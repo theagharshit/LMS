@@ -1,0 +1,6 @@
+{
+  "name": "Sikshya LMS Nepal",
+  "description": "A comprehensive Learning Management System for Nepalese schools connecting Students, Teachers, Parents, and School Leadership with digital classrooms, assignments, AI tutor, parent controls, and Nepali curriculum features.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

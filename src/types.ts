@@ -1,0 +1,240 @@
+/**
+ * Sikshya LMS Nepal - Core Type Definitions
+ */
+
+export type UserRole = 'student' | 'teacher' | 'parent' | 'admin';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  avatar: string;
+  schoolName: string;
+  gradeLevel?: number; // e.g. 8 for Grade 8
+  section?: string;    // e.g. 'A'
+  rollNumber?: number;
+  // Parent specific
+  childrenIds?: string[];
+  // Teacher specific
+  subjectsTaught?: string[];
+}
+
+export interface StudentProfile extends User {
+  attendancePercentage: number;
+  streakDays: number;
+  xpPoints: number;
+  badges: Badge[];
+  gradeLevel: number;
+  section: string;
+  parentName: string;
+  parentPhone: string;
+}
+
+export interface Badge {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  earnedDate: string;
+  category: 'academic' | 'attendance' | 'streak' | 'participation';
+}
+
+export interface Classroom {
+  id: string;
+  name: string;
+  subject: string;
+  gradeLevel: number;
+  section: string;
+  teacherId: string;
+  teacherName: string;
+  teacherAvatar: string;
+  roomNumber: string;
+  colorTheme: string;
+  bannerImage: string;
+  studentCount: number;
+  meetLink?: string;
+  code: string;
+}
+
+export interface StreamPost {
+  id: string;
+  classroomId: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar: string;
+  authorRole: UserRole;
+  content: string;
+  createdAt: string;
+  pinned?: boolean;
+  attachments?: Attachment[];
+  commentsCount: number;
+  comments?: PostComment[];
+}
+
+export interface PostComment {
+  id: string;
+  authorName: string;
+  authorAvatar: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface Attachment {
+  id: string;
+  title: string;
+  type: 'pdf' | 'video' | 'link' | 'image' | 'doc';
+  url: string;
+  size?: string;
+}
+
+export interface ModuleItem {
+  id: string;
+  classroomId: string;
+  unitName: string;
+  title: string;
+  description: string;
+  attachments: Attachment[];
+  completedByStudentIds: string[];
+  durationMinutes: number;
+}
+
+export interface Assignment {
+  id: string;
+  classroomId: string;
+  classroomName: string;
+  subject: string;
+  title: string;
+  instructions: string;
+  dueDate: string; // ISO string
+  dueTime: string;
+  totalPoints: number;
+  attachments: Attachment[];
+  createdAt: string;
+  rubric?: string[];
+}
+
+export interface Submission {
+  id: string;
+  assignmentId: string;
+  studentId: string;
+  studentName: string;
+  studentAvatar: string;
+  submittedAt: string;
+  status: 'submitted' | 'graded' | 'late' | 'pending';
+  fileUrl?: string;
+  fileName?: string;
+  responseText?: string;
+  grade?: number;
+  feedback?: string;
+  annotated?: boolean;
+}
+
+export interface QuizQuestion {
+  id: string;
+  text: string;
+  type: 'MCQ' | 'True/False' | 'ShortAnswer';
+  options?: string[];
+  correctAnswer: string;
+  explanation: string;
+  points: number;
+}
+
+export interface Quiz {
+  id: string;
+  classroomId: string;
+  classroomName: string;
+  subject: string;
+  title: string;
+  description: string;
+  durationMinutes: number;
+  dueDate: string;
+  totalQuestions: number;
+  questions: QuizQuestion[];
+  published: boolean;
+}
+
+export interface QuizSubmission {
+  id: string;
+  quizId: string;
+  studentId: string;
+  score: number;
+  totalPoints: number;
+  completedAt: string;
+  answers: Record<string, string>; // questionId -> answer
+}
+
+export type DayOfWeek = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+
+export interface SchedulePeriod {
+  id: string;
+  periodNumber: number;
+  startTime: string;
+  endTime: string;
+  subject: string;
+  teacherName: string;
+  room: string;
+  classroomId?: string;
+  isCurrent?: boolean;
+  requiredBooks?: string; // Textbook & notebook packing advice for students
+}
+
+export type WeeklySchedule = Record<DayOfWeek, SchedulePeriod[]>;
+
+export interface AttendanceRecord {
+  id: string;
+  studentId: string;
+  studentName: string;
+  date: string; // YYYY-MM-DD
+  status: 'present' | 'absent' | 'late' | 'excused';
+  markedBy: string;
+  remarks?: string;
+  checkInTime?: string;
+}
+
+export interface ParentControlSettings {
+  studentId: string;
+  allowTeacherDirectChat: boolean;
+  allowPeerDiscussion: boolean;
+  missingHomeworkAlerts: boolean;
+  lowAttendanceAlerts: boolean;
+  weeklyDigestEmail: boolean;
+  screenTimeLimitMinutes: number;
+  requireApprovalForOutboundMsgs: boolean;
+}
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  type: 'assignment' | 'quiz' | 'live_class' | 'holiday' | 'parent_meeting' | 'exam';
+  date: string; // YYYY-MM-DD
+  time?: string;
+  description: string;
+  subject?: string;
+  nepaliDateBS?: string; // e.g. "2083 Kartik 15"
+}
+
+export interface DirectMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: UserRole;
+  senderAvatar: string;
+  receiverId: string;
+  receiverName: string;
+  content: string;
+  createdAt: string;
+  read: boolean;
+  approvedByParent?: boolean;
+}
+
+export interface SubjectPerformance {
+  subject: string;
+  scorePercentage: number;
+  grade: string; // A+, A, B+, B, C+
+  assignmentsCompleted: number;
+  totalAssignments: number;
+  quizzesScoreAvg: number;
+  teacherRemark: string;
+  trend: 'up' | 'stable' | 'down';
+}
