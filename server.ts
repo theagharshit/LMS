@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
+import { logger } from "./src/utils/logger";
 
 dotenv.config();
 
@@ -12,7 +13,10 @@ const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3001;
+
+  // HTTP Request Logging Middleware
+  app.use(logger.httpMiddleware());
 
   app.use(express.json({ limit: "10mb" }));
 
@@ -20,7 +24,7 @@ async function startServer() {
   const getAi = () => {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.warn("GEMINI_API_KEY is not set. AI features will operate with fallback mode.");
+      logger.warn("GEMINI_API_KEY is not set. AI features will operate in fallback mode.");
       return null;
     }
     return new GoogleGenAI({
@@ -261,7 +265,8 @@ Language: ${language}`,
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
+    logger.info(`Server running on http://0.0.0.0:${PORT}`);
+    logger.info(`Environment: ${logger.getEnvironment()} | Log Level: ${logger.getLogLevel()}`);
   });
 }
 
