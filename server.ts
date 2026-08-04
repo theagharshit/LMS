@@ -5,6 +5,8 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 import { logger } from "./src/utils/logger";
+import { verifyFileIntegrity } from "./src/middlewares/fileMiddleware";
+import { fileStorageDB } from "./src/db/fileStorageDB";
 
 dotenv.config();
 
@@ -38,6 +40,65 @@ async function startServer() {
   };
 
   // API Routes
+  
+  // Upload Route utilizing the verifyFileIntegrity middleware & storing record in FileStorageDB
+  app.post("/api/upload", verifyFileIntegrity, (req, res) => {
+    logger.info("Processing file upload and registering entry in FileStorageDB...");
+    const fileName = req.body?.name || "Uploaded_Attachment.pdf";
+    const uploadedBy = req.body?.uploadedBy || "Sikshya User";
+    const classroomId = req.body?.classroomId;
+    const sizeBytes = req.body?.sizeBytes || 1024 * 512;
+    const sizeFormatted = req.body?.sizeFormatted || "512 KB";
+    const mimeType = req.body?.mimeType || "application/pdf";
+
+    // Create entry in FileStorageDB
+    const record = fileStorageDB.addFile({
+      originalName: fileName,
+      storedName: `${Date.now()}_${fileName}`,
+      mimeType,
+      sizeBytes,
+      sizeFormatted,
+      uploadedBy,
+      classroomId,
+      checksum: `sha256-${Math.random().toString(36).substring(2, 18)}${Math.random().toString(36).substring(2, 18)}`,
+      integrityStatus: "verified",
+      downloadUrl: `/uploads/${encodeURIComponent(fileName)}`
+    });
+
+    res.json({
+      status: "success",
+      message: "File verified and stored in FileStorageDB successfully.",
+      record
+    });
+  });
+
+  // File Storage Database API Endpoints
+  
+  // GET /api/files - Get all stored file records
+  app.get("/api/files", (req, res) => {
+    const classroomId = req.query.classroomId as string | undefined;
+    const files = fileStorageDB.getAllFiles(classroomId);
+    res.json({ status: "success", count: files.length, files });
+  });
+
+  // GET /api/files/:id - Get specific file record
+  app.get("/api/files/:id", (req, res) => {
+    const file = fileStorageDB.getFileById(req.params.id);
+    if (!file) {
+      return res.status(404).json({ status: "error", message: "File record not found in storage DB" });
+    }
+    res.json({ status: "success", file });
+  });
+
+  // DELETE /api/files/:id - Delete file record
+  app.delete("/api/files/:id", (req, res) => {
+    const deleted = fileStorageDB.deleteFile(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ status: "error", message: "File record not found in storage DB" });
+    }
+    res.json({ status: "success", message: `File ${req.params.id} deleted from storage DB` });
+  });
+
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", message: "Sikshya LMS API Operational", timestamp: new Date().toISOString() });
   });

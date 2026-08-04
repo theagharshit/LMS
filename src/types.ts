@@ -238,3 +238,18 @@ export interface SubjectPerformance {
   teacherRemark: string;
   trend: 'up' | 'stable' | 'down';
 }
+
+export interface StoredFileRecord {
+  id: string;
+  originalName: string;
+  storedName: string;
+  mimeType: string;
+  sizeBytes: number;
+  sizeFormatted: string;
+  uploadedBy: string;
+  classroomId?: string;
+  checksum: string;
+  integrityStatus: 'verified' | 'scanning' | 'quarantined';
+  uploadedAt: string;
+  downloadUrl: string;
+}
