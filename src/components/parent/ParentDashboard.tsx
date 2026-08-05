@@ -83,27 +83,6 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenParental
         </div>
       </div>
 
-      {/* Switch Child Selector Bar */}
-      {activeChildList.length > 1 && (
-        <div className="p-4 rounded-2xl bg-white border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex items-center justify-between">
-          <span className="font-bold text-xs text-[#2D2D2A]">Select Child to Monitor:</span>
-          <div className="flex gap-2">
-            {activeChildList.map(child => (
-              <button
-                key={child.id}
-                onClick={() => setActiveChildId(child.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  activeChild.id === child.id
-                    ? 'bg-[#E88D67] text-white shadow-sm'
-                    : 'bg-[#F9F7F2] text-[#7A7A72]'
-                }`}
-              >
-                {child.name} (Grade {child.gradeLevel})
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Child Status Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
