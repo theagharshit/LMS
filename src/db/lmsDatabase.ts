@@ -2,8 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Use cross-environment __dirname for ESM (tsx) and CJS (esbuild)
+const _filename = typeof __filename !== 'undefined' ? __filename : fileURLToPath(import.meta.url);
+const _dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(_filename);
 import {
   User,
   StudentProfile,
@@ -60,7 +61,7 @@ class LMSDatabaseService {
 
   constructor() {
     // Save data store json file in src/db/data_store.json
-    this.dbPath = path.resolve(__dirname, 'data_store.json');
+    this.dbPath = path.resolve(_dirname, 'data_store.json');
     this.data = this.loadDatabase();
   }
 
