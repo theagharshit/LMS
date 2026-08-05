@@ -23,10 +23,12 @@ describe('Student Interactive Functional Workflows (tests/functional/student_wor
     render(
       <AppProvider>
         <ClassroomWrapper />
-      </AppProvider>
+      </AppProvider>,
     );
 
-    const postTextarea = await screen.findByPlaceholderText(/Announce something or ask a question/i);
+    const postTextarea = await screen.findByPlaceholderText(
+      /Announce something or ask a question/i,
+    );
     await user.type(postTextarea, 'Here is my notes file for Science chapter 4');
 
     const postButton = screen.getByRole('button', { name: /Post/i });
@@ -40,12 +42,14 @@ describe('Student Interactive Functional Workflows (tests/functional/student_wor
     render(
       <AppProvider>
         <AssignmentDetailModal assignmentId="asg-math-1" onClose={vi.fn()} />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Teacher Instructions/i)).toBeInTheDocument();
 
-    const notesTextarea = screen.getByPlaceholderText(/Type any notes or answers here if requested/i);
+    const notesTextarea = screen.getByPlaceholderText(
+      /Type any notes or answers here if requested/i,
+    );
     await user.type(notesTextarea, 'Solved Q1 to Q5 on my notebook.');
 
     const resubmitButton = screen.getByRole('button', { name: /Resubmit Homework/i });
@@ -56,7 +60,7 @@ describe('Student Interactive Functional Workflows (tests/functional/student_wor
     render(
       <AppProvider>
         <QuizRunnerModal quizId="quiz-1" onClose={vi.fn()} />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Algebraic Equations/i)).toBeInTheDocument();
@@ -76,7 +80,7 @@ describe('Student Interactive Functional Workflows (tests/functional/student_wor
     render(
       <AppProvider>
         <TutorTestWrapper />
-      </AppProvider>
+      </AppProvider>,
     );
 
     const input = screen.getByPlaceholderText(/Ask Sikshya AI about/i);

@@ -13,7 +13,7 @@ import {
   BookOpen,
   ShieldAlert,
   Heart,
-  MessageSquare
+  MessageSquare,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -34,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
     setIsAiTutorOpen,
     setIsAiParentSummaryOpen,
     activeView,
-    setActiveView
+    setActiveView,
   } = useApp();
 
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
@@ -43,7 +43,6 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
   return (
     <header className="sticky top-0 z-40 bg-[#F0EDE5]/95 backdrop-blur-md border-b border-[#E5E1D8] px-4 py-2.5 transition-colors">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        
         {/* Left: Brand / Logo */}
         <div className="flex items-center gap-3">
           <button
@@ -81,14 +80,13 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
 
         {/* Right: Role Switcher, AI Tools, Child Selector, Notifications & Theme */}
         <div className="flex items-center gap-2.5">
-          
           {/* Parent-specific Child Selector */}
           {currentUser.role === 'parent' && activeChildList.length > 0 && (
             <div className="hidden sm:flex items-center gap-1 bg-[#FDEEDC] border border-[#E88D67]/30 rounded-full px-2.5 py-1 text-xs">
               <Heart className="w-3.5 h-3.5 text-[#E88D67] fill-[#E88D67]" />
               <span className="font-medium text-[#2D2D2A]">Child:</span>
               <div className="flex gap-1 ml-1">
-                {activeChildList.map(child => (
+                {activeChildList.map((child) => (
                   <button
                     key={child.id}
                     onClick={() => setActiveChildId(child.id)}
@@ -130,7 +128,11 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
             className="p-2 text-[#7A7A72] hover:bg-[#E5E1D8]/50 rounded-full transition-colors"
             title="Toggle Theme"
           >
-            {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-[#E88D67]" />}
+            {theme === 'light' ? (
+              <Moon className="w-4 h-4" />
+            ) : (
+              <Sun className="w-4 h-4 text-[#E88D67]" />
+            )}
           </button>
 
           {/* Notification Bell */}
@@ -159,9 +161,12 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
                 className="w-6 h-6 rounded-full object-cover border border-[#4A6741]"
               />
               <div className="text-left hidden sm:block">
-                <p className="font-semibold text-xs leading-none text-[#2D2D2A]">{currentUser.name}</p>
+                <p className="font-semibold text-xs leading-none text-[#2D2D2A]">
+                  {currentUser.name}
+                </p>
                 <p className="text-[10px] capitalize text-[#4A6741] font-medium">
-                  {currentUser.role} {currentUser.gradeLevel ? `(Grade ${currentUser.gradeLevel})` : ''}
+                  {currentUser.role}{' '}
+                  {currentUser.gradeLevel ? `(Grade ${currentUser.gradeLevel})` : ''}
                 </p>
               </div>
               <ChevronDown className="w-3.5 h-3.5 text-[#7A7A72]" />
@@ -185,7 +190,9 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
                   </div>
                 )}
                 <div className="px-3 py-1.5 border-b border-[#EDEAE2]">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#7A7A72]">Switch Demo Role</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#7A7A72]">
+                    Switch Demo Role
+                  </p>
                 </div>
                 <div className="p-1 space-y-1">
                   {allUsers.map((user) => (
@@ -202,7 +209,11 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <img src={user.avatar} alt={user.name} className="w-7 h-7 rounded-full object-cover" />
+                        <img
+                          src={user.avatar}
+                          alt={user.name}
+                          className="w-7 h-7 rounded-full object-cover"
+                        />
                         <div>
                           <p className="font-semibold text-xs text-[#2D2D2A]">{user.name}</p>
                           <p className="text-[10px] text-[#7A7A72] capitalize">
@@ -210,14 +221,15 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
                           </p>
                         </div>
                       </div>
-                      {currentUser.id === user.id && <UserCheck className="w-4 h-4 text-[#4A6741]" />}
+                      {currentUser.id === user.id && (
+                        <UserCheck className="w-4 h-4 text-[#4A6741]" />
+                      )}
                     </button>
                   ))}
                 </div>
               </div>
             )}
           </div>
-
         </div>
       </div>
     </header>

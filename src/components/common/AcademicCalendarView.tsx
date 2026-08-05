@@ -12,7 +12,7 @@ import {
   ChevronRight,
   Info,
   BellRing,
-  CalendarCheck
+  CalendarCheck,
 } from 'lucide-react';
 import { CalendarEvent } from '../../types';
 
@@ -24,11 +24,15 @@ export const AcademicCalendarView: React.FC = () => {
 
   // Sort events chronologically
   const sortedEvents = [...calendarEvents].sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
 
   const filteredEvents = sortedEvents.filter(
-    e => filterType === 'all' || e.type === filterType || (filterType === 'assignment' && e.type === 'quiz') || (filterType === 'event' && e.type === 'live_class')
+    (e) =>
+      filterType === 'all' ||
+      e.type === filterType ||
+      (filterType === 'assignment' && e.type === 'quiz') ||
+      (filterType === 'event' && e.type === 'live_class'),
   );
 
   // Calculate days remaining helper
@@ -54,28 +58,28 @@ export const AcademicCalendarView: React.FC = () => {
           icon: Award,
           bgColor: 'bg-rose-500',
           badgeBg: 'bg-rose-100 text-rose-800 border-rose-200',
-          label: 'Exam / Evaluation'
+          label: 'Exam / Evaluation',
         };
       case 'holiday':
         return {
           icon: Sun,
           bgColor: 'bg-amber-500',
           badgeBg: 'bg-amber-100 text-amber-800 border-amber-200',
-          label: 'Public Holiday'
+          label: 'Public Holiday',
         };
       case 'live_class':
         return {
           icon: Sparkles,
           bgColor: 'bg-emerald-600',
           badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-          label: 'School Activity'
+          label: 'School Activity',
         };
       case 'parent_meeting':
         return {
           icon: Users,
           bgColor: 'bg-purple-600',
           badgeBg: 'bg-purple-100 text-purple-800 border-purple-200',
-          label: 'Parent Meeting'
+          label: 'Parent Meeting',
         };
       case 'quiz':
       case 'assignment':
@@ -84,14 +88,13 @@ export const AcademicCalendarView: React.FC = () => {
           icon: BookOpen,
           bgColor: 'bg-blue-600',
           badgeBg: 'bg-blue-100 text-blue-800 border-blue-200',
-          label: 'Homework & Quiz'
+          label: 'Homework & Quiz',
         };
     }
   };
 
   return (
     <div className="space-y-6 pb-16 animate-in fade-in duration-200">
-      
       {/* Visual Header Banner */}
       <div className="natural-banner rounded-3xl p-6 md:p-8 text-white shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
         <div className="relative z-10 space-y-1.5">
@@ -101,7 +104,8 @@ export const AcademicCalendarView: React.FC = () => {
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold font-serif">Academic Timeline</h1>
           <p className="text-xs md:text-sm text-[#F9F7F2]/90">
-            Hover or tap any event point on the timeline to expand full descriptions, subjects, and schedules.
+            Hover or tap any event point on the timeline to expand full descriptions, subjects, and
+            schedules.
           </p>
         </div>
 
@@ -109,11 +113,11 @@ export const AcademicCalendarView: React.FC = () => {
         <div className="relative z-10 flex flex-wrap gap-2 text-xs font-bold">
           <div className="bg-white/15 backdrop-blur-md border border-white/20 px-3 py-2 rounded-2xl flex items-center gap-2">
             <Award className="w-4 h-4 text-rose-300" />
-            <span>{calendarEvents.filter(e => e.type === 'exam').length} Exams</span>
+            <span>{calendarEvents.filter((e) => e.type === 'exam').length} Exams</span>
           </div>
           <div className="bg-white/15 backdrop-blur-md border border-white/20 px-3 py-2 rounded-2xl flex items-center gap-2">
             <Sun className="w-4 h-4 text-amber-300" />
-            <span>{calendarEvents.filter(e => e.type === 'holiday').length} Holidays</span>
+            <span>{calendarEvents.filter((e) => e.type === 'holiday').length} Holidays</span>
           </div>
           <div className="bg-white/15 backdrop-blur-md border border-white/20 px-3 py-2 rounded-2xl flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-300" />
@@ -130,8 +134,8 @@ export const AcademicCalendarView: React.FC = () => {
           { id: 'holiday', label: 'Holidays & Vacations' },
           { id: 'event', label: 'School Events' },
           { id: 'assignment', label: 'Homework & Quizzes' },
-          { id: 'parent_meeting', label: 'Parent Meetings' }
-        ].map(f => (
+          { id: 'parent_meeting', label: 'Parent Meetings' },
+        ].map((f) => (
           <button
             key={f.id}
             onClick={() => setFilterType(f.id)}
@@ -171,7 +175,6 @@ export const AcademicCalendarView: React.FC = () => {
           </div>
         ) : (
           <div className="relative pl-6 md:pl-10 space-y-8 my-4">
-            
             {/* The Connecting Vertical Timeline Line */}
             <div className="absolute left-[19px] md:left-[35px] top-3 bottom-3 w-1 bg-gradient-to-b from-[#4A6741] via-[#88A070] to-[#EDEAE2] rounded-full z-0" />
 
@@ -196,7 +199,6 @@ export const AcademicCalendarView: React.FC = () => {
                   onMouseLeave={() => setHoveredEventId(null)}
                   onClick={() => setSelectedEventId(isSelected ? null : evt.id)}
                 >
-                  
                   {/* Timeline Point (Node) */}
                   <div
                     className={`absolute -left-[30px] md:-left-[46px] top-1.5 w-8 h-8 md:w-10 md:h-10 rounded-full ${style.bgColor} text-white flex items-center justify-center shadow-md ring-4 ring-white border-2 border-white transition-transform duration-200 z-20 ${
@@ -216,19 +218,26 @@ export const AcademicCalendarView: React.FC = () => {
                   >
                     {/* Compact Header Row */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      
                       {/* Left: Date pill & Title */}
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-xl text-center min-w-[55px] border ${
-                          isExpanded ? 'bg-[#EBF1E8] border-[#88A070] text-[#4A6741]' : 'bg-white border-[#EDEAE2] text-[#2D2D2A]'
-                        }`}>
-                          <span className="text-[10px] uppercase font-bold text-[#7A7A72] block leading-none">{weekdayStr}, {monthStr}</span>
+                        <div
+                          className={`p-2 rounded-xl text-center min-w-[55px] border ${
+                            isExpanded
+                              ? 'bg-[#EBF1E8] border-[#88A070] text-[#4A6741]'
+                              : 'bg-white border-[#EDEAE2] text-[#2D2D2A]'
+                          }`}
+                        >
+                          <span className="text-[10px] uppercase font-bold text-[#7A7A72] block leading-none">
+                            {weekdayStr}, {monthStr}
+                          </span>
                           <span className="text-base font-black leading-tight">{dayNum}</span>
                         </div>
 
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md border ${style.badgeBg}`}>
+                            <span
+                              className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md border ${style.badgeBg}`}
+                            >
                               {style.label}
                             </span>
                             {evt.nepaliDateBS && (
@@ -245,25 +254,35 @@ export const AcademicCalendarView: React.FC = () => {
 
                       {/* Right: Days remaining chip & Expand Indicator */}
                       <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${daysInfo.color}`}>
+                        <span
+                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${daysInfo.color}`}
+                        >
                           {daysInfo.label}
                         </span>
-                        <div className={`text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 transition-colors ${
-                          isExpanded ? 'bg-[#4A6741] text-white' : 'text-[#7A7A72] bg-white border border-[#EDEAE2]'
-                        }`}>
+                        <div
+                          className={`text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 transition-colors ${
+                            isExpanded
+                              ? 'bg-[#4A6741] text-white'
+                              : 'text-[#7A7A72] bg-white border border-[#EDEAE2]'
+                          }`}
+                        >
                           <span>{isExpanded ? 'Details' : 'Hover to Expand'}</span>
-                          <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
+                          <ChevronRight
+                            className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+                          />
                         </div>
                       </div>
-
                     </div>
 
                     {/* Expandable Rich Detail Content */}
-                    <div className={`overflow-hidden transition-all duration-300 ${
-                      isExpanded ? 'max-h-96 opacity-100 mt-4 pt-4 border-t border-[#EDEAE2]' : 'max-h-0 opacity-0'
-                    }`}>
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ${
+                        isExpanded
+                          ? 'max-h-96 opacity-100 mt-4 pt-4 border-t border-[#EDEAE2]'
+                          : 'max-h-0 opacity-0'
+                      }`}
+                    >
                       <div className="space-y-3 text-xs text-[#2D2D2A]">
-                        
                         {/* Description */}
                         <div className="p-3 rounded-xl bg-[#F9F7F2] border border-[#EDEAE2] leading-relaxed">
                           <p className="font-semibold text-[#2D2D2A]">{evt.description}</p>
@@ -271,26 +290,31 @@ export const AcademicCalendarView: React.FC = () => {
 
                         {/* Meta information grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-[#7A7A72]">
-                          
                           {evt.time && (
                             <div className="flex items-center gap-1.5 p-2 rounded-lg bg-white border border-[#EDEAE2]">
                               <Clock className="w-3.5 h-3.5 text-[#4A6741]" />
-                              <span>Time: <strong className="text-[#2D2D2A]">{evt.time}</strong></span>
+                              <span>
+                                Time: <strong className="text-[#2D2D2A]">{evt.time}</strong>
+                              </span>
                             </div>
                           )}
 
                           {evt.subject && (
                             <div className="flex items-center gap-1.5 p-2 rounded-lg bg-white border border-[#EDEAE2]">
                               <Tag className="w-3.5 h-3.5 text-[#E88D67]" />
-                              <span>Subject: <strong className="text-[#2D2D2A]">{evt.subject}</strong></span>
+                              <span>
+                                Subject: <strong className="text-[#2D2D2A]">{evt.subject}</strong>
+                              </span>
                             </div>
                           )}
 
                           <div className="flex items-center gap-1.5 p-2 rounded-lg bg-white border border-[#EDEAE2]">
                             <Users className="w-3.5 h-3.5 text-blue-600" />
-                            <span>Target: <strong className="text-[#2D2D2A]">Grade 8 & Schoolwide</strong></span>
+                            <span>
+                              Target:{' '}
+                              <strong className="text-[#2D2D2A]">Grade 8 & Schoolwide</strong>
+                            </span>
                           </div>
-
                         </div>
 
                         {/* Event Footnote / Action button */}
@@ -310,22 +334,15 @@ export const AcademicCalendarView: React.FC = () => {
                             <span>Set Reminder</span>
                           </button>
                         </div>
-
                       </div>
                     </div>
-
                   </div>
-
                 </div>
               );
             })}
-
           </div>
         )}
-
       </div>
-
     </div>
   );
 };
-

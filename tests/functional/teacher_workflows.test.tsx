@@ -23,7 +23,7 @@ describe('Teacher Interactive Functional Workflows (tests/functional/teacher_wor
         <TeacherWrapper>
           <TeacherDashboard onOpenGradeModal={vi.fn()} onOpenQuizBuilderModal={vi.fn()} />
         </TeacherWrapper>
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Class Teacher & Mathematics Faculty/i)).toBeInTheDocument();
@@ -39,7 +39,7 @@ describe('Teacher Interactive Functional Workflows (tests/functional/teacher_wor
         <TeacherWrapper>
           <AttendanceRegister />
         </TeacherWrapper>
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Daily Student Attendance Register/i)).toBeInTheDocument();
@@ -52,7 +52,7 @@ describe('Teacher Interactive Functional Workflows (tests/functional/teacher_wor
         <TeacherWrapper>
           <QuizBuilderModal isOpen={true} onClose={vi.fn()} />
         </TeacherWrapper>
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Sikshya AI Quiz Creator for Teachers/i)).toBeInTheDocument();

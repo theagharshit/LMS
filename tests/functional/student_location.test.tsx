@@ -12,7 +12,7 @@ describe('Student Location Tracker Functional Component (tests/functional/studen
     render(
       <AppProvider>
         <StudentLocationTracker studentId="user-stu-1" studentName="Aarav Sharma" />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Where is Student\? • Live Tracker/i)).toBeInTheDocument();

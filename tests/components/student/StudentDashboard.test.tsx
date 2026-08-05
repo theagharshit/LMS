@@ -13,7 +13,7 @@ describe('StudentDashboard Component (src/components/student/StudentDashboard.ts
           onOpenAssignmentModal={vi.fn()}
           onOpenQuizModal={vi.fn()}
         />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Aarav Sharma/i)).toBeInTheDocument();

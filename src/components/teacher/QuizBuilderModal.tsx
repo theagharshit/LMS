@@ -14,7 +14,9 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
   const [topic, setTopic] = useState('Algebra & Factorization');
   const [subject, setSubject] = useState('Mathematics');
   const [gradeLevel, setGradeLevel] = useState(8);
-  const [selectedClassroomId, setSelectedClassroomId] = useState(classrooms[0]?.id || 'cls-math-8a');
+  const [selectedClassroomId, setSelectedClassroomId] = useState(
+    classrooms[0]?.id || 'cls-math-8a',
+  );
   const [questionCount, setQuestionCount] = useState(4);
   const [isAiGenerating, setIsAiGenerating] = useState(false);
 
@@ -26,8 +28,8 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
       options: ['a² + b²', 'a² + 2ab + b²', 'a² - 2ab + b²', '2a + 2b'],
       correctAnswer: 'a² + 2ab + b²',
       explanation: 'Standard algebraic square identity formula.',
-      points: 5
-    }
+      points: 5,
+    },
   ]);
 
   if (!isOpen) return null;
@@ -42,15 +44,17 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
           topic,
           subject,
           gradeLevel,
-          questionCount
-        })
+          questionCount,
+        }),
       });
       const data = await res.json();
       if (data.quiz && data.quiz.questions) {
-        setQuestions(data.quiz.questions.map((q: any) => ({
-          ...q,
-          points: 5
-        })));
+        setQuestions(
+          data.quiz.questions.map((q: any) => ({
+            ...q,
+            points: 5,
+          })),
+        );
       }
     } catch (err) {
       console.error(err);
@@ -60,7 +64,7 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
   };
 
   const handleSaveQuiz = () => {
-    const selectedCls = classrooms.find(c => c.id === selectedClassroomId);
+    const selectedCls = classrooms.find((c) => c.id === selectedClassroomId);
     addQuiz({
       classroomId: selectedClassroomId,
       classroomName: selectedCls?.name || 'Grade 8 Mathematics',
@@ -71,7 +75,7 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
       dueDate: '2026-08-05',
       totalQuestions: questions.length,
       questions,
-      published: true
+      published: true,
     });
     onClose();
   };
@@ -79,7 +83,6 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200 text-xs">
-        
         {/* Header */}
         <div className="p-4 bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -96,23 +99,28 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
 
         {/* Form Body */}
         <div className="p-5 overflow-y-auto space-y-4">
-          
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Target Classroom:</label>
+              <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">
+                Target Classroom:
+              </label>
               <select
                 value={selectedClassroomId}
                 onChange={(e) => setSelectedClassroomId(e.target.value)}
                 className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold"
               >
-                {classrooms.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                {classrooms.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Subject:</label>
+              <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">
+                Subject:
+              </label>
               <input
                 type="text"
                 value={subject}
@@ -122,7 +130,9 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
             </div>
 
             <div>
-              <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Quiz Topic:</label>
+              <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">
+                Quiz Topic:
+              </label>
               <input
                 type="text"
                 value={topic}
@@ -139,7 +149,9 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
                 <Sparkles className="w-4 h-4 text-amber-500" />
                 Generate Questions with AI
               </h4>
-              <p className="text-[11px] text-purple-700 dark:text-purple-300">Creates balanced MCQs, True/False, and explanations instantly.</p>
+              <p className="text-[11px] text-purple-700 dark:text-purple-300">
+                Creates balanced MCQs, True/False, and explanations instantly.
+              </p>
             </div>
 
             <button
@@ -159,9 +171,14 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
             </h4>
 
             {questions.map((q, idx) => (
-              <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+              <div
+                key={idx}
+                className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2"
+              >
                 <div className="flex justify-between items-start">
-                  <span className="font-bold text-purple-600">Q{idx + 1}. {q.text}</span>
+                  <span className="font-bold text-purple-600">
+                    Q{idx + 1}. {q.text}
+                  </span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700">
                     {q.type} • {q.points} Pts
                   </span>
@@ -183,7 +200,6 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
               </div>
             ))}
           </div>
-
         </div>
 
         {/* Footer */}
@@ -201,7 +217,6 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
             Publish Quiz to Classroom
           </button>
         </div>
-
       </div>
     </div>
   );

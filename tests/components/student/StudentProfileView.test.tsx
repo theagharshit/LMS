@@ -9,7 +9,7 @@ describe('StudentProfileView Component (src/components/student/StudentProfileVie
     render(
       <AppProvider>
         <StudentProfileView />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Aarav Sharma/i)).toBeInTheDocument();

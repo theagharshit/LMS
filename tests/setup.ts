@@ -25,7 +25,9 @@ Object.defineProperty(window, 'localStorage', {
 // Global mocks for browser APIs not available in jsdom
 if (typeof window !== 'undefined') {
   if (!window.URL.createObjectURL) {
-    window.URL.createObjectURL = vi.fn((file: any) => `blob:http://localhost/${file?.name || 'mock-file'}`);
+    window.URL.createObjectURL = vi.fn(
+      (file: any) => `blob:http://localhost/${file?.name || 'mock-file'}`,
+    );
   }
   if (!window.URL.revokeObjectURL) {
     window.URL.revokeObjectURL = vi.fn();

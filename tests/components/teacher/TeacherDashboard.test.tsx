@@ -22,11 +22,8 @@ describe('TeacherDashboard Component (src/components/teacher/TeacherDashboard.ts
   it('renders teacher welcome banner and homework submissions queue', () => {
     render(
       <AppProvider>
-        <TestWrapper
-          onOpenGradeModal={vi.fn()}
-          onOpenQuizBuilderModal={vi.fn()}
-        />
-      </AppProvider>
+        <TestWrapper onOpenGradeModal={vi.fn()} onOpenQuizBuilderModal={vi.fn()} />
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Class Teacher & Mathematics Faculty/i)).toBeInTheDocument();

@@ -9,7 +9,7 @@ describe('Header Component (src/components/common/Header.tsx)', () => {
     render(
       <AppProvider>
         <Header onToggleNotifications={vi.fn()} />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getAllByText(/Sikshya/i)[0]).toBeInTheDocument();

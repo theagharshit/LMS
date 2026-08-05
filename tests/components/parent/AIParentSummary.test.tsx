@@ -18,7 +18,7 @@ describe('AIParentSummaryModal Component (src/components/parent/AIParentSummaryM
     render(
       <AppProvider>
         <TestWrapper />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Parent Weekly Summary/i)).toBeInTheDocument();

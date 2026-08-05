@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { useApp } from "../../context/AppContext";
-import { DayOfWeek, SchedulePeriod } from "../../types";
+import React, { useState } from 'react';
+import { useApp } from '../../context/AppContext';
+import { DayOfWeek, SchedulePeriod } from '../../types';
 import {
   Sparkles,
   Flame,
@@ -18,7 +18,7 @@ import {
   User,
   CalendarDays,
   Award,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface StudentDashboardProps {
   onOpenAssignmentModal: (assignmentId: string) => void;
@@ -26,13 +26,13 @@ interface StudentDashboardProps {
 }
 
 const DAYS_OF_WEEK: DayOfWeek[] = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
 ];
 
 export const StudentDashboard: React.FC<StudentDashboardProps> = ({
@@ -58,8 +58,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   // Dynamic system time & day tracking (updates every second)
   const [now, setNow] = React.useState<Date>(new Date());
   const [timeMode, setTimeMode] = useState<
-    "real" | "10:15" | "11:00" | "11:45" | "12:30" | "01:15" | "02:00"
-  >("real");
+    'real' | '10:15' | '11:00' | '11:45' | '12:30' | '01:15' | '02:00'
+  >('real');
 
   React.useEffect(() => {
     const timer = setInterval(() => {
@@ -73,12 +73,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
   // Selected day defaults to today
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(systemTodayName);
-  const [activeTaskTab, setActiveTaskTab] = useState<"homework" | "quizzes">(
-    "homework",
-  );
+  const [activeTaskTab, setActiveTaskTab] = useState<'homework' | 'quizzes'>('homework');
 
-  const studentData =
-    studentProfiles.find((s) => s.id === currentUser.id) || studentProfiles[0];
+  const studentData = studentProfiles.find((s) => s.id === currentUser.id) || studentProfiles[0];
 
   // Get periods for selected day
   const currentDayPeriods: SchedulePeriod[] = weeklySchedule[selectedDay] || [];
@@ -91,19 +88,19 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     let hours = parseInt(match[1], 10);
     const minutes = parseInt(match[2], 10);
     const ampm = match[3].toUpperCase();
-    if (ampm === "PM" && hours < 12) hours += 12;
-    if (ampm === "AM" && hours === 12) hours = 0;
+    if (ampm === 'PM' && hours < 12) hours += 12;
+    if (ampm === 'AM' && hours === 12) hours = 0;
     return hours * 60 + minutes;
   };
 
   // Determine current effective minutes based on user's timezone clock or simulation selection
   const getEffectiveMinutes = (): number => {
-    if (timeMode === "10:15") return 10 * 60 + 15; // 615 min
-    if (timeMode === "11:00") return 11 * 60 + 0; // 660 min
-    if (timeMode === "11:45") return 11 * 60 + 45; // 705 min
-    if (timeMode === "12:30") return 12 * 60 + 30; // 750 min
-    if (timeMode === "01:15") return 13 * 60 + 15; // 795 min
-    if (timeMode === "02:00") return 14 * 60 + 0; // 840 min
+    if (timeMode === '10:15') return 10 * 60 + 15; // 615 min
+    if (timeMode === '11:00') return 11 * 60 + 0; // 660 min
+    if (timeMode === '11:45') return 11 * 60 + 45; // 705 min
+    if (timeMode === '12:30') return 12 * 60 + 30; // 750 min
+    if (timeMode === '01:15') return 13 * 60 + 15; // 795 min
+    if (timeMode === '02:00') return 14 * 60 + 0; // 840 min
     // Real time from user's device/browser clock
     return now.getHours() * 60 + now.getMinutes();
   };
@@ -111,12 +108,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const effectiveMinutes = getEffectiveMinutes();
 
   // Helper to check if a specific period is active
-  const isPeriodActiveAtMinutes = (
-    period: SchedulePeriod,
-    day: DayOfWeek,
-  ): boolean => {
+  const isPeriodActiveAtMinutes = (period: SchedulePeriod, day: DayOfWeek): boolean => {
     // Only check active state if selected day matches today or if simulating
-    if (day !== systemTodayName && timeMode === "real") return false;
+    if (day !== systemTodayName && timeMode === 'real') return false;
     const startM = parseTimeToMinutes(period.startTime);
     const endM = parseTimeToMinutes(period.endTime);
     if (startM !== null && endM !== null) {
@@ -126,9 +120,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   };
 
   // Find currently active period for selected day (if any)
-  const activePeriod = currentDayPeriods.find((p) =>
-    isPeriodActiveAtMinutes(p, selectedDay),
-  );
+  const activePeriod = currentDayPeriods.find((p) => isPeriodActiveAtMinutes(p, selectedDay));
 
   const isPeriodHighlighted = (period: SchedulePeriod): boolean => {
     return activePeriod?.id === period.id;
@@ -139,19 +131,17 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     const sub = submissions.find(
       (s) => s.assignmentId === asg.id && s.studentId === currentUser.id,
     );
-    return !sub || sub.status === "pending";
+    return !sub || sub.status === 'pending';
   });
 
   // Quiz status calculation
   const availableQuizzes = quizzes.filter((q) => {
-    const sub = quizSubmissions.find(
-      (qs) => qs.quizId === q.id && qs.studentId === currentUser.id,
-    );
+    const sub = quizSubmissions.find((qs) => qs.quizId === q.id && qs.studentId === currentUser.id);
     return !sub;
   });
 
   const recentGrades = submissions.filter(
-    (s) => s.studentId === currentUser.id && s.status === "graded",
+    (s) => s.studentId === currentUser.id && s.status === 'graded',
   );
 
   const handleAiSubjectHelp = (subject: string) => {
@@ -169,16 +159,16 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[#FDEEDC] text-xs font-bold">
               <span>
-                🇳🇵 Grade {studentData.gradeLevel} '{studentData.section}' • Roll
-                No. {studentData.rollNumber}
+                🇳🇵 Grade {studentData.gradeLevel} '{studentData.section}' • Roll No.{' '}
+                {studentData.rollNumber}
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight font-serif">
               नमस्ते, {studentData.name}! 🙏
             </h1>
             <p className="text-[#F9F7F2]/90 text-xs md:text-sm max-w-xl">
-              Here is your clean daily schedule and learning tasks for Mount
-              Everest Secondary School.
+              Here is your clean daily schedule and learning tasks for Mount Everest Secondary
+              School.
             </p>
           </div>
 
@@ -188,21 +178,15 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
               <Flame className="w-5 h-5 text-[#FDEEDC]" />
               <div>
                 <p className="text-[10px] text-white/80 font-medium">Streak</p>
-                <p className="text-sm font-black text-[#FDEEDC]">
-                  {studentData.streakDays} Days
-                </p>
+                <p className="text-sm font-black text-[#FDEEDC]">{studentData.streakDays} Days</p>
               </div>
             </div>
 
             <div className="bg-white/15 backdrop-blur-md border border-white/20 px-3.5 py-2.5 rounded-2xl flex items-center gap-2.5">
               <CheckCircle className="w-5 h-5 text-white" />
               <div>
-                <p className="text-[10px] text-white/80 font-medium">
-                  Attendance
-                </p>
-                <p className="text-sm font-black text-white">
-                  {studentData.attendancePercentage}%
-                </p>
+                <p className="text-[10px] text-white/80 font-medium">Attendance</p>
+                <p className="text-sm font-black text-white">{studentData.attendancePercentage}%</p>
               </div>
             </div>
 
@@ -234,11 +218,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                   <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-[#EBF1E8] text-[#4A6741] border border-[#88A070]/40 flex items-center gap-1.5 shadow-xs">
                     <span className="w-2 h-2 rounded-full bg-[#4A6741] animate-pulse"></span>
                     <span>
-                      Clock:{" "}
+                      Clock:{' '}
                       {now.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
                       })}
                     </span>
                   </span>
@@ -281,17 +265,15 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                   onClick={() => setSelectedDay(day)}
                   className={`px-3.5 py-2 rounded-2xl font-bold text-xs shrink-0 transition-all flex items-center gap-1.5 ${
                     isSelected
-                      ? "bg-[#4A6741] text-white shadow-sm ring-2 ring-[#4A6741]/20"
-                      : "bg-[#F9F7F2] text-[#7A7A72] border border-[#E5E1D8] hover:bg-[#F0EDE5] hover:text-[#2D2D2A]"
+                      ? 'bg-[#4A6741] text-white shadow-sm ring-2 ring-[#4A6741]/20'
+                      : 'bg-[#F9F7F2] text-[#7A7A72] border border-[#E5E1D8] hover:bg-[#F0EDE5] hover:text-[#2D2D2A]'
                   }`}
                 >
                   <span>{day}</span>
                   {isToday && (
                     <span
                       className={`text-[9px] font-black px-1.5 py-0.2 rounded-full ${
-                        isSelected
-                          ? "bg-white text-[#4A6741]"
-                          : "bg-[#E88D67] text-white"
+                        isSelected ? 'bg-white text-[#4A6741]' : 'bg-[#E88D67] text-white'
                       }`}
                     >
                       TODAY
@@ -307,36 +289,32 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             <div
               className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-between gap-2 transition-all ${
                 activePeriod
-                  ? "bg-[#EBF1E8] border-[#88A070] text-[#4A6741]"
-                  : "bg-[#F9F7F2] border-[#EDEAE2] text-[#7A7A72]"
+                  ? 'bg-[#EBF1E8] border-[#88A070] text-[#4A6741]'
+                  : 'bg-[#F9F7F2] border-[#EDEAE2] text-[#7A7A72]'
               }`}
             >
               <div className="flex items-center gap-2">
                 <span
-                  className={`w-2.5 h-2.5 rounded-full ${activePeriod ? "bg-[#4A6741] animate-ping" : "bg-amber-500"}`}
+                  className={`w-2.5 h-2.5 rounded-full ${activePeriod ? 'bg-[#4A6741] animate-ping' : 'bg-amber-500'}`}
                 ></span>
                 <span>
                   {activePeriod ? (
                     <>
-                      Live Class in Session:{" "}
+                      Live Class in Session:{' '}
                       <strong className="text-[#2D2D2A]">
-                        Period {activePeriod.periodNumber} (
-                        {activePeriod.subject})
-                      </strong>{" "}
+                        Period {activePeriod.periodNumber} ({activePeriod.subject})
+                      </strong>{' '}
                       • {activePeriod.startTime} - {activePeriod.endTime}
                     </>
                   ) : effectiveMinutes < 600 ? (
                     <>
-                      Morning before school hours. First period starts at{" "}
+                      Morning before school hours. First period starts at{' '}
                       <strong className="text-[#2D2D2A]">10:00 AM</strong>.
                     </>
                   ) : effectiveMinutes >= 870 ? (
                     <>School concluded for today. All 6 periods completed!</>
                   ) : (
-                    <>
-                      School Recess / Transition Break. Next period starts
-                      shortly.
-                    </>
+                    <>School Recess / Transition Break. Next period starts shortly.</>
                   )}
                 </span>
               </div>
@@ -348,9 +326,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             {currentDayPeriods.length === 0 ? (
               <div className="text-center py-8 bg-[#F9F7F2] rounded-2xl border border-[#EDEAE2]">
                 <CalendarDays className="w-8 h-8 text-[#E88D67] mx-auto mb-2 opacity-80" />
-                <p className="font-bold text-sm text-[#2D2D2A]">
-                  Saturday - School Holiday
-                </p>
+                <p className="font-bold text-sm text-[#2D2D2A]">Saturday - School Holiday</p>
                 <p className="text-xs text-[#7A7A72] mt-0.5">
                   No school periods scheduled for today. Enjoy your weekend!
                 </p>
@@ -364,8 +340,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                     key={period.id}
                     className={`p-4 rounded-2xl border transition-all ${
                       highlighted
-                        ? "bg-[#EBF1E8] border-[#88A070] shadow-sm ring-1 ring-[#88A070]/50"
-                        : "bg-[#F9F7F2] border-[#E5E1D8] hover:border-[#88A070]/60"
+                        ? 'bg-[#EBF1E8] border-[#88A070] shadow-sm ring-1 ring-[#88A070]/50'
+                        : 'bg-[#F9F7F2] border-[#E5E1D8] hover:border-[#88A070]/60'
                     }`}
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -374,8 +350,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         <div
                           className={`w-10 h-10 rounded-2xl font-black text-xs flex flex-col items-center justify-center shrink-0 ${
                             highlighted
-                              ? "bg-[#4A6741] text-white shadow-sm"
-                              : "bg-[#E5E1D8] text-[#2D2D2A]"
+                              ? 'bg-[#4A6741] text-white shadow-sm'
+                              : 'bg-[#E5E1D8] text-[#2D2D2A]'
                           }`}
                         >
                           <span className="text-[9px] uppercase font-medium opacity-80">
@@ -402,9 +378,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                           <div className="flex items-center gap-3 text-xs text-[#7A7A72] mt-0.5 font-sans">
                             <span
                               className={`flex items-center gap-1 font-semibold ${
-                                highlighted
-                                  ? "text-[#4A6741]"
-                                  : "text-[#7A7A72]"
+                                highlighted ? 'text-[#4A6741]' : 'text-[#7A7A72]'
                               }`}
                             >
                               <Clock className="w-3.5 h-3.5" />
@@ -429,8 +403,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         <div
                           className={`shrink-0 border px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs transition-colors ${
                             highlighted
-                              ? "bg-white border-[#88A070] text-[#2D2D2A] shadow-sm"
-                              : "bg-white border-[#E5E1D8] text-[#2D2D2A]"
+                              ? 'bg-white border-[#88A070] text-[#2D2D2A] shadow-sm'
+                              : 'bg-white border-[#E5E1D8] text-[#2D2D2A]'
                           }`}
                         >
                           <BookMarked className="w-4 h-4 text-[#E88D67]" />
@@ -457,11 +431,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           <div className="flex items-center justify-between border-b border-[#EDEAE2] pb-3">
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setActiveTaskTab("homework")}
+                onClick={() => setActiveTaskTab('homework')}
                 className={`pb-1 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
-                  activeTaskTab === "homework"
-                    ? "border-[#4A6741] text-[#4A6741]"
-                    : "border-transparent text-[#7A7A72] hover:text-[#2D2D2A]"
+                  activeTaskTab === 'homework'
+                    ? 'border-[#4A6741] text-[#4A6741]'
+                    : 'border-transparent text-[#7A7A72] hover:text-[#2D2D2A]'
                 }`}
               >
                 <FileText className="w-4 h-4" />
@@ -469,11 +443,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
               </button>
 
               <button
-                onClick={() => setActiveTaskTab("quizzes")}
+                onClick={() => setActiveTaskTab('quizzes')}
                 className={`pb-1 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
-                  activeTaskTab === "quizzes"
-                    ? "border-[#E88D67] text-[#E88D67]"
-                    : "border-transparent text-[#7A7A72] hover:text-[#2D2D2A]"
+                  activeTaskTab === 'quizzes'
+                    ? 'border-[#E88D67] text-[#E88D67]'
+                    : 'border-transparent text-[#7A7A72] hover:text-[#2D2D2A]'
                 }`}
               >
                 <CheckSquare className="w-4 h-4" />
@@ -483,14 +457,12 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           </div>
 
           {/* Homework List */}
-          {activeTaskTab === "homework" && (
+          {activeTaskTab === 'homework' && (
             <div className="space-y-3">
               {pendingAssignments.length === 0 ? (
                 <div className="text-center py-6 text-[#7A7A72] text-xs">
                   <CheckCircle className="w-8 h-8 text-[#4A6741] mx-auto mb-2" />
-                  <p className="font-bold text-[#2D2D2A]">
-                    All Homework Submitted!
-                  </p>
+                  <p className="font-bold text-[#2D2D2A]">All Homework Submitted!</p>
                   <p className="text-[11px]">You're all caught up for today.</p>
                 </div>
               ) : (
@@ -504,18 +476,14 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         <span className="text-[10px] font-bold text-[#4A6741] uppercase tracking-wider">
                           {asg.subject}
                         </span>
-                        <h3 className="font-bold text-xs text-[#2D2D2A] font-serif">
-                          {asg.title}
-                        </h3>
+                        <h3 className="font-bold text-xs text-[#2D2D2A] font-serif">{asg.title}</h3>
                       </div>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FDEEDC] text-[#E88D67] shrink-0">
                         Due {asg.dueDate}
                       </span>
                     </div>
 
-                    <p className="text-[11px] text-[#7A7A72] line-clamp-2">
-                      {asg.instructions}
-                    </p>
+                    <p className="text-[11px] text-[#7A7A72] line-clamp-2">{asg.instructions}</p>
 
                     <div className="pt-2 flex items-center justify-between">
                       <span className="text-[10px] text-[#7A7A72] font-semibold">
@@ -535,14 +503,12 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           )}
 
           {/* Quizzes List */}
-          {activeTaskTab === "quizzes" && (
+          {activeTaskTab === 'quizzes' && (
             <div className="space-y-3">
               {availableQuizzes.length === 0 ? (
                 <div className="text-center py-6 text-[#7A7A72] text-xs">
                   <CheckCircle className="w-8 h-8 text-[#E88D67] mx-auto mb-2" />
-                  <p className="font-bold text-[#2D2D2A]">
-                    No Pending Quizzes!
-                  </p>
+                  <p className="font-bold text-[#2D2D2A]">No Pending Quizzes!</p>
                   <p className="text-[11px]">All online tests completed.</p>
                 </div>
               ) : (
@@ -565,9 +531,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       </span>
                     </div>
 
-                    <p className="text-[11px] text-[#7A7A72]">
-                      {quiz.description}
-                    </p>
+                    <p className="text-[11px] text-[#7A7A72]">{quiz.description}</p>
 
                     <div className="pt-2 flex items-center justify-between">
                       <span className="text-[10px] text-[#7A7A72] font-semibold">

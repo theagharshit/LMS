@@ -1,6 +1,6 @@
 /**
  * Environment-aware Logger Utility
- * 
+ *
  * Supports:
  * - Environments: 'development' | 'production'
  * - Log Levels: 'verbose' (highly detailed) | 'normal' (concise / minimal / ok)
@@ -16,7 +16,8 @@ class Logger {
   constructor() {
     this.env = (process.env.NODE_ENV as Environment) || 'development';
     const rawLevel = process.env.LOG_LEVEL?.toLowerCase();
-    this.level = (rawLevel === 'verbose' || rawLevel === 'detailed' || rawLevel === '-v') ? 'verbose' : 'normal';
+    this.level =
+      rawLevel === 'verbose' || rawLevel === 'detailed' || rawLevel === '-v' ? 'verbose' : 'normal';
   }
 
   public getEnvironment(): Environment {
@@ -76,7 +77,8 @@ class Logger {
       res.on('finish', () => {
         const duration = Date.now() - startTime;
         const statusCode = res.statusCode;
-        const statusColor = statusCode >= 400 ? '\x1b[31m' : statusCode >= 300 ? '\x1b[33m' : '\x1b[32m';
+        const statusColor =
+          statusCode >= 400 ? '\x1b[31m' : statusCode >= 300 ? '\x1b[33m' : '\x1b[32m';
 
         if (this.isVerbose()) {
           // Highly Detailed Log Mode
@@ -87,11 +89,14 @@ class Logger {
           console.log(`Status    : ${statusColor}${statusCode}\x1b[0m`);
           console.log(`Duration  : ${duration}ms`);
           console.log(`Client IP : ${ip || req.socket.remoteAddress}`);
-          console.log(`Headers   :`, JSON.stringify({
-            'user-agent': headers['user-agent'],
-            'content-type': headers['content-type'],
-            'accept': headers['accept']
-          }));
+          console.log(
+            `Headers   :`,
+            JSON.stringify({
+              'user-agent': headers['user-agent'],
+              'content-type': headers['content-type'],
+              accept: headers['accept'],
+            }),
+          );
           if (body && Object.keys(body).length > 0) {
             console.log(`Body      :`, JSON.stringify(body, null, 2));
           }

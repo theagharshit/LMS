@@ -22,11 +22,8 @@ describe('ParentDashboard Component (src/components/parent/ParentDashboard.tsx)'
   it('renders parent overview dashboard', () => {
     render(
       <AppProvider>
-        <TestWrapper
-          onOpenParentSummaryModal={vi.fn()}
-          onOpenParentalControlsModal={vi.fn()}
-        />
-      </AppProvider>
+        <TestWrapper onOpenParentSummaryModal={vi.fn()} onOpenParentalControlsModal={vi.fn()} />
+      </AppProvider>,
     );
 
     expect(screen.getAllByText(/Parent Portal/i)[0]).toBeInTheDocument();

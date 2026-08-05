@@ -19,7 +19,7 @@ import {
   StudentLocationRecord,
   CalendarEvent,
   DirectMessage,
-  SubjectPerformance
+  SubjectPerformance,
 } from '../types';
 import {
   MOCK_USERS,
@@ -34,7 +34,7 @@ import {
   MOCK_PARENT_CONTROLS,
   MOCK_CALENDAR_EVENTS,
   MOCK_MESSAGES,
-  MOCK_SUBJECT_PERFORMANCE
+  MOCK_SUBJECT_PERFORMANCE,
 } from '../data/mockData';
 import { logger } from '../utils/logger';
 
@@ -92,7 +92,7 @@ class LMSDatabaseService {
       studentLocations: [],
       calendarEvents: MOCK_CALENDAR_EVENTS,
       messages: MOCK_MESSAGES,
-      subjectPerformances: MOCK_SUBJECT_PERFORMANCE
+      subjectPerformances: MOCK_SUBJECT_PERFORMANCE,
     });
 
     this.saveDatabase(seeded);
@@ -111,7 +111,7 @@ class LMSDatabaseService {
           updatedBy: 'Mr. Ramesh Thapa',
           updatedByRole: 'teacher',
           updatedAt: new Date(Date.now() - 15 * 60000).toISOString(),
-          notes: 'Active participation in Algebra lecture'
+          notes: 'Active participation in Algebra lecture',
         },
         {
           id: 'loc-2',
@@ -122,8 +122,8 @@ class LMSDatabaseService {
           updatedBy: 'Duty Teacher Saraswati',
           updatedByRole: 'teacher',
           updatedAt: new Date(Date.now() - 10 * 60000).toISOString(),
-          notes: 'Having healthy lunch at school cafeteria'
-        }
+          notes: 'Having healthy lunch at school cafeteria',
+        },
       ];
     }
     return data;
@@ -160,7 +160,7 @@ class LMSDatabaseService {
       ...classroom,
       id,
       code,
-      studentCount: 30
+      studentCount: 30,
     };
     this.data.classrooms.unshift(newClassroom);
     this.saveDatabase();
@@ -178,7 +178,7 @@ class LMSDatabaseService {
       id: `post-${Date.now()}`,
       createdAt: 'Just now',
       commentsCount: 0,
-      comments: []
+      comments: [],
     };
     this.data.streamPosts.unshift(newPost);
     this.saveDatabase();
@@ -194,19 +194,28 @@ class LMSDatabaseService {
     return this.data.submissions;
   }
 
-  public submitHomework(assignmentId: string, fileName: string, fileUrl: string, studentId: string, notes?: string): Submission {
-    const existingIndex = this.data.submissions.findIndex(s => s.assignmentId === assignmentId && s.studentId === studentId);
+  public submitHomework(
+    assignmentId: string,
+    fileName: string,
+    fileUrl: string,
+    studentId: string,
+    notes?: string,
+  ): Submission {
+    const existingIndex = this.data.submissions.findIndex(
+      (s) => s.assignmentId === assignmentId && s.studentId === studentId,
+    );
     const newSubmission: Submission = {
       id: existingIndex >= 0 ? this.data.submissions[existingIndex].id : `sub-${Date.now()}`,
       assignmentId,
       studentId,
       studentName: 'Aarav Sharma',
-      studentAvatar: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+      studentAvatar:
+        'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
       fileName,
       fileUrl,
       submittedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       status: 'submitted',
-      notes
+      responseText: notes,
     };
 
     if (existingIndex >= 0) {
@@ -228,7 +237,7 @@ class LMSDatabaseService {
     const newQuiz: Quiz = {
       ...quiz,
       id: `quiz-${Date.now()}`,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
     this.data.quizzes.unshift(newQuiz);
     this.saveDatabase();
@@ -240,15 +249,24 @@ class LMSDatabaseService {
     return this.data.attendance;
   }
 
-  public markAttendance(studentId: string, studentName: string, date: string, status: 'present' | 'absent' | 'late' | 'excused', remarks?: string): AttendanceRecord {
-    const existingIndex = this.data.attendance.findIndex(a => a.studentId === studentId && a.date === date);
+  public markAttendance(
+    studentId: string,
+    studentName: string,
+    date: string,
+    status: 'present' | 'absent' | 'late' | 'excused',
+    remarks?: string,
+  ): AttendanceRecord {
+    const existingIndex = this.data.attendance.findIndex(
+      (a) => a.studentId === studentId && a.date === date,
+    );
     const record: AttendanceRecord = {
       id: existingIndex >= 0 ? this.data.attendance[existingIndex].id : `att-${Date.now()}`,
       studentId,
       studentName,
       date,
       status,
-      remarks
+      remarks,
+      markedBy: 'System',
     };
 
     if (existingIndex >= 0) {
@@ -266,7 +284,10 @@ class LMSDatabaseService {
     return this.data.parentControls;
   }
 
-  public updateParentControls(studentId: string, settings: ParentControlSettings): ParentControlSettings {
+  public updateParentControls(
+    studentId: string,
+    settings: ParentControlSettings,
+  ): ParentControlSettings {
     this.data.parentControls[studentId] = settings;
     this.saveDatabase();
     return settings;
@@ -278,7 +299,7 @@ class LMSDatabaseService {
   }
 
   public getStudentLocationById(studentId: string): StudentLocationRecord | undefined {
-    return this.data.studentLocations.find(l => l.studentId === studentId);
+    return this.data.studentLocations.find((l) => l.studentId === studentId);
   }
 
   public updateStudentLocation(
@@ -289,9 +310,9 @@ class LMSDatabaseService {
     updatedBy: string,
     updatedByRole: 'teacher' | 'admin',
     busNumber?: string,
-    notes?: string
+    notes?: string,
   ): StudentLocationRecord {
-    const existingIndex = this.data.studentLocations.findIndex(l => l.studentId === studentId);
+    const existingIndex = this.data.studentLocations.findIndex((l) => l.studentId === studentId);
     const newRecord: StudentLocationRecord = {
       id: existingIndex >= 0 ? this.data.studentLocations[existingIndex].id : `loc-${Date.now()}`,
       studentId,
@@ -302,7 +323,7 @@ class LMSDatabaseService {
       updatedByRole,
       updatedAt: new Date().toISOString(),
       busNumber,
-      notes
+      notes,
     };
 
     if (existingIndex >= 0) {

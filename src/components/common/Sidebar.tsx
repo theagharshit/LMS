@@ -16,7 +16,7 @@ import {
   PlusCircle,
   LogOut,
   Sliders,
-  CheckSquare
+  CheckSquare,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -38,7 +38,7 @@ export const Sidebar: React.FC = () => {
     { id: 'dashboard', label: 'My Dashboard', icon: LayoutDashboard },
     { id: 'classroom', label: 'Classrooms & Notes', icon: BookOpen },
     { id: 'profile', label: 'Student Profile & ID', icon: UserCheck },
-    { id: 'calendar', label: 'Academic Calendar', icon: Calendar }
+    { id: 'calendar', label: 'Academic Calendar', icon: Calendar },
   ];
 
   const teacherNav: NavItem[] = [
@@ -49,33 +49,42 @@ export const Sidebar: React.FC = () => {
     { id: 'attendance', label: 'Attendance Register', icon: UserCheck },
     { id: 'progress', label: 'Student Analytics', icon: TrendingUp },
     { id: 'calendar', label: 'Academic Calendar', icon: Calendar },
-    { id: 'messages', label: 'Parent & Student Chat', icon: MessageSquare }
+    { id: 'messages', label: 'Parent & Student Chat', icon: MessageSquare },
   ];
 
   const parentNav: NavItem[] = [
-    { id: 'dashboard', label: "Child Overview", icon: LayoutDashboard },
+    { id: 'dashboard', label: 'Child Overview', icon: LayoutDashboard },
     { id: 'progress', label: 'AI Progress Digest', icon: TrendingUp },
     { id: 'assignments', label: 'Homework & Exams', icon: FileCheck },
-    { id: 'parental-controls', label: 'Parental Controls', icon: ShieldAlert, badge: activeChild.gradeLevel < 7 ? 'Grade < 7' : undefined },
+    {
+      id: 'parental-controls',
+      label: 'Parental Controls',
+      icon: ShieldAlert,
+      badge: activeChild.gradeLevel < 7 ? 'Grade < 7' : undefined,
+    },
     { id: 'calendar', label: 'School Calendar', icon: Calendar },
-    { id: 'messages', label: 'Teacher Messages', icon: MessageSquare }
+    { id: 'messages', label: 'Teacher Messages', icon: MessageSquare },
   ];
 
   const navItems = isStudent ? studentNav : isTeacher ? teacherNav : parentNav;
 
   return (
     <aside className="w-64 bg-[#F0EDE5] border-r border-[#E5E1D8] flex flex-col justify-between p-4 h-[calc(100vh-57px)] sticky top-[57px] transition-colors shrink-0 hidden lg:flex">
-      
       {/* Top Navigation Links */}
       <div className="space-y-6">
-        
         {/* User Role Banner */}
         <div className="px-3.5 py-2.5 rounded-2xl bg-[#F9F7F2] border border-[#E5E1D8]">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#7A7A72]">Current Context</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#7A7A72]">
+            Current Context
+          </p>
           <div className="flex items-center gap-2 mt-1">
             <span className="w-2 h-2 rounded-full bg-[#88A070]" />
             <span className="font-bold text-xs text-[#2D2D2A] capitalize">
-              {isStudent ? `Student: ${currentUser.name}` : isTeacher ? `Teacher: ${currentUser.name}` : `Parent: Bina Sharma`}
+              {isStudent
+                ? `Student: ${currentUser.name}`
+                : isTeacher
+                  ? `Teacher: ${currentUser.name}`
+                  : `Parent: Bina Sharma`}
             </span>
           </div>
           {isParent && (
@@ -101,7 +110,9 @@ export const Sidebar: React.FC = () => {
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#4A6741]' : 'text-[#7A7A72]'}`} />
+                  <Icon
+                    className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#4A6741]' : 'text-[#7A7A72]'}`}
+                  />
                   <span className="whitespace-nowrap truncate">{item.label}</span>
                 </div>
                 {item.badge && (
@@ -119,7 +130,9 @@ export const Sidebar: React.FC = () => {
       <div className="pt-4 border-t border-[#E5E1D8] space-y-2">
         <div className="px-3 py-2.5 rounded-xl bg-[#EBF1E8] text-[#2D2D2A] text-xs border border-[#4A6741]/20">
           <p className="font-bold text-[11px] text-[#4A6741]">🇳🇵 CDC Nepal Standard</p>
-          <p className="text-[10px] text-[#7A7A72] mt-0.5">Aligned with National Examination Board Guidelines</p>
+          <p className="text-[10px] text-[#7A7A72] mt-0.5">
+            Aligned with National Examination Board Guidelines
+          </p>
         </div>
       </div>
     </aside>

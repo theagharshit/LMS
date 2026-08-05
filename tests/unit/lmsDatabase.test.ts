@@ -22,10 +22,12 @@ describe('LMS Database Persistence Engine (src/db/lmsDatabase.ts)', () => {
       section: 'A',
       teacherId: 'user-teach-1',
       teacherName: 'Mr. Ramesh Thapa',
-      teacherAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      teacherAvatar:
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
       roomNumber: 'Lab 3',
       colorTheme: 'from-blue-600 to-indigo-600',
-      bannerImage: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=80'
+      bannerImage:
+        'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=80',
     });
 
     expect(newClassroom.id).toBeDefined();
@@ -42,7 +44,7 @@ describe('LMS Database Persistence Engine (src/db/lmsDatabase.ts)', () => {
       'Admin Staff',
       'admin',
       undefined,
-      'Lunch break active'
+      'Lunch break active',
     );
 
     expect(updated.currentLocation).toBe('School Canteen (Lunch Time)');

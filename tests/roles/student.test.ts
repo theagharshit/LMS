@@ -14,9 +14,9 @@ describe('Role 1: Student Permissions & Workflows (tests/roles/student.test.ts)'
         React.createElement(StudentDashboard, {
           onOpenAITutorModal: vi.fn(),
           onOpenAssignmentModal: vi.fn(),
-          onOpenQuizModal: vi.fn()
-        })
-      )
+          onOpenQuizModal: vi.fn(),
+        }),
+      ),
     );
 
     expect(screen.getByText(/Aarav Sharma/i)).toBeInTheDocument();
@@ -29,9 +29,9 @@ describe('Role 1: Student Permissions & Workflows (tests/roles/student.test.ts)'
         null,
         React.createElement(ClassroomView, {
           onOpenAssignmentModal: vi.fn(),
-          onOpenQuizModal: vi.fn()
-        })
-      )
+          onOpenQuizModal: vi.fn(),
+        }),
+      ),
     );
 
     expect(screen.getAllByText(/Enrolled Subjects/i)[0]).toBeInTheDocument();

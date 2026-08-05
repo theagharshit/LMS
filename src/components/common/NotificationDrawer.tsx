@@ -28,17 +28,13 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ isOpen, 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-black/20 backdrop-blur-xs flex justify-end">
       <div className="w-full max-w-sm bg-white h-full shadow-xl border-l border-[#EDEAE2] flex flex-col animate-in slide-in-from-right duration-200">
-        
         {/* Header */}
         <div className="p-4 border-b border-[#E5E1D8] flex items-center justify-between bg-[#F0EDE5]/50">
           <div className="flex items-center gap-2">
             <Bell className="w-5 h-5 text-[#4A6741]" />
             <h3 className="font-bold text-[#2D2D2A] font-serif text-base">Notifications</h3>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 text-[#7A7A72] hover:text-[#2D2D2A] rounded-lg"
-          >
+          <button onClick={onClose} className="p-1 text-[#7A7A72] hover:text-[#2D2D2A] rounded-lg">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -56,9 +52,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ isOpen, 
               }`}
             >
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-[#F0EDE5] shadow-xs">
-                  {getIcon(item.type)}
-                </div>
+                <div className="p-2 rounded-xl bg-[#F0EDE5] shadow-xs">{getIcon(item.type)}</div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <h4 className="font-bold text-xs text-[#2D2D2A]">{item.title}</h4>

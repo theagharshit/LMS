@@ -9,7 +9,7 @@ describe('QuizBuilderModal Component (src/components/teacher/QuizBuilderModal.ts
     render(
       <AppProvider>
         <QuizBuilderModal isOpen={true} onClose={vi.fn()} />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Sikshya AI Quiz Creator for Teachers/i)).toBeInTheDocument();

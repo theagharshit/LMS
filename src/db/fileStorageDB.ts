@@ -3,8 +3,8 @@ import { logger } from '../utils/logger';
 
 /**
  * FileStorageDB Service
- * 
- * Dedicated storage database engine for managing, indexing, and querying 
+ *
+ * Dedicated storage database engine for managing, indexing, and querying
  * all file assets across the Sikshya LMS system.
  */
 class FileStorageDatabase {
@@ -31,7 +31,7 @@ class FileStorageDatabase {
         checksum: 'sha256-a9f8b4c2e1d7532098471abcfe094857',
         integrityStatus: 'verified',
         uploadedAt: new Date(Date.now() - 86400000).toISOString(),
-        downloadUrl: '/uploads/Grade_8_Math_Pythagoras_Theorem.pdf'
+        downloadUrl: '/uploads/Grade_8_Math_Pythagoras_Theorem.pdf',
       },
       {
         id: 'file-db-102',
@@ -45,11 +45,11 @@ class FileStorageDatabase {
         checksum: 'sha256-b7e3f1a098c4321156890defab123456',
         integrityStatus: 'verified',
         uploadedAt: new Date(Date.now() - 43200000).toISOString(),
-        downloadUrl: '/uploads/Science_Lab_Experiment_Guide.pdf'
-      }
+        downloadUrl: '/uploads/Science_Lab_Experiment_Guide.pdf',
+      },
     ];
 
-    initialFiles.forEach(file => this.db.set(file.id, file));
+    initialFiles.forEach((file) => this.db.set(file.id, file));
     logger.info(`FileStorageDB initialized with ${this.db.size} records`);
   }
 
@@ -61,7 +61,7 @@ class FileStorageDatabase {
     const newRecord: StoredFileRecord = {
       ...record,
       id,
-      uploadedAt: new Date().toISOString()
+      uploadedAt: new Date().toISOString(),
     };
 
     this.db.set(id, newRecord);
@@ -75,7 +75,7 @@ class FileStorageDatabase {
   public getAllFiles(classroomId?: string): StoredFileRecord[] {
     const records = Array.from(this.db.values());
     if (classroomId) {
-      return records.filter(f => f.classroomId === classroomId);
+      return records.filter((f) => f.classroomId === classroomId);
     }
     return records;
   }
@@ -105,9 +105,10 @@ class FileStorageDatabase {
   public searchFiles(query: string): StoredFileRecord[] {
     const q = query.toLowerCase();
     return Array.from(this.db.values()).filter(
-      f => f.originalName.toLowerCase().includes(q) || 
-           f.uploadedBy.toLowerCase().includes(q) ||
-           f.checksum.toLowerCase().includes(q)
+      (f) =>
+        f.originalName.toLowerCase().includes(q) ||
+        f.uploadedBy.toLowerCase().includes(q) ||
+        f.checksum.toLowerCase().includes(q),
     );
   }
 }

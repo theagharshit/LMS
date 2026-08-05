@@ -9,7 +9,7 @@ describe('ParentalControlsModal Component (src/components/parent/ParentalControl
     render(
       <AppProvider>
         <ParentalControlsModal isOpen={true} onClose={vi.fn()} />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Parental Safety Controls/i)).toBeInTheDocument();

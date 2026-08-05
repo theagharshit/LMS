@@ -9,7 +9,7 @@ describe('AttendanceRegister Component (src/components/teacher/AttendanceRegiste
     render(
       <AppProvider>
         <AttendanceRegister />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Daily Student Attendance Register/i)).toBeInTheDocument();

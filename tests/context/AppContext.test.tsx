@@ -16,7 +16,7 @@ describe('AppContext Global State (src/context/AppContext.tsx)', () => {
 
   it('should switch user between Student, Teacher, and Parent', () => {
     const { result } = renderHook(() => useApp(), { wrapper });
-    
+
     act(() => {
       result.current.switchUser('user-teach-1'); // Teacher Ramesh
     });
@@ -52,9 +52,9 @@ describe('AppContext Global State (src/context/AppContext.tsx)', () => {
             title: 'Sample_Guide.pdf',
             type: 'pdf',
             url: 'blob:test',
-            size: '1.20 MB'
-          }
-        ]
+            size: '1.20 MB',
+          },
+        ],
       });
     });
 

@@ -23,7 +23,7 @@ import {
   SubjectPerformance,
   Badge,
   StudentLocationRecord,
-  LocationStatusCategory
+  LocationStatusCategory,
 } from '../types';
 
 import {
@@ -42,7 +42,7 @@ import {
   MOCK_PARENT_CONTROLS,
   MOCK_CALENDAR_EVENTS,
   MOCK_MESSAGES,
-  MOCK_SUBJECT_PERFORMANCE
+  MOCK_SUBJECT_PERFORMANCE,
 } from '../data/mockData';
 
 interface AppContextType {
@@ -52,7 +52,7 @@ interface AppContextType {
   activeChild: StudentProfile;
   setActiveChildId: (id: string) => void;
   activeChildList: StudentProfile[];
-  
+
   // Navigation & UI State
   activeView: string;
   setActiveView: (view: string) => void;
@@ -60,37 +60,53 @@ interface AppContextType {
   setSelectedClassroomId: (id: string | null) => void;
   theme: 'light' | 'dark' | 'soft';
   setTheme: (theme: 'light' | 'dark' | 'soft') => void;
-  
+
   // Data lists & mutations
   classrooms: Classroom[];
   addClassroom: (classroom: Omit<Classroom, 'id' | 'code' | 'studentCount'>) => void;
   joinClassroomByCode: (code: string) => boolean;
-  
+
   streamPosts: StreamPost[];
   addStreamPost: (post: Omit<StreamPost, 'id' | 'createdAt' | 'commentsCount'>) => void;
   addPostComment: (postId: string, commentText: string) => void;
-  
+
   assignments: Assignment[];
   addAssignment: (asg: Omit<Assignment, 'id' | 'createdAt'>) => void;
-  
+
   submissions: Submission[];
-  submitHomework: (assignmentId: string, fileUrl: string, fileName: string, responseText: string) => void;
+  submitHomework: (
+    assignmentId: string,
+    fileUrl: string,
+    fileName: string,
+    responseText: string,
+  ) => void;
   gradeSubmission: (submissionId: string, grade: number, feedback: string) => void;
-  
+
   quizzes: Quiz[];
   addQuiz: (quiz: Omit<Quiz, 'id'>) => void;
   quizSubmissions: QuizSubmission[];
-  submitQuizAnswers: (quizId: string, answers: Record<string, string>, score: number, totalPoints: number) => void;
-  
+  submitQuizAnswers: (
+    quizId: string,
+    answers: Record<string, string>,
+    score: number,
+    totalPoints: number,
+  ) => void;
+
   attendanceRecords: AttendanceRecord[];
-  markAttendance: (studentId: string, studentName: string, date: string, status: 'present' | 'absent' | 'late' | 'excused', remarks?: string) => void;
-  
+  markAttendance: (
+    studentId: string,
+    studentName: string,
+    date: string,
+    status: 'present' | 'absent' | 'late' | 'excused',
+    remarks?: string,
+  ) => void;
+
   parentControls: Record<string, ParentControlSettings>;
   updateParentControls: (studentId: string, settings: Partial<ParentControlSettings>) => void;
-  
+
   messages: DirectMessage[];
   sendMessage: (receiverId: string, receiverName: string, content: string) => void;
-  
+
   // Timetable Schedule Data
   weeklySchedule: WeeklySchedule;
   updateDaySchedule: (day: DayOfWeek, periods: SchedulePeriod[]) => void;
@@ -99,21 +115,37 @@ interface AppContextType {
   calendarEvents: CalendarEvent[];
   subjectPerformances: SubjectPerformance[];
   studentProfiles: StudentProfile[];
-  
+
   // Real-Time Student Location Tracker
   studentLocations: StudentLocationRecord[];
-  updateStudentLocation: (studentId: string, studentName: string, location: string, category: LocationStatusCategory, updatedBy: string, updatedByRole: 'teacher' | 'admin', busNumber?: string, notes?: string) => void;
-  
+  updateStudentLocation: (
+    studentId: string,
+    studentName: string,
+    location: string,
+    category: LocationStatusCategory,
+    updatedBy: string,
+    updatedByRole: 'teacher' | 'admin',
+    busNumber?: string,
+    notes?: string,
+  ) => void;
+
   // AI Modal States
   isAiTutorOpen: boolean;
   setIsAiTutorOpen: (open: boolean) => void;
   aiTutorInitialPrompt: string;
   setAiTutorInitialPrompt: (prompt: string) => void;
-  
+
   isAiParentSummaryOpen: boolean;
   setIsAiParentSummaryOpen: (open: boolean) => void;
-  
-  notifications: { id: string; title: string; body: string; time: string; read: boolean; type: string }[];
+
+  notifications: {
+    id: string;
+    title: string;
+    body: string;
+    time: string;
+    read: boolean;
+    type: string;
+  }[];
   markNotificationRead: (id: string) => void;
   unreadCount: number;
 }
@@ -125,12 +157,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentUser, setCurrentUser] = useState<User>(MOCK_USERS[0]); // Default Student Aarav
   const [studentProfiles] = useState<StudentProfile[]>(MOCK_STUDENTS);
   const [activeChildId, setActiveChildId] = useState<string>('user-stu-1');
-  
+
   const [activeView, setActiveView] = useState<string>('dashboard');
   const [selectedClassroomId, setSelectedClassroomId] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark' | 'soft'>(() => {
     const saved = localStorage.getItem('sikshya_theme');
-    return (saved === 'dark' || saved === 'light' || saved === 'soft') ? saved : 'light';
+    return saved === 'dark' || saved === 'light' || saved === 'soft' ? saved : 'light';
   });
 
   useEffect(() => {
@@ -142,7 +174,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     localStorage.setItem('sikshya_theme', theme);
   }, [theme]);
-  
+
   const [classrooms, setClassrooms] = useState<Classroom[]>(MOCK_CLASSROOMS);
   const [streamPosts, setStreamPosts] = useState<StreamPost[]>(MOCK_STREAM_POSTS);
   const [assignments, setAssignments] = useState<Assignment[]>(MOCK_ASSIGNMENTS);
@@ -150,11 +182,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [quizzes, setQuizzes] = useState<Quiz[]>(MOCK_QUIZZES);
   const [quizSubmissions, setQuizSubmissions] = useState<QuizSubmission[]>(MOCK_QUIZ_SUBMISSIONS);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(MOCK_ATTENDANCE);
-  const [parentControls, setParentControls] = useState<Record<string, ParentControlSettings>>(MOCK_PARENT_CONTROLS);
+  const [parentControls, setParentControls] =
+    useState<Record<string, ParentControlSettings>>(MOCK_PARENT_CONTROLS);
   const [messages, setMessages] = useState<DirectMessage[]>(MOCK_MESSAGES);
-  
+
   const [weeklySchedule, setWeeklySchedule] = useState<WeeklySchedule>(MOCK_WEEKLY_SCHEDULE);
-  
+
   // Real-time Student Location State
   const [studentLocations, setStudentLocations] = useState<StudentLocationRecord[]>([
     {
@@ -166,7 +199,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updatedBy: 'Mr. Ramesh Thapa',
       updatedByRole: 'teacher',
       updatedAt: new Date(Date.now() - 15 * 60000).toISOString(),
-      notes: 'Active participation in Algebra lecture'
+      notes: 'Active participation in Algebra lecture',
     },
     {
       id: 'loc-2',
@@ -177,8 +210,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updatedBy: 'Duty Teacher Saraswati',
       updatedByRole: 'teacher',
       updatedAt: new Date(Date.now() - 10 * 60000).toISOString(),
-      notes: 'Having healthy lunch at school cafeteria'
-    }
+      notes: 'Having healthy lunch at school cafeteria',
+    },
   ]);
 
   const updateStudentLocation = (
@@ -189,7 +222,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     updatedBy: string,
     updatedByRole: 'teacher' | 'admin',
     busNumber?: string,
-    notes?: string
+    notes?: string,
   ) => {
     const updatedRecord: StudentLocationRecord = {
       id: `loc-${Date.now()}`,
@@ -201,11 +234,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updatedByRole,
       updatedAt: new Date().toISOString(),
       busNumber,
-      notes
+      notes,
     };
 
-    setStudentLocations(prev => {
-      const idx = prev.findIndex(l => l.studentId === studentId);
+    setStudentLocations((prev) => {
+      const idx = prev.findIndex((l) => l.studentId === studentId);
       if (idx >= 0) {
         const copy = [...prev];
         copy[idx] = updatedRecord;
@@ -218,14 +251,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     fetch('/api/db/student-locations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updatedRecord)
-    }).catch(err => console.error('[AppContext] Failed to post student location to server DB', err));
+      body: JSON.stringify(updatedRecord),
+    }).catch((err) =>
+      console.error('[AppContext] Failed to post student location to server DB', err),
+    );
   };
-  
+
   const updateDaySchedule = (day: DayOfWeek, periods: SchedulePeriod[]) => {
-    setWeeklySchedule(prev => ({
+    setWeeklySchedule((prev) => ({
       ...prev,
-      [day]: periods
+      [day]: periods,
     }));
   };
 
@@ -234,25 +269,53 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [modules] = useState<ModuleItem[]>(MOCK_MODULES);
   const [calendarEvents] = useState<CalendarEvent[]>(MOCK_CALENDAR_EVENTS);
   const [subjectPerformances] = useState<SubjectPerformance[]>(MOCK_SUBJECT_PERFORMANCE);
-  
+
   // AI Assistant states
   const [isAiTutorOpen, setIsAiTutorOpen] = useState<boolean>(false);
   const [aiTutorInitialPrompt, setAiTutorInitialPrompt] = useState<string>('');
   const [isAiParentSummaryOpen, setIsAiParentSummaryOpen] = useState<boolean>(false);
-  
+
   // Notifications
   const [notifications, setNotifications] = useState([
-    { id: 'n1', title: 'New Homework Assigned', body: 'Mr. Ramesh Thapa posted Exercise 4.1 in Math Grade 8', time: '10m ago', read: false, type: 'assignment' },
-    { id: 'n2', title: 'Quiz Result Published', body: 'You scored 20/20 in Algebra Mid-Term Quiz! 🎉', time: '1h ago', read: false, type: 'quiz' },
-    { id: 'n3', title: 'Attendance Marked', body: 'Marked Present today at 09:42 AM', time: '2h ago', read: true, type: 'attendance' },
-    { id: 'n4', title: 'Janai Purnima Holiday Notice', body: 'School will remain closed on 12th August for Raksha Bandhan', time: 'Yesterday', read: true, type: 'announcement' }
+    {
+      id: 'n1',
+      title: 'New Homework Assigned',
+      body: 'Mr. Ramesh Thapa posted Exercise 4.1 in Math Grade 8',
+      time: '10m ago',
+      read: false,
+      type: 'assignment',
+    },
+    {
+      id: 'n2',
+      title: 'Quiz Result Published',
+      body: 'You scored 20/20 in Algebra Mid-Term Quiz! 🎉',
+      time: '1h ago',
+      read: false,
+      type: 'quiz',
+    },
+    {
+      id: 'n3',
+      title: 'Attendance Marked',
+      body: 'Marked Present today at 09:42 AM',
+      time: '2h ago',
+      read: true,
+      type: 'attendance',
+    },
+    {
+      id: 'n4',
+      title: 'Janai Purnima Holiday Notice',
+      body: 'School will remain closed on 12th August for Raksha Bandhan',
+      time: 'Yesterday',
+      read: true,
+      type: 'announcement',
+    },
   ]);
 
-  const activeChildList = studentProfiles.filter(s => currentUser.childrenIds?.includes(s.id));
-  const activeChild = studentProfiles.find(s => s.id === activeChildId) || studentProfiles[0];
+  const activeChildList = studentProfiles.filter((s) => currentUser.childrenIds?.includes(s.id));
+  const activeChild = studentProfiles.find((s) => s.id === activeChildId) || studentProfiles[0];
 
   const switchUser = (userId: string) => {
-    const target = allUsers.find(u => u.id === userId);
+    const target = allUsers.find((u) => u.id === userId);
     if (target) {
       setCurrentUser(target);
       if (target.role === 'parent' && target.childrenIds && target.childrenIds.length > 0) {
@@ -269,13 +332,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...classroomData,
       id: newId,
       code,
-      studentCount: 1
+      studentCount: 1,
     };
-    setClassrooms(prev => [newCls, ...prev]);
+    setClassrooms((prev) => [newCls, ...prev]);
   };
 
   const joinClassroomByCode = (code: string): boolean => {
-    const found = classrooms.find(c => c.code.toUpperCase() === code.trim().toUpperCase());
+    const found = classrooms.find((c) => c.code.toUpperCase() === code.trim().toUpperCase());
     if (found) {
       setSelectedClassroomId(found.id);
       setActiveView('classroom');
@@ -290,14 +353,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: `post-${Date.now()}`,
       createdAt: new Date().toISOString(),
       commentsCount: 0,
-      comments: []
+      comments: [],
     };
-    setStreamPosts(prev => [newPost, ...prev]);
+    setStreamPosts((prev) => [newPost, ...prev]);
   };
 
   const addPostComment = (postId: string, commentText: string) => {
-    setStreamPosts(prev =>
-      prev.map(p => {
+    setStreamPosts((prev) =>
+      prev.map((p) => {
         if (p.id === postId) {
           const newComments = [
             ...(p.comments || []),
@@ -306,17 +369,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               authorName: currentUser.name,
               authorAvatar: currentUser.avatar,
               content: commentText,
-              createdAt: new Date().toISOString()
-            }
+              createdAt: new Date().toISOString(),
+            },
           ];
           return {
             ...p,
             commentsCount: newComments.length,
-            comments: newComments
+            comments: newComments,
           };
         }
         return p;
-      })
+      }),
     );
   };
 
@@ -324,13 +387,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newAsg: Assignment = {
       ...asgData,
       id: `asg-${Date.now()}`,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
-    setAssignments(prev => [newAsg, ...prev]);
+    setAssignments((prev) => [newAsg, ...prev]);
   };
 
-  const submitHomework = (assignmentId: string, fileUrl: string, fileName: string, responseText: string) => {
-    const existingIndex = submissions.findIndex(s => s.assignmentId === assignmentId && s.studentId === currentUser.id);
+  const submitHomework = (
+    assignmentId: string,
+    fileUrl: string,
+    fileName: string,
+    responseText: string,
+  ) => {
+    const existingIndex = submissions.findIndex(
+      (s) => s.assignmentId === assignmentId && s.studentId === currentUser.id,
+    );
     const newSub: Submission = {
       id: existingIndex >= 0 ? submissions[existingIndex].id : `sub-${Date.now()}`,
       assignmentId,
@@ -341,7 +411,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'submitted',
       fileUrl,
       fileName,
-      responseText
+      responseText,
     };
 
     if (existingIndex >= 0) {
@@ -349,36 +419,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updated[existingIndex] = newSub;
       setSubmissions(updated);
     } else {
-      setSubmissions(prev => [newSub, ...prev]);
+      setSubmissions((prev) => [newSub, ...prev]);
     }
   };
 
   const gradeSubmission = (submissionId: string, grade: number, feedback: string) => {
-    setSubmissions(prev =>
-      prev.map(s => {
+    setSubmissions((prev) =>
+      prev.map((s) => {
         if (s.id === submissionId) {
           return {
             ...s,
             status: 'graded',
             grade,
             feedback,
-            annotated: true
+            annotated: true,
           };
         }
         return s;
-      })
+      }),
     );
   };
 
   const addQuiz = (quizData: Omit<Quiz, 'id'>) => {
     const newQuiz: Quiz = {
       ...quizData,
-      id: `quiz-${Date.now()}`
+      id: `quiz-${Date.now()}`,
     };
-    setQuizzes(prev => [newQuiz, ...prev]);
+    setQuizzes((prev) => [newQuiz, ...prev]);
   };
 
-  const submitQuizAnswers = (quizId: string, answers: Record<string, string>, score: number, totalPoints: number) => {
+  const submitQuizAnswers = (
+    quizId: string,
+    answers: Record<string, string>,
+    score: number,
+    totalPoints: number,
+  ) => {
     const newSub: QuizSubmission = {
       id: `qs-${Date.now()}`,
       quizId,
@@ -386,9 +461,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       score,
       totalPoints,
       completedAt: new Date().toISOString(),
-      answers
+      answers,
     };
-    setQuizSubmissions(prev => [newSub, ...prev]);
+    setQuizSubmissions((prev) => [newSub, ...prev]);
   };
 
   const markAttendance = (
@@ -396,10 +471,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     studentName: string,
     date: string,
     status: 'present' | 'absent' | 'late' | 'excused',
-    remarks?: string
+    remarks?: string,
   ) => {
-    setAttendanceRecords(prev => {
-      const existingIdx = prev.findIndex(a => a.studentId === studentId && a.date === date);
+    setAttendanceRecords((prev) => {
+      const existingIdx = prev.findIndex((a) => a.studentId === studentId && a.date === date);
       const newRec: AttendanceRecord = {
         id: existingIdx >= 0 ? prev[existingIdx].id : `att-${Date.now()}`,
         studentId,
@@ -408,7 +483,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         status,
         markedBy: currentUser.name,
         remarks,
-        checkInTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        checkInTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       if (existingIdx >= 0) {
         const updated = [...prev];
@@ -420,7 +495,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateParentControls = (studentId: string, settings: Partial<ParentControlSettings>) => {
-    setParentControls(prev => ({
+    setParentControls((prev) => ({
       ...prev,
       [studentId]: {
         ...(prev[studentId] || {
@@ -431,10 +506,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           lowAttendanceAlerts: true,
           weeklyDigestEmail: true,
           screenTimeLimitMinutes: 120,
-          requireApprovalForOutboundMsgs: true
+          requireApprovalForOutboundMsgs: true,
         }),
-        ...settings
-      }
+        ...settings,
+      },
     }));
   };
 
@@ -449,16 +524,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       receiverName,
       content,
       createdAt: new Date().toISOString(),
-      read: false
+      read: false,
     };
-    setMessages(prev => [newMsg, ...prev]);
+    setMessages((prev) => [newMsg, ...prev]);
   };
 
   const markNotificationRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <AppContext.Provider
@@ -513,7 +588,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsAiParentSummaryOpen,
         notifications,
         markNotificationRead,
-        unreadCount
+        unreadCount,
       }}
     >
       {children}

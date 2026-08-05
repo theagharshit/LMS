@@ -1,7 +1,19 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { StudentLocationRecord, LocationStatusCategory } from '../../types';
-import { MapPin, Bus, Utensils, BookOpen, Clock, ShieldCheck, Edit3, X, Check, Activity, Award } from 'lucide-react';
+import {
+  MapPin,
+  Bus,
+  Utensils,
+  BookOpen,
+  Clock,
+  ShieldCheck,
+  Edit3,
+  X,
+  Check,
+  Activity,
+  Award,
+} from 'lucide-react';
 
 interface StudentLocationTrackerProps {
   studentId: string;
@@ -12,12 +24,12 @@ interface StudentLocationTrackerProps {
 export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
   studentId,
   studentName,
-  showUpdateButton = true
+  showUpdateButton = true,
 }) => {
   const { currentUser, studentLocations, updateStudentLocation } = useApp();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const locationRecord = studentLocations.find(l => l.studentId === studentId) || {
+  const locationRecord = studentLocations.find((l) => l.studentId === studentId) || {
     id: 'default',
     studentId,
     studentName,
@@ -25,7 +37,7 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
     category: 'in_class' as LocationStatusCategory,
     updatedBy: 'School Timetable System',
     updatedByRole: 'admin' as const,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
 
   const isTeacherOrAdmin = currentUser.role === 'teacher' || currentUser.role === 'admin';
@@ -66,7 +78,11 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
     }
   };
 
-  const handleApplyPreset = (presetText: string, presetCat: LocationStatusCategory, defaultBus?: string) => {
+  const handleApplyPreset = (
+    presetText: string,
+    presetCat: LocationStatusCategory,
+    defaultBus?: string,
+  ) => {
     setLocationText(presetText);
     setCategory(presetCat);
     if (defaultBus) setBusNumber(defaultBus);
@@ -82,14 +98,14 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
       currentUser.name,
       currentUser.role === 'admin' ? 'admin' : 'teacher',
       category === 'en_route_bus' ? busNumber : undefined,
-      notes
+      notes,
     );
     setIsModalOpen(false);
   };
 
   const formattedTime = new Date(locationRecord.updatedAt).toLocaleTimeString([], {
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   });
 
   return (
@@ -103,14 +119,14 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
             <p className="text-[10px] font-bold uppercase tracking-wider text-[#7A7A72]">
               Where is Student? • Live Tracker
             </p>
-            <p className="text-xs font-bold text-[#2D2D2A]">
-              {locationRecord.currentLocation}
-            </p>
+            <p className="text-xs font-bold text-[#2D2D2A]">{locationRecord.currentLocation}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${getCategoryBadgeColor(locationRecord.category)}`}>
+          <span
+            className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${getCategoryBadgeColor(locationRecord.category)}`}
+          >
             ● Live
           </span>
           {isTeacherOrAdmin && showUpdateButton && (
@@ -126,8 +142,12 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
       </div>
 
       <div className="text-[10px] text-[#7A7A72] flex items-center justify-between border-t border-[#EDEAE2] pt-2">
-        <span>Updated by: <strong className="text-[#2D2D2A]">{locationRecord.updatedBy}</strong></span>
-        <span>Time: <strong className="text-[#2D2D2A]">{formattedTime}</strong></span>
+        <span>
+          Updated by: <strong className="text-[#2D2D2A]">{locationRecord.updatedBy}</strong>
+        </span>
+        <span>
+          Time: <strong className="text-[#2D2D2A]">{formattedTime}</strong>
+        </span>
       </div>
 
       {/* Location Update Modal for Teacher & Admin */}
@@ -139,7 +159,10 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
                 <MapPin className="w-4 h-4 text-[#4A6741]" />
                 <span>Update Real-Time Location: {studentName}</span>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-1 text-[#7A7A72] hover:text-[#2D2D2A]">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-1 text-[#7A7A72] hover:text-[#2D2D2A]"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -164,7 +187,13 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleApplyPreset('Boarded School Bus #4 (En Route Home)', 'en_route_bus', 'Bus #4')}
+                  onClick={() =>
+                    handleApplyPreset(
+                      'Boarded School Bus #4 (En Route Home)',
+                      'en_route_bus',
+                      'Bus #4',
+                    )
+                  }
                   className="px-2.5 py-1 rounded-xl bg-sky-50 text-sky-700 font-semibold hover:bg-sky-100 cursor-pointer"
                 >
                   🚌 Boarded Bus
@@ -182,7 +211,9 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
             {/* Form */}
             <form onSubmit={handleSaveLocation} className="space-y-3 pt-1">
               <div>
-                <label className="block font-semibold text-[#2D2D2A] mb-1">Current Location Description:</label>
+                <label className="block font-semibold text-[#2D2D2A] mb-1">
+                  Current Location Description:
+                </label>
                 <input
                   type="text"
                   value={locationText}
@@ -207,7 +238,9 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
               )}
 
               <div>
-                <label className="block font-semibold text-[#2D2D2A] mb-1">Teacher / Staff Notes (Optional):</label>
+                <label className="block font-semibold text-[#2D2D2A] mb-1">
+                  Teacher / Staff Notes (Optional):
+                </label>
                 <input
                   type="text"
                   value={notes}
