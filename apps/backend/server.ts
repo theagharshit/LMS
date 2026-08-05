@@ -1,19 +1,12 @@
 import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { GoogleGenAI, Type } from '@google/genai';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { logger } from './src/utils/logger';
-import { verifyFileIntegrity } from './src/middlewares/fileMiddleware';
-import { fileStorageDB } from './src/db/fileStorageDB';
-import { lmsDB } from './src/db/lmsDatabase';
+import { loadEnv } from '@utils/envResolver';
+loadEnv();
 
-const _filename = typeof __filename !== 'undefined' ? __filename : fileURLToPath(import.meta.url);
-const _dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(_filename);
-
-dotenv.config({ path: path.resolve(_dirname, '../../.env') }); // Relative to apps/backend/
+import { logger } from '@utils/logger';
+import { verifyFileIntegrity } from '@middlewares/fileMiddleware';
+import { fileStorageDB } from '@db/fileStorageDB';
+import { lmsDB } from '@db/lmsDatabase';
 
 async function startServer() {
   const app = express();

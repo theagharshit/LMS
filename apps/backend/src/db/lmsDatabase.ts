@@ -1,14 +1,9 @@
-import { config } from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { loadEnv } from '@utils/envResolver';
 
-const _filename = typeof __filename !== 'undefined' ? __filename : fileURLToPath(import.meta.url);
-const _dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(_filename);
-
-config({ path: path.resolve(_dirname, '../../../../.env') }); // Relative to apps/backend/src/db/
-
+// Automatically finds and loads the root .env file
+loadEnv();
 import { PrismaClient } from '@prisma/client';
-import { logger } from '../utils/logger';
+import { logger } from '@utils/logger';
 import {
   User,
   StudentProfile,

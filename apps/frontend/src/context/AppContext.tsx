@@ -191,13 +191,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('sikshya_theme', theme);
   }, [theme]);
 
-  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
-  const [streamPosts, setStreamPosts] = useState<StreamPost[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [quizSubmissions, setQuizSubmissions] = useState<QuizSubmission[]>([]);
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+  const [classrooms, setClassrooms] = useState<Classroom[]>(MOCK_CLASSROOMS);
+  const [streamPosts, setStreamPosts] = useState<StreamPost[]>(MOCK_STREAM_POSTS);
+  const [assignments, setAssignments] = useState<Assignment[]>(MOCK_ASSIGNMENTS);
+  const [submissions, setSubmissions] = useState<Submission[]>(MOCK_SUBMISSIONS);
+  const [quizzes, setQuizzes] = useState<Quiz[]>(MOCK_QUIZZES);
+  const [quizSubmissions, setQuizSubmissions] = useState<QuizSubmission[]>(MOCK_QUIZ_SUBMISSIONS);
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(MOCK_ATTENDANCE);
   const [parentControls, setParentControls] = useState<Record<string, ParentControlSettings>>({});
   const [messages, setMessages] = useState<DirectMessage[]>([]);
 
