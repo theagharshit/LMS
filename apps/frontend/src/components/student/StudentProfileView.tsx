@@ -45,6 +45,11 @@ export const StudentProfileView: React.FC = () => {
     streakDays: 14,
     parentName: 'Bina Sharma',
     parentPhone: '+977 9841234567',
+    xpPoints: 1250,
+    badges: [],
+    email: currentUser.email || 'aarav.sharma@example.com',
+    role: 'student' as const,
+    schoolName: 'Everest Academy',
   };
 
   const [streakCount, setStreakCount] = useState<number>(studentData.streakDays || 14);
