@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
+import { StudentLocationTracker } from '../common/StudentLocationTracker';
 import {
   Heart,
   CheckCircle2,
@@ -83,6 +84,9 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenParental
         </div>
       </div>
 
+
+      {/* Real-Time "Where is My Child?" Location Tracking Card */}
+      <StudentLocationTracker studentId={activeChild.id} studentName={activeChild.name} />
 
       {/* Child Status Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

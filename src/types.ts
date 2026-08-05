@@ -152,6 +152,7 @@ export interface Quiz {
   totalQuestions: number;
   questions: QuizQuestion[];
   published: boolean;
+  createdAt?: string;
 }
 
 export interface QuizSubmission {
@@ -253,3 +254,26 @@ export interface StoredFileRecord {
   uploadedAt: string;
   downloadUrl: string;
 }
+
+export type LocationStatusCategory = 
+  | 'in_class' 
+  | 'canteen_lunch' 
+  | 'en_route_bus' 
+  | 'library' 
+  | 'sports_ground' 
+  | 'assembly_hall' 
+  | 'dismissed_home';
+
+export interface StudentLocationRecord {
+  id: string;
+  studentId: string;
+  studentName: string;
+  currentLocation: string;
+  category: LocationStatusCategory;
+  busNumber?: string;
+  updatedBy: string;
+  updatedByRole: 'teacher' | 'admin';
+  updatedAt: string;
+  notes?: string;
+}
+

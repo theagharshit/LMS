@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { StudentLocationTracker } from '../common/StudentLocationTracker';
 import { DayOfWeek, SchedulePeriod } from '../../types';
 import {
   Users,
@@ -136,6 +137,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Real-Time Student Location Tracker Control */}
+      <StudentLocationTracker studentId="user-stu-1" studentName="Aarav Sharma" />
 
       {/* Main Grid: Grading Desk & Class Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

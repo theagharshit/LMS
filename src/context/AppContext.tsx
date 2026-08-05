@@ -21,7 +21,9 @@ import {
   ModuleItem,
   DirectMessage,
   SubjectPerformance,
-  Badge
+  Badge,
+  StudentLocationRecord,
+  LocationStatusCategory
 } from '../types';
 
 import {
@@ -98,6 +100,10 @@ interface AppContextType {
   subjectPerformances: SubjectPerformance[];
   studentProfiles: StudentProfile[];
   
+  // Real-Time Student Location Tracker
+  studentLocations: StudentLocationRecord[];
+  updateStudentLocation: (studentId: string, studentName: string, location: string, category: LocationStatusCategory, updatedBy: string, updatedByRole: 'teacher' | 'admin', busNumber?: string, notes?: string) => void;
+  
   // AI Modal States
   isAiTutorOpen: boolean;
   setIsAiTutorOpen: (open: boolean) => void;
@@ -148,6 +154,73 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [messages, setMessages] = useState<DirectMessage[]>(MOCK_MESSAGES);
   
   const [weeklySchedule, setWeeklySchedule] = useState<WeeklySchedule>(MOCK_WEEKLY_SCHEDULE);
+  
+  // Real-time Student Location State
+  const [studentLocations, setStudentLocations] = useState<StudentLocationRecord[]>([
+    {
+      id: 'loc-1',
+      studentId: 'user-stu-1',
+      studentName: 'Aarav Sharma',
+      currentLocation: 'In Math Class (Room 204)',
+      category: 'in_class',
+      updatedBy: 'Mr. Ramesh Thapa',
+      updatedByRole: 'teacher',
+      updatedAt: new Date(Date.now() - 15 * 60000).toISOString(),
+      notes: 'Active participation in Algebra lecture'
+    },
+    {
+      id: 'loc-2',
+      studentId: 'user-stu-2',
+      studentName: 'Sunita Sharma',
+      currentLocation: 'School Canteen (Lunch Time)',
+      category: 'canteen_lunch',
+      updatedBy: 'Duty Teacher Saraswati',
+      updatedByRole: 'teacher',
+      updatedAt: new Date(Date.now() - 10 * 60000).toISOString(),
+      notes: 'Having healthy lunch at school cafeteria'
+    }
+  ]);
+
+  const updateStudentLocation = (
+    studentId: string,
+    studentName: string,
+    location: string,
+    category: LocationStatusCategory,
+    updatedBy: string,
+    updatedByRole: 'teacher' | 'admin',
+    busNumber?: string,
+    notes?: string
+  ) => {
+    const updatedRecord: StudentLocationRecord = {
+      id: `loc-${Date.now()}`,
+      studentId,
+      studentName,
+      currentLocation: location,
+      category,
+      updatedBy,
+      updatedByRole,
+      updatedAt: new Date().toISOString(),
+      busNumber,
+      notes
+    };
+
+    setStudentLocations(prev => {
+      const idx = prev.findIndex(l => l.studentId === studentId);
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = updatedRecord;
+        return copy;
+      }
+      return [updatedRecord, ...prev];
+    });
+
+    // Also post update to /api/db/student-locations endpoint in background
+    fetch('/api/db/student-locations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedRecord)
+    }).catch(err => console.error('[AppContext] Failed to post student location to server DB', err));
+  };
   
   const updateDaySchedule = (day: DayOfWeek, periods: SchedulePeriod[]) => {
     setWeeklySchedule(prev => ({
@@ -430,6 +503,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         calendarEvents,
         subjectPerformances,
         studentProfiles,
+        studentLocations,
+        updateStudentLocation,
         isAiTutorOpen,
         setIsAiTutorOpen,
         aiTutorInitialPrompt,

@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import { logger } from "./src/utils/logger";
 import { verifyFileIntegrity } from "./src/middlewares/fileMiddleware";
 import { fileStorageDB } from "./src/db/fileStorageDB";
+import { lmsDB } from "./src/db/lmsDatabase";
 
 dotenv.config();
 
@@ -102,6 +103,59 @@ async function startServer() {
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", message: "Sikshya LMS API Operational", timestamp: new Date().toISOString() });
   });
+
+  // --- LMS Database & Real-Time Location REST API Endpoints ---
+  app.get("/api/db/state", (_req, res) => {
+    res.json({
+      status: "success",
+      users: lmsDB.getUsers(),
+      studentProfiles: lmsDB.getStudentProfiles(),
+      classrooms: lmsDB.getClassrooms(),
+      streamPosts: lmsDB.getStreamPosts(),
+      assignments: lmsDB.getAssignments(),
+      submissions: lmsDB.getSubmissions(),
+      quizzes: lmsDB.getQuizzes(),
+      attendance: lmsDB.getAttendance(),
+      parentControls: lmsDB.getParentControls(),
+      studentLocations: lmsDB.getStudentLocations()
+    });
+  });
+
+  // GET /api/db/student-locations - List all student location records
+  app.get("/api/db/student-locations", (_req, res) => {
+    res.json({ status: "success", studentLocations: lmsDB.getStudentLocations() });
+  });
+
+  // GET /api/db/student-locations/:studentId - Get real-time location for specific student
+  app.get("/api/db/student-locations/:studentId", (req, res) => {
+    const record = lmsDB.getStudentLocationById(req.params.studentId);
+    if (!record) {
+      return res.status(404).json({ status: "error", message: "Student location record not found" });
+    }
+    res.json({ status: "success", location: record });
+  });
+
+  // POST /api/db/student-locations - Update student real-time location (Teacher/Admin)
+  app.post("/api/db/student-locations", (req, res) => {
+    const { studentId, studentName, location, category, updatedBy, updatedByRole, busNumber, notes } = req.body;
+    if (!studentId || !location || !category) {
+      return res.status(400).json({ status: "error", message: "studentId, location, and category are required" });
+    }
+
+    const updated = lmsDB.updateStudentLocation(
+      studentId,
+      studentName || "Student",
+      location,
+      category,
+      updatedBy || "School Staff",
+      updatedByRole || "teacher",
+      busNumber,
+      notes
+    );
+
+    res.json({ status: "success", location: updated });
+  });
+
 
   // AI Tutor Route
   app.post("/api/ai/tutor", async (req, res) => {

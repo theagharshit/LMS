@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { StudentLocationTracker } from '../common/StudentLocationTracker';
 import {
   Flame,
   CheckCircle2,
@@ -156,6 +157,9 @@ export const StudentProfileView: React.FC = () => {
           <span>Print Student ID</span>
         </button>
       </div>
+
+      {/* Real-Time Live Location Status Tracker */}
+      <StudentLocationTracker studentId={studentData.id} studentName={studentData.name} />
 
       {/* 2. COMPACT STATS & STREAK MAINTAINER */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
