@@ -174,3 +174,19 @@ html.dark .shadow-md,
 html.dark .shadow-sm {
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5) !important;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-id-card, .print-id-card * {
+    visibility: visible;
+  }
+  .print-id-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    margin: 0;
+    padding: 0;
+  }
+}
