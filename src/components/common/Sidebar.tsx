@@ -100,12 +100,12 @@ export const Sidebar: React.FC = () => {
                     : 'text-[#7A7A72] hover:bg-[#E5E1D8]/40 hover:text-[#2D2D2A]'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-[#4A6741]' : 'text-[#7A7A72]'}`} />
-                  <span>{item.label}</span>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#4A6741]' : 'text-[#7A7A72]'}`} />
+                  <span className="whitespace-nowrap truncate">{item.label}</span>
                 </div>
                 {item.badge && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FDEEDC] text-[#E88D67]">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FDEEDC] text-[#E88D67] whitespace-nowrap shrink-0 ml-1">
                     {item.badge}
                   </span>
                 )}
