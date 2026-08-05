@@ -340,11 +340,13 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                         <span
                           onClick={() => {
                             navigator.clipboard.writeText(cls.code);
+                            setCopiedCode(cls.id);
+                            setTimeout(() => setCopiedCode(null), 500);
                           }}
                           title="Copy class code"
                           className="text-[10px] font-mono bg-black/20 text-[#FDEEDC] px-2 py-0.5 rounded-md border border-white/10 cursor-pointer"
                         >
-                          Code: {cls.code}
+                          {copiedCode === cls.id ? 'Copied!' : `Code: ${cls.code}`}
                         </span>
                       )}
                     </div>
@@ -466,11 +468,17 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
               </span>
               {currentUser.role === 'teacher' && (
                 <span
-                  onClick={() => navigator.clipboard.writeText(currentClassroom.code)}
+                  onClick={() => {
+                    navigator.clipboard.writeText(currentClassroom.code);
+                    setCopiedCode(currentClassroom.id);
+                    setTimeout(() => setCopiedCode(null), 500);
+                  }}
                   title="Copy class code"
-                  className="text-xs font-mono opacity-90 text-[#FDEEDC] cursor-pointer"
+                  className="text-[10px] font-mono bg-black/20 text-[#FDEEDC] px-2 py-0.5 rounded-md border border-white/10 cursor-pointer"
                 >
-                  Code: {currentClassroom.code}
+                  {copiedCode === currentClassroom.id
+                    ? 'Copied!'
+                    : `Code: ${currentClassroom.code}`}
                 </span>
               )}
             </div>
