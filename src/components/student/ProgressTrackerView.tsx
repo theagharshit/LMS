@@ -1,28 +1,47 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { TrendingUp, Award, CheckCircle, Flame, Sparkles, BookOpen, ChevronRight } from 'lucide-react';
+import {
+  TrendingUp,
+  Award,
+  CheckCircle,
+  Flame,
+  Sparkles,
+  BookOpen,
+  ChevronRight,
+} from 'lucide-react';
 
 export const ProgressTrackerView: React.FC = () => {
-  const { currentUser, subjectPerformances, studentProfiles, setIsAiTutorOpen, setAiTutorInitialPrompt } = useApp();
+  const {
+    currentUser,
+    subjectPerformances,
+    studentProfiles,
+    setIsAiTutorOpen,
+    setAiTutorInitialPrompt,
+  } = useApp();
 
-  const studentData = studentProfiles.find(s => s.id === currentUser.id) || studentProfiles[0];
+  const studentData = studentProfiles.find((s) => s.id === currentUser.id) || studentProfiles[0];
 
   const handleAskHelpForSubject = (subjectName: string) => {
-    setAiTutorInitialPrompt(`I need help improving my understanding and marks in ${subjectName}. Can you give me key study tips and revision concepts?`);
+    setAiTutorInitialPrompt(
+      `I need help improving my understanding and marks in ${subjectName}. Can you give me key study tips and revision concepts?`,
+    );
     setIsAiTutorOpen(true);
   };
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
-      
       {/* Header Banner */}
       <div className="natural-banner rounded-3xl p-6 md:p-8 text-white shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[#FDEEDC] text-xs font-bold mb-2">
             <span>CDC Nepal Standard Evaluation</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold font-serif">{studentData.name}'s Academic Progress</h1>
-          <p className="text-xs md:text-sm text-[#F9F7F2]/90 mt-1">Grade {studentData.gradeLevel}-{studentData.section} • Roll No. {studentData.rollNumber}</p>
+          <h1 className="text-2xl md:text-3xl font-extrabold font-serif">
+            {studentData.name}'s Academic Progress
+          </h1>
+          <p className="text-xs md:text-sm text-[#F9F7F2]/90 mt-1">
+            Grade {studentData.gradeLevel}-{studentData.section} • Roll No. {studentData.rollNumber}
+          </p>
         </div>
 
         <div className="flex gap-3">
@@ -48,7 +67,9 @@ export const ProgressTrackerView: React.FC = () => {
               <TrendingUp className="w-5 h-5 text-[#4A6741]" />
               Subject-wise Performance & Teacher Evaluation
             </h2>
-            <p className="text-xs text-[#7A7A72]">Based on homework submissions, quizzes, and classroom participation</p>
+            <p className="text-xs text-[#7A7A72]">
+              Based on homework submissions, quizzes, and classroom participation
+            </p>
           </div>
         </div>
 
@@ -86,7 +107,9 @@ export const ProgressTrackerView: React.FC = () => {
               </p>
 
               <div className="flex justify-between items-center pt-1">
-                <span className="text-[10px] text-[#7A7A72] font-bold">Quiz Average: {sp.quizzesScoreAvg}%</span>
+                <span className="text-[10px] text-[#7A7A72] font-bold">
+                  Quiz Average: {sp.quizzesScoreAvg}%
+                </span>
                 <button
                   onClick={() => handleAskHelpForSubject(sp.subject)}
                   className="text-xs font-bold text-[#E88D67] hover:underline flex items-center gap-1"
@@ -108,17 +131,21 @@ export const ProgressTrackerView: React.FC = () => {
         </h2>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {studentData.badges.map(b => (
-            <div key={b.id} className="p-4 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] text-center space-y-1">
+          {studentData.badges.map((b) => (
+            <div
+              key={b.id}
+              className="p-4 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] text-center space-y-1"
+            >
               <span className="text-3xl block">{b.icon}</span>
               <h3 className="font-bold text-xs text-[#2D2D2A]">{b.title}</h3>
               <p className="text-[10px] text-[#7A7A72] leading-snug">{b.description}</p>
-              <span className="inline-block text-[9px] font-bold text-[#E88D67] mt-1">Earned: {b.earnedDate}</span>
+              <span className="inline-block text-[9px] font-bold text-[#E88D67] mt-1">
+                Earned: {b.earnedDate}
+              </span>
             </div>
           ))}
         </div>
       </div>
-
     </div>
   );
 };

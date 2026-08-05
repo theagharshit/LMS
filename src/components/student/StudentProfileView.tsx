@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { StudentLocationTracker } from '../common/StudentLocationTracker';
 import {
   Flame,
   CheckCircle2,
@@ -12,7 +13,7 @@ import {
   Zap,
   Calendar,
   Award,
-  BookOpen
+  BookOpen,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -24,32 +25,36 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
-  Cell
+  Cell,
 } from 'recharts';
 
 export const StudentProfileView: React.FC = () => {
   const { currentUser, studentProfiles } = useApp();
 
-  const studentData = studentProfiles.find(s => s.id === currentUser.id) || {
+  const studentData = studentProfiles.find((s) => s.id === currentUser.id) || {
     id: currentUser.id || 'user-stu-1',
     name: currentUser.name || 'Aarav Sharma',
-    avatar: currentUser.avatar || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
+    avatar:
+      currentUser.avatar ||
+      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
     gradeLevel: 8,
     section: 'A',
     rollNumber: 14,
     attendancePercentage: 96.5,
     streakDays: 14,
     parentName: 'Bina Sharma',
-    parentPhone: '+977 9841234567'
+    parentPhone: '+977 9841234567',
   };
 
   const [streakCount, setStreakCount] = useState<number>(studentData.streakDays || 14);
   const [isCheckedInToday, setIsCheckedInToday] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'progress' | 'attendance' | 'activities' | 'badges'>('progress');
+  const [activeTab, setActiveTab] = useState<'progress' | 'attendance' | 'activities' | 'badges'>(
+    'progress',
+  );
 
   const handleCheckIn = () => {
     if (isCheckedInToday) return;
-    setStreakCount(prev => prev + 1);
+    setStreakCount((prev) => prev + 1);
     setIsCheckedInToday(true);
   };
 
@@ -57,7 +62,7 @@ export const StudentProfileView: React.FC = () => {
     { term: '1st Term', score: 88 },
     { term: 'Mid Term', score: 91 },
     { term: '2nd Term', score: 93 },
-    { term: '3rd Term', score: 96 }
+    { term: '3rd Term', score: 96 },
   ];
 
   const subjectPerformanceData = [
@@ -66,7 +71,7 @@ export const StudentProfileView: React.FC = () => {
     { subject: 'Computer', score: 98 },
     { subject: 'English', score: 94 },
     { subject: 'Nepali', score: 88 },
-    { subject: 'Social', score: 90 }
+    { subject: 'Social', score: 90 },
   ];
 
   const activities = [
@@ -76,7 +81,7 @@ export const StudentProfileView: React.FC = () => {
       category: 'Science & Tech',
       position: '1st Place 🥇',
       date: 'May 2026',
-      description: 'Built automated solar drip irrigation model.'
+      description: 'Built automated solar drip irrigation model.',
     },
     {
       id: 'act-2',
@@ -84,7 +89,7 @@ export const StudentProfileView: React.FC = () => {
       category: 'Mind Games',
       position: 'Runner-Up 🥈',
       date: 'April 2026',
-      description: 'Secured 2nd rank among 64 Valley participants.'
+      description: 'Secured 2nd rank among 64 Valley participants.',
     },
     {
       id: 'act-3',
@@ -92,7 +97,7 @@ export const StudentProfileView: React.FC = () => {
       category: 'Literature',
       position: '2nd Place 🥈',
       date: 'Baisakh 2083',
-      description: 'Recited original poem "Himal ko Chhaya".'
+      description: 'Recited original poem "Himal ko Chhaya".',
     },
     {
       id: 'act-4',
@@ -100,15 +105,39 @@ export const StudentProfileView: React.FC = () => {
       category: 'Sports',
       position: 'Semi-Finalist ⚽',
       date: 'Falgun 2082',
-      description: 'Led Machhapuchhre Green House football squad.'
-    }
+      description: 'Led Machhapuchhre Green House football squad.',
+    },
   ];
 
   const badgesList = [
-    { id: 'b-1', title: 'Streak Legend', desc: '14+ continuous check-in days', icon: Flame, color: 'text-amber-500 bg-amber-50' },
-    { id: 'b-2', title: 'Academic Titan', desc: 'A+ grade in Math & Science', icon: Trophy, color: 'text-emerald-600 bg-emerald-50' },
-    { id: 'b-3', title: '100% Attendance', desc: 'Perfect attendance in Jestha', icon: UserCheck, color: 'text-blue-600 bg-blue-50' },
-    { id: 'b-4', title: 'Quiz Master', desc: 'Top scorer in 5 quizzes', icon: Zap, color: 'text-purple-600 bg-purple-50' }
+    {
+      id: 'b-1',
+      title: 'Streak Legend',
+      desc: '14+ continuous check-in days',
+      icon: Flame,
+      color: 'text-amber-500 bg-amber-50',
+    },
+    {
+      id: 'b-2',
+      title: 'Academic Titan',
+      desc: 'A+ grade in Math & Science',
+      icon: Trophy,
+      color: 'text-emerald-600 bg-emerald-50',
+    },
+    {
+      id: 'b-3',
+      title: '100% Attendance',
+      desc: 'Perfect attendance in Jestha',
+      icon: UserCheck,
+      color: 'text-blue-600 bg-blue-50',
+    },
+    {
+      id: 'b-4',
+      title: 'Quiz Master',
+      desc: 'Top scorer in 5 quizzes',
+      icon: Zap,
+      color: 'text-purple-600 bg-purple-50',
+    },
   ];
 
   const weekDays = [
@@ -118,12 +147,11 @@ export const StudentProfileView: React.FC = () => {
     { day: 'T', checked: true },
     { day: 'F', checked: true },
     { day: 'S', checked: isCheckedInToday, isToday: true },
-    { day: 'S', checked: false }
+    { day: 'S', checked: false },
   ];
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-16 text-[#2D2D2A]">
-      
       {/* 1. MINIMALIST STUDENT IDENTIFICATION CARD */}
       <div className="bg-white rounded-2xl p-6 border border-[#EDEAE2] shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
@@ -140,7 +168,9 @@ export const StudentProfileView: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-[#7A7A72]">
-              Roll No: <strong className="text-[#2D2D2A]">#{studentData.rollNumber}</strong> • Reg ID: <strong className="text-[#2D2D2A]">STU-2026-0814</strong> • House: <strong className="text-[#4A6741]">Machhapuchhre Green</strong>
+              Roll No: <strong className="text-[#2D2D2A]">#{studentData.rollNumber}</strong> • Reg
+              ID: <strong className="text-[#2D2D2A]">STU-2026-0814</strong> • House:{' '}
+              <strong className="text-[#4A6741]">Machhapuchhre Green</strong>
             </p>
             <p className="text-[11px] text-[#7A7A72]">
               Mount Everest Secondary School • Guardian: {studentData.parentName}
@@ -157,9 +187,11 @@ export const StudentProfileView: React.FC = () => {
         </button>
       </div>
 
+      {/* Real-Time Live Location Status Tracker */}
+      <StudentLocationTracker studentId={studentData.id} studentName={studentData.name} />
+
       {/* 2. COMPACT STATS & STREAK MAINTAINER */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        
         {/* Streak & Maintenance */}
         <div className="md:col-span-2 bg-white rounded-2xl p-4 border border-[#EDEAE2] flex items-center justify-between gap-4">
           <div className="space-y-2">
@@ -182,8 +214,8 @@ export const StudentProfileView: React.FC = () => {
                     wd.checked
                       ? 'bg-amber-500 text-white border-amber-500'
                       : wd.isToday
-                      ? 'bg-amber-50 border-amber-300 text-amber-700'
-                      : 'bg-[#F9F7F2] border-[#EDEAE2] text-[#7A7A72]'
+                        ? 'bg-amber-50 border-amber-300 text-amber-700'
+                        : 'bg-[#F9F7F2] border-[#EDEAE2] text-[#7A7A72]'
                   }`}
                   title={wd.day}
                 >
@@ -239,7 +271,6 @@ export const StudentProfileView: React.FC = () => {
             <p className="text-[11px] text-[#7A7A72]">Class Rank #3</p>
           </div>
         </div>
-
       </div>
 
       {/* 3. MINIMALIST TABS */}
@@ -248,8 +279,8 @@ export const StudentProfileView: React.FC = () => {
           { id: 'progress', label: 'Academic Progress', icon: TrendingUp },
           { id: 'attendance', label: 'Attendance Log', icon: Clock },
           { id: 'activities', label: 'Activities & Wins', icon: Trophy },
-          { id: 'badges', label: 'Badges & Honors', icon: Medal }
-        ].map(t => {
+          { id: 'badges', label: 'Badges & Honors', icon: Medal },
+        ].map((t) => {
           const Icon = t.icon;
           const isActive = activeTab === t.id;
           return (
@@ -272,18 +303,36 @@ export const StudentProfileView: React.FC = () => {
       {/* TAB CONTENT: ACADEMIC PROGRESS */}
       {activeTab === 'progress' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
           {/* Term Trend Line Chart */}
           <div className="bg-white rounded-2xl p-5 border border-[#EDEAE2] space-y-3">
-            <h3 className="font-bold text-xs uppercase tracking-wider text-[#7A7A72]">Term Examination Progress</h3>
+            <h3 className="font-bold text-xs uppercase tracking-wider text-[#7A7A72]">
+              Term Examination Progress
+            </h3>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={termProgressData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                <AreaChart
+                  data={termProgressData}
+                  margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="#F0EDE5" />
                   <XAxis dataKey="term" tick={{ fontSize: 11, fill: '#7A7A72' }} />
                   <YAxis domain={[70, 100]} tick={{ fontSize: 11, fill: '#7A7A72' }} />
-                  <Tooltip contentStyle={{ backgroundColor: '#FFF', borderRadius: '12px', border: '1px solid #EDEAE2', fontSize: '12px' }} />
-                  <Area type="monotone" dataKey="score" stroke="#4A6741" strokeWidth={2} fill="#EBF1E8" name="Score %" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#FFF',
+                      borderRadius: '12px',
+                      border: '1px solid #EDEAE2',
+                      fontSize: '12px',
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="score"
+                    stroke="#4A6741"
+                    strokeWidth={2}
+                    fill="#EBF1E8"
+                    name="Score %"
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -291,20 +340,31 @@ export const StudentProfileView: React.FC = () => {
 
           {/* Subject Scores Bar Chart */}
           <div className="bg-white rounded-2xl p-5 border border-[#EDEAE2] space-y-3">
-            <h3 className="font-bold text-xs uppercase tracking-wider text-[#7A7A72]">Subject Performance</h3>
+            <h3 className="font-bold text-xs uppercase tracking-wider text-[#7A7A72]">
+              Subject Performance
+            </h3>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={subjectPerformanceData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                <BarChart
+                  data={subjectPerformanceData}
+                  margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="#F0EDE5" />
                   <XAxis dataKey="subject" tick={{ fontSize: 10, fill: '#7A7A72' }} />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#7A7A72' }} />
-                  <Tooltip contentStyle={{ backgroundColor: '#FFF', borderRadius: '12px', border: '1px solid #EDEAE2', fontSize: '12px' }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#FFF',
+                      borderRadius: '12px',
+                      border: '1px solid #EDEAE2',
+                      fontSize: '12px',
+                    }}
+                  />
                   <Bar dataKey="score" fill="#4A6741" radius={[4, 4, 0, 0]} name="Score (%)" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
-
         </div>
       )}
 
@@ -332,13 +392,19 @@ export const StudentProfileView: React.FC = () => {
           </div>
 
           <div className="pt-2">
-            <p className="text-xs font-bold text-[#7A7A72] uppercase tracking-wider mb-2">Recent Approved Absence Log</p>
+            <p className="text-xs font-bold text-[#7A7A72] uppercase tracking-wider mb-2">
+              Recent Approved Absence Log
+            </p>
             <div className="p-3 rounded-xl bg-[#F9F7F2] border border-[#EDEAE2] flex justify-between items-center text-xs">
               <div>
                 <p className="font-bold text-[#2D2D2A]">Medical Leave (Fever)</p>
-                <p className="text-[11px] text-[#7A7A72]">12 June 2026 • Verified by Class Teacher</p>
+                <p className="text-[11px] text-[#7A7A72]">
+                  12 June 2026 • Verified by Class Teacher
+                </p>
               </div>
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Approved</span>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                Approved
+              </span>
             </div>
           </div>
         </div>
@@ -348,10 +414,13 @@ export const StudentProfileView: React.FC = () => {
       {activeTab === 'activities' && (
         <div className="bg-white rounded-2xl p-6 border border-[#EDEAE2] space-y-4">
           <h3 className="font-bold text-sm text-[#2D2D2A]">Activities Participated & Won</h3>
-          
+
           <div className="space-y-3">
-            {activities.map(act => (
-              <div key={act.id} className="p-4 rounded-xl bg-[#F9F7F2] border border-[#EDEAE2] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            {activities.map((act) => (
+              <div
+                key={act.id}
+                className="p-4 rounded-xl bg-[#F9F7F2] border border-[#EDEAE2] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
+              >
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-[#2D2D2A] text-sm">{act.title}</span>
@@ -373,10 +442,13 @@ export const StudentProfileView: React.FC = () => {
       {/* TAB CONTENT: BADGES */}
       {activeTab === 'badges' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {badgesList.map(b => {
+          {badgesList.map((b) => {
             const Icon = b.icon;
             return (
-              <div key={b.id} className="bg-white p-4 rounded-2xl border border-[#EDEAE2] flex items-center gap-3">
+              <div
+                key={b.id}
+                className="bg-white p-4 rounded-2xl border border-[#EDEAE2] flex items-center gap-3"
+              >
                 <div className={`p-2.5 rounded-xl ${b.color} shrink-0`}>
                   <Icon className="w-5 h-5" />
                 </div>
@@ -389,7 +461,6 @@ export const StudentProfileView: React.FC = () => {
           })}
         </div>
       )}
-
     </div>
   );
 };

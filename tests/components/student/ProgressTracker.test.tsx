@@ -9,7 +9,7 @@ describe('ProgressTrackerView Component (src/components/student/ProgressTrackerV
     render(
       <AppProvider>
         <ProgressTrackerView />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Academic Progress/i)).toBeInTheDocument();

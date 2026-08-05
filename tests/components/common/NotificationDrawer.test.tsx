@@ -9,7 +9,7 @@ describe('NotificationDrawer Component (src/components/common/NotificationDrawer
     render(
       <AppProvider>
         <NotificationDrawer isOpen={true} onClose={vi.fn()} />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Notifications/i)).toBeInTheDocument();

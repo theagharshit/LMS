@@ -12,19 +12,13 @@ const ParentTestWrapper = () => {
 
   return React.createElement(ParentDashboard, {
     onOpenParentSummaryModal: vi.fn(),
-    onOpenParentalControlsModal: vi.fn()
+    onOpenParentalControlsModal: vi.fn(),
   });
 };
 
 describe('Role 3: Parent Permissions & Workflows (tests/roles/parent.test.ts)', () => {
   it('allows parent to view child attendance and trigger AI parent digest', () => {
-    render(
-      React.createElement(
-        AppProvider,
-        null,
-        React.createElement(ParentTestWrapper)
-      )
-    );
+    render(React.createElement(AppProvider, null, React.createElement(ParentTestWrapper)));
 
     expect(screen.getAllByText(/Parent Portal/i)[0]).toBeInTheDocument();
   });

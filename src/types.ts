@@ -12,7 +12,7 @@ export interface User {
   avatar: string;
   schoolName: string;
   gradeLevel?: number; // e.g. 8 for Grade 8
-  section?: string;    // e.g. 'A'
+  section?: string; // e.g. 'A'
   rollNumber?: number;
   // Parent specific
   childrenIds?: string[];
@@ -152,6 +152,7 @@ export interface Quiz {
   totalQuestions: number;
   questions: QuizQuestion[];
   published: boolean;
+  createdAt?: string;
 }
 
 export interface QuizSubmission {
@@ -164,7 +165,8 @@ export interface QuizSubmission {
   answers: Record<string, string>; // questionId -> answer
 }
 
-export type DayOfWeek = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+export type DayOfWeek =
+  'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
 
 export interface SchedulePeriod {
   id: string;
@@ -252,4 +254,26 @@ export interface StoredFileRecord {
   integrityStatus: 'verified' | 'scanning' | 'quarantined';
   uploadedAt: string;
   downloadUrl: string;
+}
+
+export type LocationStatusCategory =
+  | 'in_class'
+  | 'canteen_lunch'
+  | 'en_route_bus'
+  | 'library'
+  | 'sports_ground'
+  | 'assembly_hall'
+  | 'dismissed_home';
+
+export interface StudentLocationRecord {
+  id: string;
+  studentId: string;
+  studentName: string;
+  currentLocation: string;
+  category: LocationStatusCategory;
+  busNumber?: string;
+  updatedBy: string;
+  updatedByRole: 'teacher' | 'admin';
+  updatedAt: string;
+  notes?: string;
 }

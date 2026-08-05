@@ -9,7 +9,7 @@ describe('AcademicCalendarView Component (src/components/common/AcademicCalendar
     render(
       <AppProvider>
         <AcademicCalendarView />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getAllByText(/Academic Timeline/i)[0]).toBeInTheDocument();

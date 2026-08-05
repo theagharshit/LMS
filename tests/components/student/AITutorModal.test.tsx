@@ -18,7 +18,7 @@ describe('AITutorModal Component (src/components/student/AITutorModal.tsx)', () 
     render(
       <AppProvider>
         <TestWrapper />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getAllByText(/Sikshya AI/i)[0]).toBeInTheDocument();

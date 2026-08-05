@@ -14,7 +14,7 @@ describe('API & Security Middleware Functional Workflows (tests/functional/api_a
       classroomId: 'chan-1',
       checksum: 'sha256-func-test-12345',
       integrityStatus: 'verified',
-      downloadUrl: '/uploads/Functional_Test_Doc.pdf'
+      downloadUrl: '/uploads/Functional_Test_Doc.pdf',
     });
 
     expect(record.id).toBeDefined();
@@ -36,7 +36,7 @@ describe('API & Security Middleware Functional Workflows (tests/functional/api_a
     const req: any = {};
     const res: any = {
       status: vi.fn().mockReturnThis(),
-      json: vi.fn()
+      json: vi.fn(),
     };
     const next = vi.fn();
 
@@ -56,7 +56,7 @@ describe('API & Security Middleware Functional Workflows (tests/functional/api_a
       classroomId: 'chan-1',
       checksum: 'sha256-delete-test',
       integrityStatus: 'verified',
-      downloadUrl: '/uploads/To_Be_Deleted.pdf'
+      downloadUrl: '/uploads/To_Be_Deleted.pdf',
     });
 
     const deleted = fileStorageDB.deleteFile(tempRecord.id);

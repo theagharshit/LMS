@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { useApp } from "../../context/AppContext";
-import { Attachment } from "../../types";
+import React, { useState } from 'react';
+import { useApp } from '../../context/AppContext';
+import { Attachment } from '../../types';
 import {
   MessageSquare,
   FileText,
@@ -20,7 +20,7 @@ import {
   Building,
   CheckCircle2,
   Tag,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface ClassroomViewProps {
   onOpenAssignmentModal: (id: string) => void;
@@ -46,24 +46,20 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
     joinClassroomByCode,
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<"stream" | "classwork" | "people">(
-    "stream",
-  );
-  const [newPostText, setNewPostText] = useState("");
-  const [commentInputs, setCommentInputs] = useState<Record<string, string>>(
-    {},
-  );
+  const [activeTab, setActiveTab] = useState<'stream' | 'classwork' | 'people'>('stream');
+  const [newPostText, setNewPostText] = useState('');
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
 
   // Landing Page Filters & Search
-  const [searchQuery, setSearchQuery] = useState("");
-  const [subjectFilter, setSubjectFilter] = useState<string>("all");
-  const [joinCodeInput, setJoinCodeInput] = useState("");
-  const [joinError, setJoinError] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [subjectFilter, setSubjectFilter] = useState<string>('all');
+  const [joinCodeInput, setJoinCodeInput] = useState('');
+  const [joinError, setJoinError] = useState('');
   const [showJoinModal, setShowJoinModal] = useState(false);
 
   // File Attachment Modal State
   const [showAttachModal, setShowAttachModal] = useState(false);
-  const [attachFileName, setAttachFileName] = useState("");
+  const [attachFileName, setAttachFileName] = useState('');
   const [attachFileObj, setAttachFileObj] = useState<File | null>(null);
 
   // If a classroom is selected, find it
@@ -76,31 +72,38 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
     let attachments: Attachment[] = [];
 
     if (attachFileObj) {
-      let type: "pdf" | "video" | "link" | "image" | "doc" = "doc";
-      if (attachFileObj.type.includes("pdf") || attachFileName.toLowerCase().endsWith(".pdf")) {
-        type = "pdf";
-      } else if (attachFileObj.type.includes("image") || /\.(png|jpe?g|gif|webp|svg)$/i.test(attachFileName)) {
-        type = "image";
-      } else if (attachFileObj.type.includes("video") || /\.(mp4|webm|mkv)$/i.test(attachFileName)) {
-        type = "video";
+      let type: 'pdf' | 'video' | 'link' | 'image' | 'doc' = 'doc';
+      if (attachFileObj.type.includes('pdf') || attachFileName.toLowerCase().endsWith('.pdf')) {
+        type = 'pdf';
+      } else if (
+        attachFileObj.type.includes('image') ||
+        /\.(png|jpe?g|gif|webp|svg)$/i.test(attachFileName)
+      ) {
+        type = 'image';
+      } else if (
+        attachFileObj.type.includes('video') ||
+        /\.(mp4|webm|mkv)$/i.test(attachFileName)
+      ) {
+        type = 'video';
       }
 
-      const formattedSize = attachFileObj.size > 1024 * 1024
-        ? `${(attachFileObj.size / (1024 * 1024)).toFixed(2)} MB`
-        : `${(attachFileObj.size / 1024).toFixed(2)} KB`;
+      const formattedSize =
+        attachFileObj.size > 1024 * 1024
+          ? `${(attachFileObj.size / (1024 * 1024)).toFixed(2)} MB`
+          : `${(attachFileObj.size / 1024).toFixed(2)} KB`;
 
-      let fileUrl = "";
+      let fileUrl = '';
       try {
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: attachFileName || attachFileObj.name,
             sizeBytes: attachFileObj.size,
             sizeFormatted: formattedSize,
-            mimeType: attachFileObj.type || "application/octet-stream",
+            mimeType: attachFileObj.type || 'application/octet-stream',
             uploadedBy: currentUser.name,
-            classroomId: currentClassroom.id
+            classroomId: currentClassroom.id,
           }),
         });
 
@@ -133,8 +136,8 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
       attachments: attachments.length > 0 ? attachments : undefined,
     });
 
-    setNewPostText("");
-    setAttachFileName("");
+    setNewPostText('');
+    setAttachFileName('');
     setAttachFileObj(null);
   };
 
@@ -143,7 +146,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
     if (!text || !text.trim()) return;
 
     addPostComment(postId, text);
-    setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
+    setCommentInputs((prev) => ({ ...prev, [postId]: '' }));
   };
 
   const handleJoinClassroom = (e: React.FormEvent) => {
@@ -151,13 +154,11 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
     if (!joinCodeInput.trim()) return;
     const success = joinClassroomByCode(joinCodeInput);
     if (success) {
-      setJoinCodeInput("");
-      setJoinError("");
+      setJoinCodeInput('');
+      setJoinError('');
       setShowJoinModal(false);
     } else {
-      setJoinError(
-        "Invalid Class Code. Please try code like MATH8A, SCI8A, NEP8A or COMP8A.",
-      );
+      setJoinError('Invalid Class Code. Please try code like MATH8A, SCI8A, NEP8A or COMP8A.');
     }
   };
 
@@ -169,8 +170,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
       cls.teacherName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       cls.code.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesSubject =
-      subjectFilter === "all" ||
-      cls.subject.toLowerCase().includes(subjectFilter.toLowerCase());
+      subjectFilter === 'all' || cls.subject.toLowerCase().includes(subjectFilter.toLowerCase());
     return matchesSearch && matchesSubject;
   });
 
@@ -191,9 +191,9 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
               Enrolled Subjects & Classrooms
             </h1>
             <p className="text-xs md:text-sm text-[#F9F7F2]/90 max-w-2xl">
-              Browse all your enrolled subject classrooms. Click on any subject
-              below to access its stream announcements, textbook modules,
-              downloadable notes, homework assignments, and teacher contacts.
+              Browse all your enrolled subject classrooms. Click on any subject below to access its
+              stream announcements, textbook modules, downloadable notes, homework assignments, and
+              teacher contacts.
             </p>
           </div>
 
@@ -226,9 +226,9 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
               </div>
 
               <p className="text-xs text-[#7A7A72]">
-                Ask your subject teacher for the class code, then enter it below
-                (e.g., <strong className="text-[#2D2D2A]">MATH8A</strong>,{" "}
-                <strong className="text-[#2D2D2A]">SCI8A</strong>,{" "}
+                Ask your subject teacher for the class code, then enter it below (e.g.,{' '}
+                <strong className="text-[#2D2D2A]">MATH8A</strong>,{' '}
+                <strong className="text-[#2D2D2A]">SCI8A</strong>,{' '}
                 <strong className="text-[#2D2D2A]">NEP8A</strong>).
               </p>
 
@@ -238,14 +238,12 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                   value={joinCodeInput}
                   onChange={(e) => {
                     setJoinCodeInput(e.target.value);
-                    setJoinError("");
+                    setJoinError('');
                   }}
                   placeholder="Enter 6-character Class Code..."
                   className="w-full text-xs bg-[#F9F7F2] p-3 rounded-2xl border border-[#EDEAE2] font-mono uppercase font-bold text-[#2D2D2A] focus:outline-none focus:ring-2 focus:ring-[#4A6741]"
                 />
-                {joinError && (
-                  <p className="text-xs text-rose-600 font-bold">{joinError}</p>
-                )}
+                {joinError && <p className="text-xs text-rose-600 font-bold">{joinError}</p>}
 
                 <div className="flex justify-end gap-2 pt-2">
                   <button
@@ -285,19 +283,19 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
             {/* Subject Filters */}
             <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
               {[
-                { id: "all", label: "All Enrolled Subjects" },
-                { id: "mathematics", label: "Mathematics" },
-                { id: "science", label: "Science" },
-                { id: "nepali", label: "Nepali" },
-                { id: "computer", label: "Computer" },
+                { id: 'all', label: 'All Enrolled Subjects' },
+                { id: 'mathematics', label: 'Mathematics' },
+                { id: 'science', label: 'Science' },
+                { id: 'nepali', label: 'Nepali' },
+                { id: 'computer', label: 'Computer' },
               ].map((f) => (
                 <button
                   key={f.id}
                   onClick={() => setSubjectFilter(f.id)}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
                     subjectFilter === f.id
-                      ? "bg-[#4A6741] text-white shadow-xs"
-                      : "bg-[#F9F7F2] text-[#7A7A72] hover:bg-[#EDEAE2] hover:text-[#2D2D2A]"
+                      ? 'bg-[#4A6741] text-white shadow-xs'
+                      : 'bg-[#F9F7F2] text-[#7A7A72] hover:bg-[#EDEAE2] hover:text-[#2D2D2A]'
                   }`}
                 >
                   {f.label}
@@ -312,27 +310,17 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
           {filteredClassrooms.length === 0 ? (
             <div className="col-span-2 p-12 text-center bg-white rounded-3xl border border-[#EDEAE2] space-y-2">
               <BookOpen className="w-10 h-10 text-[#7A7A72] mx-auto opacity-50" />
-              <h3 className="font-bold text-sm text-[#2D2D2A]">
-                No subject classroom found
-              </h3>
+              <h3 className="font-bold text-sm text-[#2D2D2A]">No subject classroom found</h3>
               <p className="text-xs text-[#7A7A72]">
                 Try clearing search or join a classroom with a class code.
               </p>
             </div>
           ) : (
             filteredClassrooms.map((cls) => {
-              const clsPosts = streamPosts.filter(
-                (p) => p.classroomId === cls.id,
-              );
-              const clsAssignments = assignments.filter(
-                (a) => a.classroomId === cls.id,
-              );
-              const clsQuizzes = quizzes.filter(
-                (q) => q.classroomId === cls.id,
-              );
-              const clsModules = modules.filter(
-                (m) => m.classroomId === cls.id,
-              );
+              const clsPosts = streamPosts.filter((p) => p.classroomId === cls.id);
+              const clsAssignments = assignments.filter((a) => a.classroomId === cls.id);
+              const clsQuizzes = quizzes.filter((q) => q.classroomId === cls.id);
+              const clsModules = modules.filter((m) => m.classroomId === cls.id);
 
               return (
                 <div
@@ -341,7 +329,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                 >
                   {/* Card Top Header Banner */}
                   <div
-                    className={`p-5 bg-gradient-to-r ${cls.colorTheme || "from-emerald-700 to-teal-800"} text-white relative`}
+                    className={`p-5 bg-gradient-to-r ${cls.colorTheme || 'from-emerald-700 to-teal-800'} text-white relative`}
                   >
                     <div className="flex justify-between items-start gap-2">
                       <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md text-[#FDEEDC]">
@@ -370,21 +358,15 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                       <div className="p-2.5 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] flex items-center gap-2">
                         <BookOpen className="w-4 h-4 text-[#4A6741]" />
                         <div>
-                          <p className="text-[10px] text-[#7A7A72] font-medium">
-                            Notes & Modules
-                          </p>
-                          <p className="font-bold text-[#2D2D2A]">
-                            {clsModules.length} Modules
-                          </p>
+                          <p className="text-[10px] text-[#7A7A72] font-medium">Notes & Modules</p>
+                          <p className="font-bold text-[#2D2D2A]">{clsModules.length} Modules</p>
                         </div>
                       </div>
 
                       <div className="p-2.5 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] flex items-center gap-2">
                         <FileText className="w-4 h-4 text-[#E88D67]" />
                         <div>
-                          <p className="text-[10px] text-[#7A7A72] font-medium">
-                            Homework Due
-                          </p>
+                          <p className="text-[10px] text-[#7A7A72] font-medium">Homework Due</p>
                           <p className="font-bold text-[#2D2D2A]">
                             {clsAssignments.length} Assignments
                           </p>
@@ -394,24 +376,16 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                       <div className="p-2.5 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-purple-600" />
                         <div>
-                          <p className="text-[10px] text-[#7A7A72] font-medium">
-                            Online Quizzes
-                          </p>
-                          <p className="font-bold text-[#2D2D2A]">
-                            {clsQuizzes.length} Quizzes
-                          </p>
+                          <p className="text-[10px] text-[#7A7A72] font-medium">Online Quizzes</p>
+                          <p className="font-bold text-[#2D2D2A]">{clsQuizzes.length} Quizzes</p>
                         </div>
                       </div>
 
                       <div className="p-2.5 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] flex items-center gap-2">
                         <MessageSquare className="w-4 h-4 text-blue-600" />
                         <div>
-                          <p className="text-[10px] text-[#7A7A72] font-medium">
-                            Stream Posts
-                          </p>
-                          <p className="font-bold text-[#2D2D2A]">
-                            {clsPosts.length} Updates
-                          </p>
+                          <p className="text-[10px] text-[#7A7A72] font-medium">Stream Posts</p>
+                          <p className="font-bold text-[#2D2D2A]">{clsPosts.length} Updates</p>
                         </div>
                       </div>
                     </div>
@@ -437,18 +411,10 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
   // =========================================================================
   // SCENARIO 2: SPECIFIC ENROLLED CLASSROOM VIEW (Stream, Classwork, People)
   // =========================================================================
-  const classPosts = streamPosts.filter(
-    (p) => p.classroomId === currentClassroom.id,
-  );
-  const classAssignments = assignments.filter(
-    (a) => a.classroomId === currentClassroom.id,
-  );
-  const classQuizzes = quizzes.filter(
-    (q) => q.classroomId === currentClassroom.id,
-  );
-  const classModules = modules.filter(
-    (m) => m.classroomId === currentClassroom.id,
-  );
+  const classPosts = streamPosts.filter((p) => p.classroomId === currentClassroom.id);
+  const classAssignments = assignments.filter((a) => a.classroomId === currentClassroom.id);
+  const classQuizzes = quizzes.filter((q) => q.classroomId === currentClassroom.id);
+  const classModules = modules.filter((m) => m.classroomId === currentClassroom.id);
 
   return (
     <div className="space-y-6 pb-16 animate-in fade-in duration-200">
@@ -510,13 +476,13 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
       {/* Classroom Navigation Tabs */}
       <div className="border-b border-[#EDEAE2] flex gap-6 text-xs font-bold text-[#7A7A72]">
         {[
-          { id: "stream", label: "Stream & Discussion", icon: MessageSquare },
+          { id: 'stream', label: 'Stream & Discussion', icon: MessageSquare },
           {
-            id: "classwork",
-            label: "Classwork, Notes & Modules",
+            id: 'classwork',
+            label: 'Classwork, Notes & Modules',
             icon: FileText,
           },
-          { id: "people", label: "Teacher & Classmates", icon: Users },
+          { id: 'people', label: 'Teacher & Classmates', icon: Users },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -526,8 +492,8 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
               onClick={() => setActiveTab(tab.id as any)}
               className={`pb-3 flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
                 isActive
-                  ? "border-[#4A6741] text-[#4A6741] font-extrabold"
-                  : "border-transparent hover:text-[#2D2D2A]"
+                  ? 'border-[#4A6741] text-[#4A6741] font-extrabold'
+                  : 'border-transparent hover:text-[#2D2D2A]'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -538,7 +504,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
       </div>
 
       {/* TAB 1: STREAM (Announcements & Discussion) */}
-      {activeTab === "stream" && (
+      {activeTab === 'stream' && (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Upcoming Classwork Widget (Left col) */}
           <div className="lg:col-span-1 space-y-4">
@@ -548,9 +514,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                 Upcoming Due Dates
               </h3>
               {classAssignments.length === 0 ? (
-                <p className="text-xs text-[#7A7A72]">
-                  No upcoming homework for this subject!
-                </p>
+                <p className="text-xs text-[#7A7A72]">No upcoming homework for this subject!</p>
               ) : (
                 classAssignments.map((asg) => (
                   <div
@@ -605,7 +569,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          setAttachFileName("");
+                          setAttachFileName('');
                           setAttachFileObj(null);
                         }}
                         className="hover:text-red-500 ml-1 cursor-pointer"
@@ -631,9 +595,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
               {classPosts.length === 0 ? (
                 <div className="p-8 text-center bg-white rounded-3xl border border-[#EDEAE2] text-[#7A7A72] space-y-1">
                   <MessageSquare className="w-8 h-8 text-[#7A7A72] mx-auto opacity-50" />
-                  <p className="font-bold text-xs">
-                    No stream announcements yet
-                  </p>
+                  <p className="font-bold text-xs">No stream announcements yet</p>
                   <p className="text-[11px]">
                     Be the first to ask a question or start a study discussion!
                   </p>
@@ -670,9 +632,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                       )}
                     </div>
 
-                    <p className="text-xs text-[#2D2D2A] leading-relaxed">
-                      {post.content}
-                    </p>
+                    <p className="text-xs text-[#2D2D2A] leading-relaxed">{post.content}</p>
 
                     {/* Attachments */}
                     {post.attachments && post.attachments.length > 0 && (
@@ -719,12 +679,8 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                               className="w-6 h-6 rounded-full object-cover"
                             />
                             <div>
-                              <p className="font-bold text-[#2D2D2A] text-[11px]">
-                                {c.authorName}
-                              </p>
-                              <p className="text-[#2D2D2A] text-xs mt-0.5">
-                                {c.content}
-                              </p>
+                              <p className="font-bold text-[#2D2D2A] text-[11px]">{c.authorName}</p>
+                              <p className="text-[#2D2D2A] text-xs mt-0.5">{c.content}</p>
                             </div>
                           </div>
                         ))}
@@ -732,16 +688,14 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                       <div className="flex gap-2">
                         <input
                           type="text"
-                          value={commentInputs[post.id] || ""}
+                          value={commentInputs[post.id] || ''}
                           onChange={(e) =>
                             setCommentInputs((prev) => ({
                               ...prev,
                               [post.id]: e.target.value,
                             }))
                           }
-                          onKeyDown={(e) =>
-                            e.key === "Enter" && handleCommentSubmit(post.id)
-                          }
+                          onKeyDown={(e) => e.key === 'Enter' && handleCommentSubmit(post.id)}
                           placeholder="Add a class comment..."
                           className="flex-1 text-xs bg-[#F9F7F2] px-3.5 py-1.5 rounded-full border border-[#E5E1D8] focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
                         />
@@ -762,7 +716,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
       )}
 
       {/* TAB 2: CLASSWORK, NOTES & MODULES */}
-      {activeTab === "classwork" && (
+      {activeTab === 'classwork' && (
         <div className="space-y-6">
           {/* Modules & PDF Notes Section */}
           <div className="space-y-4">
@@ -787,9 +741,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                         <span className="text-[10px] font-bold text-[#4A6741] uppercase tracking-wider">
                           {mod.unitName}
                         </span>
-                        <h3 className="font-bold text-sm text-[#2D2D2A] font-serif">
-                          {mod.title}
-                        </h3>
+                        <h3 className="font-bold text-sm text-[#2D2D2A] font-serif">{mod.title}</h3>
                       </div>
                       <span className="text-xs text-[#7A7A72]">
                         {mod.durationMinutes} min reading
@@ -806,9 +758,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                             className="p-2.5 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] flex items-center gap-2 text-xs"
                           >
                             <FileText className="w-4 h-4 text-[#4A6741]" />
-                            <span className="font-semibold text-[#2D2D2A]">
-                              {att.title}
-                            </span>
+                            <span className="font-semibold text-[#2D2D2A]">{att.title}</span>
                             <Download className="w-3.5 h-3.5 text-[#7A7A72] hover:text-[#4A6741] cursor-pointer" />
                           </div>
                         ))}
@@ -838,16 +788,12 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                     className="p-4 rounded-3xl bg-white border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-2"
                   >
                     <div className="flex justify-between items-start">
-                      <h4 className="font-bold text-xs text-[#2D2D2A] font-serif">
-                        {asg.title}
-                      </h4>
+                      <h4 className="font-bold text-xs text-[#2D2D2A] font-serif">{asg.title}</h4>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#FDEEDC] text-[#E88D67]">
                         Due {asg.dueDate}
                       </span>
                     </div>
-                    <p className="text-xs text-[#7A7A72] line-clamp-2">
-                      {asg.instructions}
-                    </p>
+                    <p className="text-xs text-[#7A7A72] line-clamp-2">{asg.instructions}</p>
                     <button
                       onClick={() => onOpenAssignmentModal(asg.id)}
                       className="w-full mt-2 py-2 rounded-xl bg-[#4A6741] text-white font-bold text-xs hover:bg-[#3D5535] transition-colors cursor-pointer"
@@ -875,9 +821,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                     className="p-4 rounded-3xl bg-white border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-2"
                   >
                     <div className="flex justify-between items-start">
-                      <h4 className="font-bold text-xs text-[#2D2D2A] font-serif">
-                        {quiz.title}
-                      </h4>
+                      <h4 className="font-bold text-xs text-[#2D2D2A] font-serif">{quiz.title}</h4>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#FDEEDC] text-[#E88D67]">
                         {quiz.durationMinutes} mins
                       </span>
@@ -898,7 +842,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
       )}
 
       {/* TAB 3: PEOPLE (Teachers & Classmates) */}
-      {activeTab === "people" && (
+      {activeTab === 'people' && (
         <div className="bg-white rounded-3xl p-6 border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-6">
           <div>
             <h3 className="font-bold text-sm text-[#4A6741] font-serif uppercase tracking-wider border-b border-[#EDEAE2] pb-2 mb-4">
@@ -911,12 +855,9 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                 className="w-10 h-10 rounded-full object-cover border-2 border-[#4A6741]"
               />
               <div>
-                <h4 className="font-bold text-xs text-[#2D2D2A]">
-                  {currentClassroom.teacherName}
-                </h4>
+                <h4 className="font-bold text-xs text-[#2D2D2A]">{currentClassroom.teacherName}</h4>
                 <p className="text-[11px] text-[#7A7A72]">
-                  Faculty • {currentClassroom.subject} (
-                  {currentClassroom.roomNumber})
+                  Faculty • {currentClassroom.subject} ({currentClassroom.roomNumber})
                 </p>
               </div>
             </div>
@@ -939,9 +880,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                       className="w-8 h-8 rounded-full object-cover"
                     />
                     <div>
-                      <h4 className="font-bold text-xs text-[#2D2D2A]">
-                        {s.name}
-                      </h4>
+                      <h4 className="font-bold text-xs text-[#2D2D2A]">{s.name}</h4>
                       <p className="text-[10px] text-[#7A7A72]">
                         Roll No. {s.rollNumber} • Section {s.section}
                       </p>
@@ -1014,14 +953,12 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                   >
                     <Download className="w-6 h-6 mb-1" />
                     <span className="text-xs font-bold">
-                      {attachFileObj
-                        ? attachFileObj.name
-                        : "Click to browse files"}
+                      {attachFileObj ? attachFileObj.name : 'Click to browse files'}
                     </span>
                     {attachFileObj && (
                       <span className="text-[10px] font-medium text-[#7A7A72] bg-[#EBF1E8] px-2 py-0.5 rounded-full mt-1">
-                        {attachFileObj.size > 1024 * 1024 
-                          ? `${(attachFileObj.size / (1024 * 1024)).toFixed(2)} MB` 
+                        {attachFileObj.size > 1024 * 1024
+                          ? `${(attachFileObj.size / (1024 * 1024)).toFixed(2)} MB`
                           : `${(attachFileObj.size / 1024).toFixed(2)} KB`}
                       </span>
                     )}

@@ -46,11 +46,7 @@ const AppContent: React.FC = () => {
             />
           );
         } else {
-          return (
-            <ParentDashboard
-              onOpenParentalControls={() => setIsParentalControlsOpen(true)}
-            />
-          );
+          return <ParentDashboard onOpenParentalControls={() => setIsParentalControlsOpen(true)} />;
         }
 
       case 'classroom':
@@ -85,11 +81,7 @@ const AppContent: React.FC = () => {
         return <MessagesView />;
 
       case 'parent-portal':
-        return (
-          <ParentDashboard
-            onOpenParentalControls={() => setIsParentalControlsOpen(true)}
-          />
-        );
+        return <ParentDashboard onOpenParentalControls={() => setIsParentalControlsOpen(true)} />;
 
       default:
         return (
@@ -103,7 +95,6 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F9F7F2] text-[#2D2D2A] flex flex-col font-sans transition-colors duration-200">
-      
       {/* Top Header */}
       <Header onToggleNotifications={() => setIsNotificationOpen(true)} />
 
@@ -112,9 +103,7 @@ const AppContent: React.FC = () => {
         <Sidebar />
 
         {/* Main View Area */}
-        <main className="flex-1 min-w-0">
-          {renderMainView()}
-        </main>
+        <main className="flex-1 min-w-0">{renderMainView()}</main>
       </div>
 
       {/* Global Modals & Drawers */}
@@ -131,21 +120,14 @@ const AppContent: React.FC = () => {
         onClose={() => setActiveAssignmentId(null)}
       />
 
-      <QuizRunnerModal
-        quizId={activeQuizId}
-        onClose={() => setActiveQuizId(null)}
-      />
+      <QuizRunnerModal quizId={activeQuizId} onClose={() => setActiveQuizId(null)} />
 
-      <QuizBuilderModal
-        isOpen={isQuizBuilderOpen}
-        onClose={() => setIsQuizBuilderOpen(false)}
-      />
+      <QuizBuilderModal isOpen={isQuizBuilderOpen} onClose={() => setIsQuizBuilderOpen(false)} />
 
       <ParentalControlsModal
         isOpen={isParentalControlsOpen}
         onClose={() => setIsParentalControlsOpen(false)}
       />
-
     </div>
   );
 };

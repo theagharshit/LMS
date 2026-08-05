@@ -9,7 +9,7 @@ describe('QuizRunnerModal Component (src/components/student/QuizRunnerModal.tsx)
     render(
       <AppProvider>
         <QuizRunnerModal quizId="quiz-1" onClose={vi.fn()} />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Algebraic Equations/i)).toBeInTheDocument();

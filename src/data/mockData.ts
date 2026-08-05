@@ -19,7 +19,7 @@ import {
   DirectMessage,
   SubjectPerformance,
   Badge,
-  QuizSubmission
+  QuizSubmission,
 } from '../types';
 
 export const MOCK_USERS: User[] = [
@@ -28,49 +28,54 @@ export const MOCK_USERS: User[] = [
     name: 'Aarav Sharma',
     email: 'aarav.sharma@mteverest.edu.np',
     role: 'student',
-    avatar: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+    avatar:
+      'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
     schoolName: 'Mount Everest Secondary School, Kathmandu',
     gradeLevel: 8,
     section: 'A',
-    rollNumber: 12
+    rollNumber: 12,
   },
   {
     id: 'user-stu-2',
     name: 'Sunita Sharma',
     email: 'sunita.sharma@mteverest.edu.np',
     role: 'student',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+    avatar:
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
     schoolName: 'Mount Everest Secondary School, Kathmandu',
     gradeLevel: 5, // Grade < 7 triggers parental controls!
     section: 'B',
-    rollNumber: 5
+    rollNumber: 5,
   },
   {
     id: 'user-teach-1',
     name: 'Mr. Ramesh Thapa',
     email: 'ramesh.thapa@mteverest.edu.np',
     role: 'teacher',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    avatar:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     schoolName: 'Mount Everest Secondary School, Kathmandu',
-    subjectsTaught: ['Mathematics', 'Computer Science']
+    subjectsTaught: ['Mathematics', 'Computer Science'],
   },
   {
     id: 'user-parent-1',
     name: 'Bina Sharma',
     email: 'bina.sharma@gmail.com',
     role: 'parent',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    avatar:
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
     schoolName: 'Mount Everest Secondary School, Kathmandu',
-    childrenIds: ['user-stu-1', 'user-stu-2']
+    childrenIds: ['user-stu-1', 'user-stu-2'],
   },
   {
     id: 'user-admin-1',
     name: 'Dr. K.P. Bhattarai',
     email: 'principal@mteverest.edu.np',
     role: 'admin',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-    schoolName: 'Mount Everest Secondary School, Kathmandu'
-  }
+    avatar:
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+    schoolName: 'Mount Everest Secondary School, Kathmandu',
+  },
 ];
 
 export const MOCK_STUDENTS: StudentProfile[] = [
@@ -79,7 +84,8 @@ export const MOCK_STUDENTS: StudentProfile[] = [
     name: 'Aarav Sharma',
     email: 'aarav.sharma@mteverest.edu.np',
     role: 'student',
-    avatar: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+    avatar:
+      'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
     schoolName: 'Mount Everest Secondary School, Kathmandu',
     gradeLevel: 8,
     section: 'A',
@@ -90,18 +96,47 @@ export const MOCK_STUDENTS: StudentProfile[] = [
     parentName: 'Bina Sharma',
     parentPhone: '+977 9841234567',
     badges: [
-      { id: 'b1', title: 'Math Genius', description: 'Scored 95%+ in 3 consecutive Math Quizzes', icon: '📐', earnedDate: '2026-07-15', category: 'academic' },
-      { id: 'b2', title: '14-Day Streak Hero', description: 'Logged into Sikshya LMS every day for 2 weeks', icon: '🔥', earnedDate: '2026-07-28', category: 'streak' },
-      { id: 'b3', title: 'Science Explorer', description: 'Completed all Unit 3 Science experiments', icon: '🔬', earnedDate: '2026-07-20', category: 'academic' },
-      { id: 'b4', title: 'Perfect Attendance', description: '100% attendance in June 2026', icon: '🌟', earnedDate: '2026-07-01', category: 'attendance' }
-    ]
+      {
+        id: 'b1',
+        title: 'Math Genius',
+        description: 'Scored 95%+ in 3 consecutive Math Quizzes',
+        icon: '📐',
+        earnedDate: '2026-07-15',
+        category: 'academic',
+      },
+      {
+        id: 'b2',
+        title: '14-Day Streak Hero',
+        description: 'Logged into Sikshya LMS every day for 2 weeks',
+        icon: '🔥',
+        earnedDate: '2026-07-28',
+        category: 'streak',
+      },
+      {
+        id: 'b3',
+        title: 'Science Explorer',
+        description: 'Completed all Unit 3 Science experiments',
+        icon: '🔬',
+        earnedDate: '2026-07-20',
+        category: 'academic',
+      },
+      {
+        id: 'b4',
+        title: 'Perfect Attendance',
+        description: '100% attendance in June 2026',
+        icon: '🌟',
+        earnedDate: '2026-07-01',
+        category: 'attendance',
+      },
+    ],
   },
   {
     id: 'user-stu-2',
     name: 'Sunita Sharma',
     email: 'sunita.sharma@mteverest.edu.np',
     role: 'student',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+    avatar:
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
     schoolName: 'Mount Everest Secondary School, Kathmandu',
     gradeLevel: 5,
     section: 'B',
@@ -112,16 +147,31 @@ export const MOCK_STUDENTS: StudentProfile[] = [
     parentName: 'Bina Sharma',
     parentPhone: '+977 9841234567',
     badges: [
-      { id: 'b5', title: 'Reading Champion', description: 'Read 5 CDC Nepali story modules', icon: '📚', earnedDate: '2026-07-22', category: 'academic' },
-      { id: 'b6', title: 'Art & Drawing Star', description: 'Submitted top rated drawing assignment', icon: '🎨', earnedDate: '2026-07-18', category: 'participation' }
-    ]
+      {
+        id: 'b5',
+        title: 'Reading Champion',
+        description: 'Read 5 CDC Nepali story modules',
+        icon: '📚',
+        earnedDate: '2026-07-22',
+        category: 'academic',
+      },
+      {
+        id: 'b6',
+        title: 'Art & Drawing Star',
+        description: 'Submitted top rated drawing assignment',
+        icon: '🎨',
+        earnedDate: '2026-07-18',
+        category: 'participation',
+      },
+    ],
   },
   {
     id: 'user-stu-3',
     name: 'Rohan Shrestha',
     email: 'rohan.shrestha@mteverest.edu.np',
     role: 'student',
-    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+    avatar:
+      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
     schoolName: 'Mount Everest Secondary School, Kathmandu',
     gradeLevel: 8,
     section: 'A',
@@ -132,15 +182,23 @@ export const MOCK_STUDENTS: StudentProfile[] = [
     parentName: 'Gopal Shrestha',
     parentPhone: '+977 9851098765',
     badges: [
-      { id: 'b7', title: 'Coding Whiz', description: 'Built HTML website for school project', icon: '💻', earnedDate: '2026-07-25', category: 'academic' }
-    ]
+      {
+        id: 'b7',
+        title: 'Coding Whiz',
+        description: 'Built HTML website for school project',
+        icon: '💻',
+        earnedDate: '2026-07-25',
+        category: 'academic',
+      },
+    ],
   },
   {
     id: 'user-stu-4',
     name: 'Bikas Rai',
     email: 'bikas.rai@mteverest.edu.np',
     role: 'student',
-    avatar: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=150&auto=format&fit=crop&q=80',
+    avatar:
+      'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=150&auto=format&fit=crop&q=80',
     schoolName: 'Mount Everest Secondary School, Kathmandu',
     gradeLevel: 8,
     section: 'A',
@@ -150,8 +208,8 @@ export const MOCK_STUDENTS: StudentProfile[] = [
     xpPoints: 450,
     parentName: 'Maya Rai',
     parentPhone: '+977 9801239876',
-    badges: []
-  }
+    badges: [],
+  },
 ];
 
 export const MOCK_CLASSROOMS: Classroom[] = [
@@ -163,13 +221,15 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     section: 'A',
     teacherId: 'user-teach-1',
     teacherName: 'Mr. Ramesh Thapa',
-    teacherAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    teacherAvatar:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     roomNumber: 'Room 204',
     colorTheme: 'from-blue-600 to-indigo-700',
-    bannerImage: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=1000&auto=format&fit=crop&q=80',
+    bannerImage:
+      'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=1000&auto=format&fit=crop&q=80',
     studentCount: 34,
     meetLink: 'https://meet.google.com/sikshya-math-8a',
-    code: 'MATH8A'
+    code: 'MATH8A',
   },
   {
     id: 'cls-sci-8a',
@@ -179,13 +239,15 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     section: 'A',
     teacherId: 'user-teach-2',
     teacherName: 'Mrs. Sabina Karki',
-    teacherAvatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
+    teacherAvatar:
+      'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
     roomNumber: 'Science Lab 1',
     colorTheme: 'from-emerald-600 to-teal-700',
-    bannerImage: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1000&auto=format&fit=crop&q=80',
+    bannerImage:
+      'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1000&auto=format&fit=crop&q=80',
     studentCount: 34,
     meetLink: 'https://meet.google.com/sikshya-sci-8a',
-    code: 'SCI8A'
+    code: 'SCI8A',
   },
   {
     id: 'cls-nep-8a',
@@ -195,13 +257,15 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     section: 'A',
     teacherId: 'user-teach-3',
     teacherName: 'Mr. Bishnu Prasad Gautam',
-    teacherAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+    teacherAvatar:
+      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
     roomNumber: 'Room 202',
     colorTheme: 'from-amber-600 to-rose-700',
-    bannerImage: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=1000&auto=format&fit=crop&q=80',
+    bannerImage:
+      'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=1000&auto=format&fit=crop&q=80',
     studentCount: 34,
     meetLink: 'https://meet.google.com/sikshya-nep-8a',
-    code: 'NEP8A'
+    code: 'NEP8A',
   },
   {
     id: 'cls-comp-8a',
@@ -211,14 +275,16 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     section: 'A',
     teacherId: 'user-teach-1',
     teacherName: 'Mr. Ramesh Thapa',
-    teacherAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    teacherAvatar:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     roomNumber: 'Computer Lab B',
     colorTheme: 'from-purple-600 to-indigo-800',
-    bannerImage: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1000&auto=format&fit=crop&q=80',
+    bannerImage:
+      'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1000&auto=format&fit=crop&q=80',
     studentCount: 34,
     meetLink: 'https://meet.google.com/sikshya-cs-8a',
-    code: 'COMP8A'
-  }
+    code: 'COMP8A',
+  },
 ];
 
 export const MOCK_STREAM_POSTS: StreamPost[] = [
@@ -227,36 +293,59 @@ export const MOCK_STREAM_POSTS: StreamPost[] = [
     classroomId: 'cls-math-8a',
     authorId: 'user-teach-1',
     authorName: 'Mr. Ramesh Thapa',
-    authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    authorAvatar:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     authorRole: 'teacher',
-    content: 'Namaste students! 🙏 Reminder that Unit 4 Algebraic Expressions revision sheet is uploaded. Please review the solved examples before tomorrow\'s quiz.',
+    content:
+      "Namaste students! 🙏 Reminder that Unit 4 Algebraic Expressions revision sheet is uploaded. Please review the solved examples before tomorrow's quiz.",
     createdAt: '2026-07-30T14:30:00Z',
     pinned: true,
     attachments: [
       { id: 'att-1', title: 'Algebra_Unit4_Revision.pdf', type: 'pdf', url: '#', size: '2.4 MB' },
-      { id: 'att-2', title: 'Video: Solving Quadratic Equations', type: 'video', url: 'https://youtube.com' }
+      {
+        id: 'att-2',
+        title: 'Video: Solving Quadratic Equations',
+        type: 'video',
+        url: 'https://youtube.com',
+      },
     ],
     commentsCount: 3,
     comments: [
-      { id: 'c1', authorName: 'Aarav Sharma', authorAvatar: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80', content: 'Thank you Sir! Is question number 7 included in syllabus?', createdAt: '2026-07-30T15:02:00Z' },
-      { id: 'c2', authorName: 'Mr. Ramesh Thapa', authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', content: 'Yes Aarav, Q7 is important for first term exams.', createdAt: '2026-07-30T15:10:00Z' }
-    ]
+      {
+        id: 'c1',
+        authorName: 'Aarav Sharma',
+        authorAvatar:
+          'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+        content: 'Thank you Sir! Is question number 7 included in syllabus?',
+        createdAt: '2026-07-30T15:02:00Z',
+      },
+      {
+        id: 'c2',
+        authorName: 'Mr. Ramesh Thapa',
+        authorAvatar:
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+        content: 'Yes Aarav, Q7 is important for first term exams.',
+        createdAt: '2026-07-30T15:10:00Z',
+      },
+    ],
   },
   {
     id: 'post-2',
     classroomId: 'cls-sci-8a',
     authorId: 'user-teach-2',
     authorName: 'Mrs. Sabina Karki',
-    authorAvatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
+    authorAvatar:
+      'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
     authorRole: 'teacher',
-    content: 'Science Lab Notice: Tomorrow we will perform the refraction of light experiment. Please bring your practical notebooks and geometry boxes.',
+    content:
+      'Science Lab Notice: Tomorrow we will perform the refraction of light experiment. Please bring your practical notebooks and geometry boxes.',
     createdAt: '2026-07-29T09:15:00Z',
     attachments: [
-      { id: 'att-3', title: 'Lab_Refraction_Guide.pdf', type: 'pdf', url: '#', size: '1.8 MB' }
+      { id: 'att-3', title: 'Lab_Refraction_Guide.pdf', type: 'pdf', url: '#', size: '1.8 MB' },
     ],
     commentsCount: 1,
-    comments: []
-  }
+    comments: [],
+  },
 ];
 
 export const MOCK_ASSIGNMENTS: Assignment[] = [
@@ -266,7 +355,8 @@ export const MOCK_ASSIGNMENTS: Assignment[] = [
     classroomName: 'Grade 8 Mathematics - Sec A',
     subject: 'Mathematics',
     title: 'Unit 4: Factorization & Algebraic Identities Homework',
-    instructions: 'Complete Exercises 4.1 & 4.2 from CDC Nepal Math Textbook page 84. Write step-by-step working clearly on your notebook, take clean photos/PDF, and upload here.',
+    instructions:
+      'Complete Exercises 4.1 & 4.2 from CDC Nepal Math Textbook page 84. Write step-by-step working clearly on your notebook, take clean photos/PDF, and upload here.',
     dueDate: '2026-08-02',
     dueTime: '17:00',
     totalPoints: 20,
@@ -274,11 +364,11 @@ export const MOCK_ASSIGNMENTS: Assignment[] = [
     rubric: [
       'Correct formula application (5 pts)',
       'Step-by-step neat working (10 pts)',
-      'Final correct solution (5 pts)'
+      'Final correct solution (5 pts)',
     ],
     attachments: [
-      { id: 'att-a1', title: 'CDC_Grade8_Math_Ch4.pdf', type: 'pdf', url: '#', size: '3.1 MB' }
-    ]
+      { id: 'att-a1', title: 'CDC_Grade8_Math_Ch4.pdf', type: 'pdf', url: '#', size: '3.1 MB' },
+    ],
   },
   {
     id: 'asg-sci-1',
@@ -286,14 +376,21 @@ export const MOCK_ASSIGNMENTS: Assignment[] = [
     classroomName: 'Grade 8 Science & Technology',
     subject: 'Science & Technology',
     title: 'Cell Biology Diagram & Function Worksheet',
-    instructions: 'Draw a well-labeled diagram of a Plant Cell and Animal Cell. Write 5 major differences between Plant and Animal cells in tabular form.',
+    instructions:
+      'Draw a well-labeled diagram of a Plant Cell and Animal Cell. Write 5 major differences between Plant and Animal cells in tabular form.',
     dueDate: '2026-08-04',
     dueTime: '23:59',
     totalPoints: 15,
     createdAt: '2026-07-29T11:00:00Z',
     attachments: [
-      { id: 'att-a2', title: 'Cell_Structure_Worksheet.pdf', type: 'pdf', url: '#', size: '1.2 MB' }
-    ]
+      {
+        id: 'att-a2',
+        title: 'Cell_Structure_Worksheet.pdf',
+        type: 'pdf',
+        url: '#',
+        size: '1.2 MB',
+      },
+    ],
   },
   {
     id: 'asg-nep-1',
@@ -301,12 +398,13 @@ export const MOCK_ASSIGNMENTS: Assignment[] = [
     classroomName: 'Grade 8 नेपाली (Nepali)',
     subject: 'Nepali',
     title: 'निबन्ध लेखन: "नेपालको प्राकृतिक सौन्दर्य"',
-    instructions: 'नेपालको प्राकृतिक सौन्दर्य र पर्यटन सम्भावना विषयमा कम्तीमा २०० शब्दको मौलिक निबन्ध लेखेर बुझाउनुहोस्।',
+    instructions:
+      'नेपालको प्राकृतिक सौन्दर्य र पर्यटन सम्भावना विषयमा कम्तीमा २०० शब्दको मौलिक निबन्ध लेखेर बुझाउनुहोस्।',
     dueDate: '2026-08-01',
     dueTime: '18:00',
     totalPoints: 20,
     createdAt: '2026-07-27T08:30:00Z',
-    attachments: []
+    attachments: [],
   },
   {
     id: 'asg-comp-1',
@@ -314,13 +412,14 @@ export const MOCK_ASSIGNMENTS: Assignment[] = [
     classroomName: 'Grade 8 Computer Science',
     subject: 'Computer Science',
     title: 'HTML & CSS Basic Web Page Design Project',
-    instructions: 'Create a simple webpage titled "My Favorite Heritage Site in Nepal" using HTML tags (h1, p, img, ul). Submit .html file or screenshot.',
+    instructions:
+      'Create a simple webpage titled "My Favorite Heritage Site in Nepal" using HTML tags (h1, p, img, ul). Submit .html file or screenshot.',
     dueDate: '2026-08-06',
     dueTime: '16:00',
     totalPoints: 25,
     createdAt: '2026-07-30T12:00:00Z',
-    attachments: []
-  }
+    attachments: [],
+  },
 ];
 
 export const MOCK_SUBMISSIONS: Submission[] = [
@@ -329,48 +428,53 @@ export const MOCK_SUBMISSIONS: Submission[] = [
     assignmentId: 'asg-math-1',
     studentId: 'user-stu-1',
     studentName: 'Aarav Sharma',
-    studentAvatar: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+    studentAvatar:
+      'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
     submittedAt: '2026-07-30T18:45:00Z',
     status: 'graded',
     fileUrl: 'Aarav_Math_Homework_Ch4.pdf',
     fileName: 'Aarav_Math_Homework_Ch4.pdf',
     responseText: 'Respected Sir, I have solved all 10 problems from Exercise 4.1 and 4.2.',
     grade: 19,
-    feedback: 'Excellent step-by-step problem breakdown, Aarav! Just remember to check signs when taking common factors in Q6.',
-    annotated: true
+    feedback:
+      'Excellent step-by-step problem breakdown, Aarav! Just remember to check signs when taking common factors in Q6.',
+    annotated: true,
   },
   {
     id: 'sub-aarav-nep',
     assignmentId: 'asg-nep-1',
     studentId: 'user-stu-1',
     studentName: 'Aarav Sharma',
-    studentAvatar: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+    studentAvatar:
+      'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
     submittedAt: '2026-07-29T14:20:00Z',
     status: 'submitted',
     fileUrl: 'Aarav_Nepali_Essay.pdf',
     fileName: 'Aarav_Nepali_Essay.pdf',
-    responseText: 'निबन्ध बुझाएको छु गुरु।'
+    responseText: 'निबन्ध बुझाएको छु गुरु।',
   },
   {
     id: 'sub-rohan-math',
     assignmentId: 'asg-math-1',
     studentId: 'user-stu-3',
     studentName: 'Rohan Shrestha',
-    studentAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+    studentAvatar:
+      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
     submittedAt: '2026-07-31T09:10:00Z',
     status: 'submitted',
     fileUrl: 'Rohan_Math_Ex4.pdf',
-    fileName: 'Rohan_Math_Ex4.pdf'
+    fileName: 'Rohan_Math_Ex4.pdf',
   },
   {
     id: 'sub-bikas-math',
     assignmentId: 'asg-math-1',
     studentId: 'user-stu-4',
     studentName: 'Bikas Rai',
-    studentAvatar: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=150&auto=format&fit=crop&q=80',
+    studentAvatar:
+      'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=150&auto=format&fit=crop&q=80',
     submittedAt: '',
-    status: 'pending'
-  }
+    status: 'pending',
+  },
 ];
 
 export const MOCK_QUIZZES: Quiz[] = [
@@ -393,7 +497,7 @@ export const MOCK_QUIZZES: Quiz[] = [
         options: ['a² + b²', 'a² + 2ab + b²', 'a² - 2ab + b²', '2a + 2b'],
         correctAnswer: 'a² + 2ab + b²',
         explanation: '(a + b)² = (a + b)(a + b) = a² + ab + ba + b² = a² + 2ab + b²',
-        points: 5
+        points: 5,
       },
       {
         id: 'q2',
@@ -402,7 +506,7 @@ export const MOCK_QUIZZES: Quiz[] = [
         options: ['True', 'False'],
         correctAnswer: 'True',
         explanation: 'Difference of squares formula is (a - b)(a + b).',
-        points: 5
+        points: 5,
       },
       {
         id: 'q3',
@@ -411,7 +515,7 @@ export const MOCK_QUIZZES: Quiz[] = [
         options: ['(x + 2)(x + 3)', '(x + 1)(x + 6)', '(x - 2)(x - 3)', '(x + 5)(x + 1)'],
         correctAnswer: '(x + 2)(x + 3)',
         explanation: 'Find numbers that multiply to 6 and add to 5: 2 and 3.',
-        points: 5
+        points: 5,
       },
       {
         id: 'q4',
@@ -420,9 +524,9 @@ export const MOCK_QUIZZES: Quiz[] = [
         options: ['True', 'False'],
         correctAnswer: 'True',
         explanation: 'Linear equations have maximum exponent of 1.',
-        points: 5
-      }
-    ]
+        points: 5,
+      },
+    ],
   },
   {
     id: 'quiz-2',
@@ -430,7 +534,7 @@ export const MOCK_QUIZZES: Quiz[] = [
     classroomName: 'Grade 8 Science & Technology',
     subject: 'Science',
     title: 'Light & Refraction Quick Check',
-    description: 'Check your understanding of Snell\'s Law and lenses.',
+    description: "Check your understanding of Snell's Law and lenses.",
     durationMinutes: 15,
     dueDate: '2026-08-03',
     totalQuestions: 3,
@@ -443,7 +547,7 @@ export const MOCK_QUIZZES: Quiz[] = [
         options: ['True', 'False'],
         correctAnswer: 'True',
         explanation: 'Light bends towards normal when moving from rarer to denser medium.',
-        points: 5
+        points: 5,
       },
       {
         id: 'sq2',
@@ -452,7 +556,7 @@ export const MOCK_QUIZZES: Quiz[] = [
         options: ['Convex Lens', 'Concave Lens', 'Biconvex Lens', 'Cylindrical Lens'],
         correctAnswer: 'Concave Lens',
         explanation: 'Concave lenses diverge light and are thinner at the center.',
-        points: 5
+        points: 5,
       },
       {
         id: 'sq3',
@@ -461,10 +565,10 @@ export const MOCK_QUIZZES: Quiz[] = [
         options: ['3 × 10⁸ m/s', '3 × 10⁶ m/s', '300,000 m/s', '1.5 × 10⁸ m/s'],
         correctAnswer: '3 × 10⁸ m/s',
         explanation: 'Speed of light in vacuum is approximately 300,000,000 meters per second.',
-        points: 5
-      }
-    ]
-  }
+        points: 5,
+      },
+    ],
+  },
 ];
 
 export const MOCK_QUIZ_SUBMISSIONS: QuizSubmission[] = [
@@ -479,61 +583,457 @@ export const MOCK_QUIZ_SUBMISSIONS: QuizSubmission[] = [
       q1: 'a² + 2ab + b²',
       q2: 'True',
       q3: '(x + 2)(x + 3)',
-      q4: 'True'
-    }
-  }
+      q4: 'True',
+    },
+  },
 ];
 
 export const MOCK_WEEKLY_SCHEDULE: WeeklySchedule = {
   Sunday: [
-    { id: 'sun-p1', periodNumber: 1, startTime: '10:00 AM', endTime: '10:45 AM', subject: 'Mathematics', teacherName: 'Mr. Ramesh Thapa', room: 'Room 204', classroomId: 'cls-math-8a', isCurrent: false, requiredBooks: 'Math Textbook & Exercise Copy' },
-    { id: 'sun-p2', periodNumber: 2, startTime: '10:45 AM', endTime: '11:30 AM', subject: 'Science & Tech', teacherName: 'Mrs. Sabina Karki', room: 'Science Lab 1', classroomId: 'cls-sci-8a', isCurrent: true, requiredBooks: 'Science Book & Practical File' },
-    { id: 'sun-p3', periodNumber: 3, startTime: '11:30 AM', endTime: '12:15 PM', subject: 'नेपाली (Nepali)', teacherName: 'Mr. Bishnu P. Gautam', room: 'Room 202', classroomId: 'cls-nep-8a', isCurrent: false, requiredBooks: 'Nepali Vyakaran & Reader Copy' },
-    { id: 'sun-p4', periodNumber: 4, startTime: '12:15 PM', endTime: '01:00 PM', subject: '🍱 Tiffin & Lunch Break', teacherName: 'Cafeteria Staff', room: 'Playground Ground', classroomId: '', isCurrent: false, requiredBooks: 'Tiffin Box & Water Bottle' },
-    { id: 'sun-p5', periodNumber: 5, startTime: '01:00 PM', endTime: '01:45 PM', subject: 'Computer Science', teacherName: 'Mr. Ramesh Thapa', room: 'Comp Lab B', classroomId: 'cls-comp-8a', isCurrent: false, requiredBooks: 'Computer Book & Lab Note' },
-    { id: 'sun-p6', periodNumber: 6, startTime: '01:45 PM', endTime: '02:30 PM', subject: 'Social Studies', teacherName: 'Mr. Bishnu P. Gautam', room: 'Room 204', classroomId: 'cls-nep-8a', isCurrent: false, requiredBooks: 'Social Book & Nepal Atlas' }
+    {
+      id: 'sun-p1',
+      periodNumber: 1,
+      startTime: '10:00 AM',
+      endTime: '10:45 AM',
+      subject: 'Mathematics',
+      teacherName: 'Mr. Ramesh Thapa',
+      room: 'Room 204',
+      classroomId: 'cls-math-8a',
+      isCurrent: false,
+      requiredBooks: 'Math Textbook & Exercise Copy',
+    },
+    {
+      id: 'sun-p2',
+      periodNumber: 2,
+      startTime: '10:45 AM',
+      endTime: '11:30 AM',
+      subject: 'Science & Tech',
+      teacherName: 'Mrs. Sabina Karki',
+      room: 'Science Lab 1',
+      classroomId: 'cls-sci-8a',
+      isCurrent: true,
+      requiredBooks: 'Science Book & Practical File',
+    },
+    {
+      id: 'sun-p3',
+      periodNumber: 3,
+      startTime: '11:30 AM',
+      endTime: '12:15 PM',
+      subject: 'नेपाली (Nepali)',
+      teacherName: 'Mr. Bishnu P. Gautam',
+      room: 'Room 202',
+      classroomId: 'cls-nep-8a',
+      isCurrent: false,
+      requiredBooks: 'Nepali Vyakaran & Reader Copy',
+    },
+    {
+      id: 'sun-p4',
+      periodNumber: 4,
+      startTime: '12:15 PM',
+      endTime: '01:00 PM',
+      subject: '🍱 Tiffin & Lunch Break',
+      teacherName: 'Cafeteria Staff',
+      room: 'Playground Ground',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'Tiffin Box & Water Bottle',
+    },
+    {
+      id: 'sun-p5',
+      periodNumber: 5,
+      startTime: '01:00 PM',
+      endTime: '01:45 PM',
+      subject: 'Computer Science',
+      teacherName: 'Mr. Ramesh Thapa',
+      room: 'Comp Lab B',
+      classroomId: 'cls-comp-8a',
+      isCurrent: false,
+      requiredBooks: 'Computer Book & Lab Note',
+    },
+    {
+      id: 'sun-p6',
+      periodNumber: 6,
+      startTime: '01:45 PM',
+      endTime: '02:30 PM',
+      subject: 'Social Studies',
+      teacherName: 'Mr. Bishnu P. Gautam',
+      room: 'Room 204',
+      classroomId: 'cls-nep-8a',
+      isCurrent: false,
+      requiredBooks: 'Social Book & Nepal Atlas',
+    },
   ],
   Monday: [
-    { id: 'mon-p1', periodNumber: 1, startTime: '10:00 AM', endTime: '10:45 AM', subject: 'English Language', teacherName: 'Mrs. Sabina Karki', room: 'Room 204', classroomId: '', isCurrent: false, requiredBooks: 'English Reader & Grammar Book' },
-    { id: 'mon-p2', periodNumber: 2, startTime: '10:45 AM', endTime: '11:30 AM', subject: 'Mathematics', teacherName: 'Mr. Ramesh Thapa', room: 'Room 204', classroomId: 'cls-math-8a', isCurrent: false, requiredBooks: 'Math Textbook & Geometry Box' },
-    { id: 'mon-p3', periodNumber: 3, startTime: '11:30 AM', endTime: '12:15 PM', subject: 'Science & Tech', teacherName: 'Mrs. Sabina Karki', room: 'Science Lab 1', classroomId: 'cls-sci-8a', isCurrent: false, requiredBooks: 'Science Textbook & Note' },
-    { id: 'mon-p4', periodNumber: 4, startTime: '12:15 PM', endTime: '01:00 PM', subject: '🍱 Tiffin & Lunch Break', teacherName: 'Cafeteria Staff', room: 'Playground', classroomId: '', isCurrent: false, requiredBooks: 'Tiffin Box & Water Bottle' },
-    { id: 'mon-p5', periodNumber: 5, startTime: '01:00 PM', endTime: '01:45 PM', subject: 'Health & Physical Ed', teacherName: 'Mr. Bishnu P. Gautam', room: 'Sports Ground', classroomId: '', isCurrent: false, requiredBooks: 'PE Uniform & Sports Shoes' },
-    { id: 'mon-p6', periodNumber: 6, startTime: '01:45 PM', endTime: '02:30 PM', subject: 'नेपाली (Nepali)', teacherName: 'Mr. Bishnu P. Gautam', room: 'Room 202', classroomId: 'cls-nep-8a', isCurrent: false, requiredBooks: 'Nepali Sahitya Book' }
+    {
+      id: 'mon-p1',
+      periodNumber: 1,
+      startTime: '10:00 AM',
+      endTime: '10:45 AM',
+      subject: 'English Language',
+      teacherName: 'Mrs. Sabina Karki',
+      room: 'Room 204',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'English Reader & Grammar Book',
+    },
+    {
+      id: 'mon-p2',
+      periodNumber: 2,
+      startTime: '10:45 AM',
+      endTime: '11:30 AM',
+      subject: 'Mathematics',
+      teacherName: 'Mr. Ramesh Thapa',
+      room: 'Room 204',
+      classroomId: 'cls-math-8a',
+      isCurrent: false,
+      requiredBooks: 'Math Textbook & Geometry Box',
+    },
+    {
+      id: 'mon-p3',
+      periodNumber: 3,
+      startTime: '11:30 AM',
+      endTime: '12:15 PM',
+      subject: 'Science & Tech',
+      teacherName: 'Mrs. Sabina Karki',
+      room: 'Science Lab 1',
+      classroomId: 'cls-sci-8a',
+      isCurrent: false,
+      requiredBooks: 'Science Textbook & Note',
+    },
+    {
+      id: 'mon-p4',
+      periodNumber: 4,
+      startTime: '12:15 PM',
+      endTime: '01:00 PM',
+      subject: '🍱 Tiffin & Lunch Break',
+      teacherName: 'Cafeteria Staff',
+      room: 'Playground',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'Tiffin Box & Water Bottle',
+    },
+    {
+      id: 'mon-p5',
+      periodNumber: 5,
+      startTime: '01:00 PM',
+      endTime: '01:45 PM',
+      subject: 'Health & Physical Ed',
+      teacherName: 'Mr. Bishnu P. Gautam',
+      room: 'Sports Ground',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'PE Uniform & Sports Shoes',
+    },
+    {
+      id: 'mon-p6',
+      periodNumber: 6,
+      startTime: '01:45 PM',
+      endTime: '02:30 PM',
+      subject: 'नेपाली (Nepali)',
+      teacherName: 'Mr. Bishnu P. Gautam',
+      room: 'Room 202',
+      classroomId: 'cls-nep-8a',
+      isCurrent: false,
+      requiredBooks: 'Nepali Sahitya Book',
+    },
   ],
   Tuesday: [
-    { id: 'tue-p1', periodNumber: 1, startTime: '10:00 AM', endTime: '10:45 AM', subject: 'Science & Tech', teacherName: 'Mrs. Sabina Karki', room: 'Science Lab 1', classroomId: 'cls-sci-8a', isCurrent: false, requiredBooks: 'Science Lab Manual & Coat' },
-    { id: 'tue-p2', periodNumber: 2, startTime: '10:45 AM', endTime: '11:30 AM', subject: 'Mathematics', teacherName: 'Mr. Ramesh Thapa', room: 'Room 204', classroomId: 'cls-math-8a', isCurrent: false, requiredBooks: 'Math Algebra Copy' },
-    { id: 'tue-p3', periodNumber: 3, startTime: '11:30 AM', endTime: '12:15 PM', subject: 'Social Studies', teacherName: 'Mr. Bishnu P. Gautam', room: 'Room 204', classroomId: '', isCurrent: false, requiredBooks: 'Social Studies Book' },
-    { id: 'tue-p4', periodNumber: 4, startTime: '12:15 PM', endTime: '01:00 PM', subject: '🍱 Tiffin & Lunch Break', teacherName: 'Cafeteria Staff', room: 'Playground', classroomId: '', isCurrent: false, requiredBooks: 'Tiffin Box & Water Bottle' },
-    { id: 'tue-p5', periodNumber: 5, startTime: '01:00 PM', endTime: '01:45 PM', subject: 'English Language', teacherName: 'Mrs. Sabina Karki', room: 'Room 204', classroomId: '', isCurrent: false, requiredBooks: 'English Essay Copy' },
-    { id: 'tue-p6', periodNumber: 6, startTime: '01:45 PM', endTime: '02:30 PM', subject: 'Computer Science', teacherName: 'Mr. Ramesh Thapa', room: 'Comp Lab B', classroomId: 'cls-comp-8a', isCurrent: false, requiredBooks: 'Computer Science Textbook' }
+    {
+      id: 'tue-p1',
+      periodNumber: 1,
+      startTime: '10:00 AM',
+      endTime: '10:45 AM',
+      subject: 'Science & Tech',
+      teacherName: 'Mrs. Sabina Karki',
+      room: 'Science Lab 1',
+      classroomId: 'cls-sci-8a',
+      isCurrent: false,
+      requiredBooks: 'Science Lab Manual & Coat',
+    },
+    {
+      id: 'tue-p2',
+      periodNumber: 2,
+      startTime: '10:45 AM',
+      endTime: '11:30 AM',
+      subject: 'Mathematics',
+      teacherName: 'Mr. Ramesh Thapa',
+      room: 'Room 204',
+      classroomId: 'cls-math-8a',
+      isCurrent: false,
+      requiredBooks: 'Math Algebra Copy',
+    },
+    {
+      id: 'tue-p3',
+      periodNumber: 3,
+      startTime: '11:30 AM',
+      endTime: '12:15 PM',
+      subject: 'Social Studies',
+      teacherName: 'Mr. Bishnu P. Gautam',
+      room: 'Room 204',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'Social Studies Book',
+    },
+    {
+      id: 'tue-p4',
+      periodNumber: 4,
+      startTime: '12:15 PM',
+      endTime: '01:00 PM',
+      subject: '🍱 Tiffin & Lunch Break',
+      teacherName: 'Cafeteria Staff',
+      room: 'Playground',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'Tiffin Box & Water Bottle',
+    },
+    {
+      id: 'tue-p5',
+      periodNumber: 5,
+      startTime: '01:00 PM',
+      endTime: '01:45 PM',
+      subject: 'English Language',
+      teacherName: 'Mrs. Sabina Karki',
+      room: 'Room 204',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'English Essay Copy',
+    },
+    {
+      id: 'tue-p6',
+      periodNumber: 6,
+      startTime: '01:45 PM',
+      endTime: '02:30 PM',
+      subject: 'Computer Science',
+      teacherName: 'Mr. Ramesh Thapa',
+      room: 'Comp Lab B',
+      classroomId: 'cls-comp-8a',
+      isCurrent: false,
+      requiredBooks: 'Computer Science Textbook',
+    },
   ],
   Wednesday: [
-    { id: 'wed-p1', periodNumber: 1, startTime: '10:00 AM', endTime: '10:45 AM', subject: 'Mathematics', teacherName: 'Mr. Ramesh Thapa', room: 'Room 204', classroomId: 'cls-math-8a', isCurrent: false, requiredBooks: 'Math Practice Copy' },
-    { id: 'wed-p2', periodNumber: 2, startTime: '10:45 AM', endTime: '11:30 AM', subject: 'नेपाली (Nepali)', teacherName: 'Mr. Bishnu P. Gautam', room: 'Room 202', classroomId: 'cls-nep-8a', isCurrent: false, requiredBooks: 'Nepali Essay Copy' },
-    { id: 'wed-p3', periodNumber: 3, startTime: '11:30 AM', endTime: '12:15 PM', subject: 'English Language', teacherName: 'Mrs. Sabina Karki', room: 'Room 204', classroomId: '', isCurrent: false, requiredBooks: 'English Reader Book' },
-    { id: 'wed-p4', periodNumber: 4, startTime: '12:15 PM', endTime: '01:00 PM', subject: '🍱 Tiffin & Lunch Break', teacherName: 'Cafeteria Staff', room: 'Playground', classroomId: '', isCurrent: false, requiredBooks: 'Tiffin Box & Water Bottle' },
-    { id: 'wed-p5', periodNumber: 5, startTime: '01:00 PM', endTime: '01:45 PM', subject: 'Science & Tech', teacherName: 'Mrs. Sabina Karki', room: 'Lab 1', classroomId: 'cls-sci-8a', isCurrent: false, requiredBooks: 'Science Textbook' },
-    { id: 'wed-p6', periodNumber: 6, startTime: '01:45 PM', endTime: '02:30 PM', subject: 'Moral Education', teacherName: 'Mr. Bishnu P. Gautam', room: 'Room 204', classroomId: '', isCurrent: false, requiredBooks: 'Moral Ed Book' }
+    {
+      id: 'wed-p1',
+      periodNumber: 1,
+      startTime: '10:00 AM',
+      endTime: '10:45 AM',
+      subject: 'Mathematics',
+      teacherName: 'Mr. Ramesh Thapa',
+      room: 'Room 204',
+      classroomId: 'cls-math-8a',
+      isCurrent: false,
+      requiredBooks: 'Math Practice Copy',
+    },
+    {
+      id: 'wed-p2',
+      periodNumber: 2,
+      startTime: '10:45 AM',
+      endTime: '11:30 AM',
+      subject: 'नेपाली (Nepali)',
+      teacherName: 'Mr. Bishnu P. Gautam',
+      room: 'Room 202',
+      classroomId: 'cls-nep-8a',
+      isCurrent: false,
+      requiredBooks: 'Nepali Essay Copy',
+    },
+    {
+      id: 'wed-p3',
+      periodNumber: 3,
+      startTime: '11:30 AM',
+      endTime: '12:15 PM',
+      subject: 'English Language',
+      teacherName: 'Mrs. Sabina Karki',
+      room: 'Room 204',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'English Reader Book',
+    },
+    {
+      id: 'wed-p4',
+      periodNumber: 4,
+      startTime: '12:15 PM',
+      endTime: '01:00 PM',
+      subject: '🍱 Tiffin & Lunch Break',
+      teacherName: 'Cafeteria Staff',
+      room: 'Playground',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'Tiffin Box & Water Bottle',
+    },
+    {
+      id: 'wed-p5',
+      periodNumber: 5,
+      startTime: '01:00 PM',
+      endTime: '01:45 PM',
+      subject: 'Science & Tech',
+      teacherName: 'Mrs. Sabina Karki',
+      room: 'Lab 1',
+      classroomId: 'cls-sci-8a',
+      isCurrent: false,
+      requiredBooks: 'Science Textbook',
+    },
+    {
+      id: 'wed-p6',
+      periodNumber: 6,
+      startTime: '01:45 PM',
+      endTime: '02:30 PM',
+      subject: 'Moral Education',
+      teacherName: 'Mr. Bishnu P. Gautam',
+      room: 'Room 204',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'Moral Ed Book',
+    },
   ],
   Thursday: [
-    { id: 'thu-p1', periodNumber: 1, startTime: '10:00 AM', endTime: '10:45 AM', subject: 'Social Studies', teacherName: 'Mr. Bishnu P. Gautam', room: 'Room 204', classroomId: '', isCurrent: false, requiredBooks: 'Social Book & World Map' },
-    { id: 'thu-p2', periodNumber: 2, startTime: '10:45 AM', endTime: '11:30 AM', subject: 'Science & Tech', teacherName: 'Mrs. Sabina Karki', room: 'Lab 1', classroomId: 'cls-sci-8a', isCurrent: false, requiredBooks: 'Science Practical Copy' },
-    { id: 'thu-p3', periodNumber: 3, startTime: '11:30 AM', endTime: '12:15 PM', subject: 'Mathematics', teacherName: 'Mr. Ramesh Thapa', room: 'Room 204', classroomId: 'cls-math-8a', isCurrent: false, requiredBooks: 'Math Geometry Book' },
-    { id: 'thu-p4', periodNumber: 4, startTime: '12:15 PM', endTime: '01:00 PM', subject: '🍱 Tiffin & Lunch Break', teacherName: 'Cafeteria Staff', room: 'Playground', classroomId: '', isCurrent: false, requiredBooks: 'Tiffin Box & Water Bottle' },
-    { id: 'thu-p5', periodNumber: 5, startTime: '01:00 PM', endTime: '01:45 PM', subject: 'नेपाली (Nepali)', teacherName: 'Mr. Bishnu P. Gautam', room: 'Room 202', classroomId: 'cls-nep-8a', isCurrent: false, requiredBooks: 'Nepali Book' },
-    { id: 'thu-p6', periodNumber: 6, startTime: '01:45 PM', endTime: '02:30 PM', subject: 'Creative Arts & Music', teacherName: 'Mrs. Sabina Karki', room: 'Art Room', classroomId: '', isCurrent: false, requiredBooks: 'Drawing Book & Colors' }
+    {
+      id: 'thu-p1',
+      periodNumber: 1,
+      startTime: '10:00 AM',
+      endTime: '10:45 AM',
+      subject: 'Social Studies',
+      teacherName: 'Mr. Bishnu P. Gautam',
+      room: 'Room 204',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'Social Book & World Map',
+    },
+    {
+      id: 'thu-p2',
+      periodNumber: 2,
+      startTime: '10:45 AM',
+      endTime: '11:30 AM',
+      subject: 'Science & Tech',
+      teacherName: 'Mrs. Sabina Karki',
+      room: 'Lab 1',
+      classroomId: 'cls-sci-8a',
+      isCurrent: false,
+      requiredBooks: 'Science Practical Copy',
+    },
+    {
+      id: 'thu-p3',
+      periodNumber: 3,
+      startTime: '11:30 AM',
+      endTime: '12:15 PM',
+      subject: 'Mathematics',
+      teacherName: 'Mr. Ramesh Thapa',
+      room: 'Room 204',
+      classroomId: 'cls-math-8a',
+      isCurrent: false,
+      requiredBooks: 'Math Geometry Book',
+    },
+    {
+      id: 'thu-p4',
+      periodNumber: 4,
+      startTime: '12:15 PM',
+      endTime: '01:00 PM',
+      subject: '🍱 Tiffin & Lunch Break',
+      teacherName: 'Cafeteria Staff',
+      room: 'Playground',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'Tiffin Box & Water Bottle',
+    },
+    {
+      id: 'thu-p5',
+      periodNumber: 5,
+      startTime: '01:00 PM',
+      endTime: '01:45 PM',
+      subject: 'नेपाली (Nepali)',
+      teacherName: 'Mr. Bishnu P. Gautam',
+      room: 'Room 202',
+      classroomId: 'cls-nep-8a',
+      isCurrent: false,
+      requiredBooks: 'Nepali Book',
+    },
+    {
+      id: 'thu-p6',
+      periodNumber: 6,
+      startTime: '01:45 PM',
+      endTime: '02:30 PM',
+      subject: 'Creative Arts & Music',
+      teacherName: 'Mrs. Sabina Karki',
+      room: 'Art Room',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'Drawing Book & Colors',
+    },
   ],
   Friday: [
-    { id: 'fri-p1', periodNumber: 1, startTime: '10:00 AM', endTime: '10:45 AM', subject: 'English Language', teacherName: 'Mrs. Sabina Karki', room: 'Room 204', classroomId: '', isCurrent: false, requiredBooks: 'English Dictionary & Reader' },
-    { id: 'fri-p2', periodNumber: 2, startTime: '10:45 AM', endTime: '11:30 AM', subject: 'Mathematics', teacherName: 'Mr. Ramesh Thapa', room: 'Room 204', classroomId: 'cls-math-8a', isCurrent: false, requiredBooks: 'Math Revision Copy' },
-    { id: 'fri-p3', periodNumber: 3, startTime: '11:30 AM', endTime: '12:15 PM', subject: 'Computer Science', teacherName: 'Mr. Ramesh Thapa', room: 'Comp Lab B', classroomId: 'cls-comp-8a', isCurrent: false, requiredBooks: 'Computer Science Practical File' },
-    { id: 'fri-p4', periodNumber: 4, startTime: '12:15 PM', endTime: '01:00 PM', subject: '🍱 Tiffin & Lunch Break', teacherName: 'Cafeteria Staff', room: 'Playground', classroomId: '', isCurrent: false, requiredBooks: 'Tiffin Box & Water Bottle' },
-    { id: 'fri-p5', periodNumber: 5, startTime: '01:00 PM', endTime: '01:45 PM', subject: 'Library & Reading', teacherName: 'Mrs. Sabina Karki', room: 'School Library', classroomId: '', isCurrent: false, requiredBooks: 'Library Card & Story Book' },
-    { id: 'fri-p6', periodNumber: 6, startTime: '01:45 PM', endTime: '02:30 PM', subject: 'Club & Sports Activities', teacherName: 'Mr. Bishnu P. Gautam', room: 'Sports Ground', classroomId: '', isCurrent: false, requiredBooks: 'House Sports Uniform' }
+    {
+      id: 'fri-p1',
+      periodNumber: 1,
+      startTime: '10:00 AM',
+      endTime: '10:45 AM',
+      subject: 'English Language',
+      teacherName: 'Mrs. Sabina Karki',
+      room: 'Room 204',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'English Dictionary & Reader',
+    },
+    {
+      id: 'fri-p2',
+      periodNumber: 2,
+      startTime: '10:45 AM',
+      endTime: '11:30 AM',
+      subject: 'Mathematics',
+      teacherName: 'Mr. Ramesh Thapa',
+      room: 'Room 204',
+      classroomId: 'cls-math-8a',
+      isCurrent: false,
+      requiredBooks: 'Math Revision Copy',
+    },
+    {
+      id: 'fri-p3',
+      periodNumber: 3,
+      startTime: '11:30 AM',
+      endTime: '12:15 PM',
+      subject: 'Computer Science',
+      teacherName: 'Mr. Ramesh Thapa',
+      room: 'Comp Lab B',
+      classroomId: 'cls-comp-8a',
+      isCurrent: false,
+      requiredBooks: 'Computer Science Practical File',
+    },
+    {
+      id: 'fri-p4',
+      periodNumber: 4,
+      startTime: '12:15 PM',
+      endTime: '01:00 PM',
+      subject: '🍱 Tiffin & Lunch Break',
+      teacherName: 'Cafeteria Staff',
+      room: 'Playground',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'Tiffin Box & Water Bottle',
+    },
+    {
+      id: 'fri-p5',
+      periodNumber: 5,
+      startTime: '01:00 PM',
+      endTime: '01:45 PM',
+      subject: 'Library & Reading',
+      teacherName: 'Mrs. Sabina Karki',
+      room: 'School Library',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'Library Card & Story Book',
+    },
+    {
+      id: 'fri-p6',
+      periodNumber: 6,
+      startTime: '01:45 PM',
+      endTime: '02:30 PM',
+      subject: 'Club & Sports Activities',
+      teacherName: 'Mr. Bishnu P. Gautam',
+      room: 'Sports Ground',
+      classroomId: '',
+      isCurrent: false,
+      requiredBooks: 'House Sports Uniform',
+    },
   ],
-  Saturday: []
+  Saturday: [],
 };
 
 export const MOCK_SCHEDULE = MOCK_WEEKLY_SCHEDULE.Sunday;
@@ -547,7 +1047,7 @@ export const MOCK_ATTENDANCE: AttendanceRecord[] = [
     status: 'present',
     markedBy: 'Mr. Ramesh Thapa',
     checkInTime: '09:42 AM',
-    remarks: 'Punctual & attentive'
+    remarks: 'Punctual & attentive',
   },
   {
     id: 'att-sunita-today',
@@ -556,7 +1056,7 @@ export const MOCK_ATTENDANCE: AttendanceRecord[] = [
     date: '2026-07-31',
     status: 'present',
     markedBy: 'Mrs. Sabina Karki',
-    checkInTime: '09:38 AM'
+    checkInTime: '09:38 AM',
   },
   {
     id: 'att-rohan-today',
@@ -565,7 +1065,7 @@ export const MOCK_ATTENDANCE: AttendanceRecord[] = [
     date: '2026-07-31',
     status: 'present',
     markedBy: 'Mr. Ramesh Thapa',
-    checkInTime: '09:50 AM'
+    checkInTime: '09:50 AM',
   },
   {
     id: 'att-bikas-today',
@@ -574,8 +1074,8 @@ export const MOCK_ATTENDANCE: AttendanceRecord[] = [
     date: '2026-07-31',
     status: 'absent',
     markedBy: 'Mr. Ramesh Thapa',
-    remarks: 'Informed sick leave by parent'
-  }
+    remarks: 'Informed sick leave by parent',
+  },
 ];
 
 export const MOCK_MODULES: ModuleItem[] = [
@@ -588,8 +1088,14 @@ export const MOCK_MODULES: ModuleItem[] = [
     completedByStudentIds: ['user-stu-1', 'user-stu-3'],
     durationMinutes: 25,
     attachments: [
-      { id: 'm-att-1', title: 'Grade8_Math_Unit1_Notes.pdf', type: 'pdf', url: '#', size: '4.2 MB' }
-    ]
+      {
+        id: 'm-att-1',
+        title: 'Grade8_Math_Unit1_Notes.pdf',
+        type: 'pdf',
+        url: '#',
+        size: '4.2 MB',
+      },
+    ],
   },
   {
     id: 'mod-2',
@@ -601,21 +1107,26 @@ export const MOCK_MODULES: ModuleItem[] = [
     durationMinutes: 30,
     attachments: [
       { id: 'm-att-2', title: 'Financial_Math_Guide.pdf', type: 'pdf', url: '#', size: '2.8 MB' },
-      { id: 'm-att-3', title: 'Video: Simple Interest Breakdown', type: 'video', url: 'https://youtube.com' }
-    ]
+      {
+        id: 'm-att-3',
+        title: 'Video: Simple Interest Breakdown',
+        type: 'video',
+        url: 'https://youtube.com',
+      },
+    ],
   },
   {
     id: 'mod-3',
     classroomId: 'cls-sci-8a',
     unitName: 'Unit 3: Force & Motion',
-    title: 'Newton\'s Laws of Motion & Gravitation',
+    title: "Newton's Laws of Motion & Gravitation",
     description: 'Textbook chapter summary with diagrams.',
     completedByStudentIds: ['user-stu-1', 'user-stu-2'],
     durationMinutes: 35,
     attachments: [
-      { id: 'm-att-4', title: 'Newton_Laws_Summary.pdf', type: 'pdf', url: '#', size: '3.5 MB' }
-    ]
-  }
+      { id: 'm-att-4', title: 'Newton_Laws_Summary.pdf', type: 'pdf', url: '#', size: '3.5 MB' },
+    ],
+  },
 ];
 
 export const MOCK_PARENT_CONTROLS: Record<string, ParentControlSettings> = {
@@ -627,7 +1138,7 @@ export const MOCK_PARENT_CONTROLS: Record<string, ParentControlSettings> = {
     lowAttendanceAlerts: true,
     weeklyDigestEmail: true,
     screenTimeLimitMinutes: 120,
-    requireApprovalForOutboundMsgs: true
+    requireApprovalForOutboundMsgs: true,
   },
   'user-stu-1': {
     studentId: 'user-stu-1',
@@ -637,8 +1148,8 @@ export const MOCK_PARENT_CONTROLS: Record<string, ParentControlSettings> = {
     lowAttendanceAlerts: true,
     weeklyDigestEmail: true,
     screenTimeLimitMinutes: 180,
-    requireApprovalForOutboundMsgs: false
-  }
+    requireApprovalForOutboundMsgs: false,
+  },
 };
 
 export const MOCK_CALENDAR_EVENTS: CalendarEvent[] = [
@@ -650,7 +1161,7 @@ export const MOCK_CALENDAR_EVENTS: CalendarEvent[] = [
     time: '05:00 PM',
     description: 'Submit CDC Math Exercises 4.1 & 4.2 PDF',
     subject: 'Mathematics',
-    nepaliDateBS: '2083 Shrawan 18'
+    nepaliDateBS: '2083 Shrawan 18',
   },
   {
     id: 'ev-2',
@@ -660,7 +1171,7 @@ export const MOCK_CALENDAR_EVENTS: CalendarEvent[] = [
     time: '10:45 AM',
     description: 'Online timed quiz during period 2',
     subject: 'Science',
-    nepaliDateBS: '2083 Shrawan 19'
+    nepaliDateBS: '2083 Shrawan 19',
   },
   {
     id: 'ev-3',
@@ -669,7 +1180,7 @@ export const MOCK_CALENDAR_EVENTS: CalendarEvent[] = [
     date: '2026-08-08',
     time: '10:00 AM',
     description: 'Interactive offline/online session with Class Teacher Mr. Ramesh Thapa',
-    nepaliDateBS: '2083 Shrawan 24'
+    nepaliDateBS: '2083 Shrawan 24',
   },
   {
     id: 'ev-4',
@@ -677,7 +1188,7 @@ export const MOCK_CALENDAR_EVENTS: CalendarEvent[] = [
     type: 'holiday',
     date: '2026-08-12',
     description: 'School closed for Janai Purnima / Raksha Bandhan festival',
-    nepaliDateBS: '2083 Shrawan 28'
+    nepaliDateBS: '2083 Shrawan 28',
   },
   {
     id: 'ev-5',
@@ -685,8 +1196,8 @@ export const MOCK_CALENDAR_EVENTS: CalendarEvent[] = [
     type: 'exam',
     date: '2026-08-20',
     description: 'First Term Evaluation based on CDC Nepal curriculum standards',
-    nepaliDateBS: '2083 Bhadra 04'
-  }
+    nepaliDateBS: '2083 Bhadra 04',
+  },
 ];
 
 export const MOCK_MESSAGES: DirectMessage[] = [
@@ -695,25 +1206,29 @@ export const MOCK_MESSAGES: DirectMessage[] = [
     senderId: 'user-teach-1',
     senderName: 'Mr. Ramesh Thapa',
     senderRole: 'teacher',
-    senderAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    senderAvatar:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     receiverId: 'user-parent-1',
     receiverName: 'Bina Sharma',
-    content: 'Namaste Mrs. Sharma! I wanted to let you know Aarav did remarkably well in today\'s Math problem solving session. His dedication is impressive!',
+    content:
+      "Namaste Mrs. Sharma! I wanted to let you know Aarav did remarkably well in today's Math problem solving session. His dedication is impressive!",
     createdAt: '2026-07-30T16:10:00Z',
-    read: true
+    read: true,
   },
   {
     id: 'm2',
     senderId: 'user-parent-1',
     senderName: 'Bina Sharma',
     senderRole: 'parent',
-    senderAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    senderAvatar:
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
     receiverId: 'user-teach-1',
     receiverName: 'Mr. Ramesh Thapa',
-    content: 'Thank you so much Ramesh Sir! We encourage him at home as well. We will see you during PTM on 8th August.',
+    content:
+      'Thank you so much Ramesh Sir! We encourage him at home as well. We will see you during PTM on 8th August.',
     createdAt: '2026-07-30T16:30:00Z',
-    read: true
-  }
+    read: true,
+  },
 ];
 
 export const MOCK_SUBJECT_PERFORMANCE: SubjectPerformance[] = [
@@ -725,7 +1240,7 @@ export const MOCK_SUBJECT_PERFORMANCE: SubjectPerformance[] = [
     totalAssignments: 8,
     quizzesScoreAvg: 95,
     teacherRemark: 'Outstanding analytical skills and neat notebook work.',
-    trend: 'up'
+    trend: 'up',
   },
   {
     subject: 'Science & Technology',
@@ -735,7 +1250,7 @@ export const MOCK_SUBJECT_PERFORMANCE: SubjectPerformance[] = [
     totalAssignments: 8,
     quizzesScoreAvg: 85,
     teacherRemark: 'Active participant in lab practicals and group discussions.',
-    trend: 'stable'
+    trend: 'stable',
   },
   {
     subject: 'नेपाली (Nepali)',
@@ -745,7 +1260,7 @@ export const MOCK_SUBJECT_PERFORMANCE: SubjectPerformance[] = [
     totalAssignments: 7,
     quizzesScoreAvg: 82,
     teacherRemark: 'व्याकरण र रचना राम्रो छ। लेखन शैलीमा सुधार हुँदैछ।',
-    trend: 'up'
+    trend: 'up',
   },
   {
     subject: 'Computer Science',
@@ -755,7 +1270,7 @@ export const MOCK_SUBJECT_PERFORMANCE: SubjectPerformance[] = [
     totalAssignments: 5,
     quizzesScoreAvg: 98,
     teacherRemark: 'Top performer in HTML coding and computer logic.',
-    trend: 'up'
+    trend: 'up',
   },
   {
     subject: 'Social Studies',
@@ -765,6 +1280,6 @@ export const MOCK_SUBJECT_PERFORMANCE: SubjectPerformance[] = [
     totalAssignments: 7,
     quizzesScoreAvg: 80,
     teacherRemark: 'Good understanding of Nepalese history and civic duties.',
-    trend: 'stable'
-  }
+    trend: 'stable',
+  },
 ];

@@ -9,7 +9,7 @@ describe('Sidebar Component (src/components/common/Sidebar.tsx)', () => {
     render(
       <AppProvider>
         <Sidebar />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Dashboard/i)).toBeInTheDocument();

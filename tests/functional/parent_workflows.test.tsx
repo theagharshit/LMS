@@ -29,7 +29,7 @@ describe('Parent Interactive Functional Workflows (tests/functional/parent_workf
             onOpenParentalControlsModal={handleOpenControls}
           />
         </ParentWrapper>
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getAllByText(/Parent Portal/i)[0]).toBeInTheDocument();
@@ -47,7 +47,7 @@ describe('Parent Interactive Functional Workflows (tests/functional/parent_workf
         <ParentWrapper>
           <ParentalControlsModal isOpen={true} onClose={handleClose} />
         </ParentWrapper>
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Parental Safety Controls/i)).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe('Parent Interactive Functional Workflows (tests/functional/parent_workf
         <ParentWrapper>
           <DigestWrapper />
         </ParentWrapper>
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Parent Weekly Summary/i)).toBeInTheDocument();

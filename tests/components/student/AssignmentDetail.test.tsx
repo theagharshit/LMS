@@ -9,7 +9,7 @@ describe('AssignmentDetailModal Component (src/components/student/AssignmentDeta
     render(
       <AppProvider>
         <AssignmentDetailModal assignmentId="asg-math-1" onClose={vi.fn()} />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/Teacher Instructions/i)).toBeInTheDocument();

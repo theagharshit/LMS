@@ -9,7 +9,7 @@ describe('MessagesView Component (src/components/common/MessagesView.tsx)', () =
     render(
       <AppProvider>
         <MessagesView />
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(screen.getByText(/School Messages & Channels/i)).toBeInTheDocument();

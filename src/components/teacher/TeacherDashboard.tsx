@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { StudentLocationTracker } from '../common/StudentLocationTracker';
 import { DayOfWeek, SchedulePeriod } from '../../types';
 import {
   Users,
@@ -19,7 +20,7 @@ import {
   Save,
   Plus,
   Trash2,
-  BookMarked
+  BookMarked,
 } from 'lucide-react';
 
 interface TeacherDashboardProps {
@@ -31,7 +32,7 @@ const DAYS_LIST: DayOfWeek[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thu
 
 export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   onOpenGradeModal,
-  onOpenQuizBuilderModal
+  onOpenQuizBuilderModal,
 }) => {
   const {
     currentUser,
@@ -43,7 +44,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     gradeSubmission,
     setActiveView,
     weeklySchedule,
-    updateDaySchedule
+    updateDaySchedule,
   } = useApp();
 
   const [gradingModalSubmissionId, setGradingModalSubmissionId] = useState<string | null>(null);
@@ -57,8 +58,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [editablePeriods, setEditablePeriods] = useState<SchedulePeriod[]>(weeklySchedule.Sunday);
   const [timetableSaveSuccess, setTimetableSaveSuccess] = useState(false);
 
-  const pendingGradingSubmissions = submissions.filter(s => s.status === 'submitted');
-  const strugglingStudents = studentProfiles.filter(s => s.attendancePercentage < 80);
+  const pendingGradingSubmissions = submissions.filter((s) => s.status === 'submitted');
+  const strugglingStudents = studentProfiles.filter((s) => s.attendancePercentage < 80);
 
   const handleAiFeedbackDraft = async (studentName: string) => {
     setIsAiGeneratingFeedback(true);
@@ -68,8 +69,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           task: 'grade_feedback',
-          context: { studentName, subject: 'Mathematics', score: gradeInput, maxScore: 20 }
-        })
+          context: { studentName, subject: 'Mathematics', score: gradeInput, maxScore: 20 },
+        }),
       });
       const data = await res.json();
       setFeedbackInput(data.text || `Great job ${studentName}! Clear step-by-step working.`);
@@ -88,7 +89,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
-      
       {/* Teacher Hero Banner */}
       <div className="relative overflow-hidden rounded-3xl natural-banner p-6 md:p-8 text-white shadow-md">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -100,7 +100,11 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               Welcome Back, {currentUser.name}! 🙏
             </h1>
             <p className="text-[#F9F7F2]/90 text-xs md:text-sm max-w-xl">
-              You have <span className="font-bold text-[#FDEEDC]">{pendingGradingSubmissions.length} pending homework submissions</span> waiting for review and grading across your classrooms.
+              You have{' '}
+              <span className="font-bold text-[#FDEEDC]">
+                {pendingGradingSubmissions.length} pending homework submissions
+              </span>{' '}
+              waiting for review and grading across your classrooms.
             </p>
           </div>
 
@@ -137,12 +141,13 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         </div>
       </div>
 
+      {/* Real-Time Student Location Tracker Control */}
+      <StudentLocationTracker studentId="user-stu-1" studentName="Aarav Sharma" />
+
       {/* Main Grid: Grading Desk & Class Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
         {/* Left Column (2 Cols): Submissions Desk Needing Grading */}
         <div className="lg:col-span-2 space-y-6">
-          
           <div className="bg-white rounded-3xl p-6 border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -150,7 +155,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   <FileCheck className="w-5 h-5 text-[#4A6741]" />
                   Homework Submissions Queue
                 </h2>
-                <p className="text-xs text-[#7A7A72]">Student submissions needing grading & feedback</p>
+                <p className="text-xs text-[#7A7A72]">
+                  Student submissions needing grading & feedback
+                </p>
               </div>
               <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#FDEEDC] text-[#E88D67]">
                 {pendingGradingSubmissions.length} Pending Review
@@ -161,23 +168,30 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               <div className="text-center py-8 text-[#7A7A72] text-xs">
                 <CheckCircle className="w-10 h-10 text-[#4A6741] mx-auto mb-2" />
                 <p className="font-bold text-[#2D2D2A] text-sm">Submissions Queue Clear!</p>
-                <p className="text-[11px]">All student submissions have been graded and returned.</p>
+                <p className="text-[11px]">
+                  All student submissions have been graded and returned.
+                </p>
               </div>
             ) : (
               <div className="space-y-3">
-                {pendingGradingSubmissions.map(sub => {
-                  const asg = assignments.find(a => a.id === sub.assignmentId);
+                {pendingGradingSubmissions.map((sub) => {
+                  const asg = assignments.find((a) => a.id === sub.assignmentId);
                   return (
                     <div
                       key={sub.id}
                       className="p-4 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                     >
                       <div className="flex items-center gap-3">
-                        <img src={sub.studentAvatar} alt={sub.studentName} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                        <img
+                          src={sub.studentAvatar}
+                          alt={sub.studentName}
+                          className="w-10 h-10 rounded-full object-cover shrink-0"
+                        />
                         <div>
                           <h3 className="font-bold text-xs text-[#2D2D2A]">{sub.studentName}</h3>
                           <p className="text-[11px] text-[#7A7A72]">
-                            {asg?.title || 'Assignment'} • Submitted {new Date(sub.submittedAt).toLocaleTimeString()}
+                            {asg?.title || 'Assignment'} • Submitted{' '}
+                            {new Date(sub.submittedAt).toLocaleTimeString()}
                           </p>
                           {sub.fileName && (
                             <span className="inline-block text-[10px] text-[#4A6741] font-medium mt-0.5">
@@ -212,8 +226,11 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {classrooms.map(cls => (
-                <div key={cls.id} className="p-4 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-2">
+              {classrooms.map((cls) => (
+                <div
+                  key={cls.id}
+                  className="p-4 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-2"
+                >
                   <div className="flex justify-between items-start">
                     <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-[#EBF1E8] text-[#4A6741]">
                       Grade {cls.gradeLevel}-{cls.section}
@@ -221,34 +238,45 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     <span className="text-xs font-mono text-[#7A7A72]">{cls.code}</span>
                   </div>
                   <h3 className="font-bold text-sm text-[#2D2D2A] font-serif">{cls.name}</h3>
-                  <p className="text-xs text-[#7A7A72]">{cls.studentCount} Students Enrolled • {cls.roomNumber}</p>
+                  <p className="text-xs text-[#7A7A72]">
+                    {cls.studentCount} Students Enrolled • {cls.roomNumber}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
-
         </div>
 
         {/* Right Column: Struggling Student Detection & Attendance Summary */}
         <div className="space-y-6">
-          
           {/* Struggling Student Radar */}
           <div className="bg-white rounded-3xl p-6 border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-4">
             <div className="flex items-center gap-2 text-[#E88D67] font-bold text-sm font-serif">
               <AlertTriangle className="w-5 h-5" />
               <span>Struggling Student Radar</span>
             </div>
-            <p className="text-xs text-[#7A7A72]">Students requiring teacher intervention or parent communication</p>
+            <p className="text-xs text-[#7A7A72]">
+              Students requiring teacher intervention or parent communication
+            </p>
 
             <div className="space-y-3">
-              {strugglingStudents.map(st => (
-                <div key={st.id} className="p-3.5 rounded-2xl bg-[#FDEEDC] border border-[#E88D67]/30 space-y-2">
+              {strugglingStudents.map((st) => (
+                <div
+                  key={st.id}
+                  className="p-3.5 rounded-2xl bg-[#FDEEDC] border border-[#E88D67]/30 space-y-2"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <img src={st.avatar} alt={st.name} className="w-8 h-8 rounded-full object-cover" />
+                      <img
+                        src={st.avatar}
+                        alt={st.name}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
                       <div>
                         <h4 className="font-bold text-xs text-[#2D2D2A]">{st.name}</h4>
-                        <p className="text-[10px] text-[#7A7A72]">Grade {st.gradeLevel}-{st.section}</p>
+                        <p className="text-[10px] text-[#7A7A72]">
+                          Grade {st.gradeLevel}-{st.section}
+                        </p>
                       </div>
                     </div>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#E88D67] text-white">
@@ -274,7 +302,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           {/* Today's Attendance Quick Widget */}
           <div className="bg-white rounded-3xl p-6 border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-sm text-[#2D2D2A] font-serif">Today's Class Attendance</h3>
+              <h3 className="font-bold text-sm text-[#2D2D2A] font-serif">
+                Today's Class Attendance
+              </h3>
               <span className="text-xs font-bold text-[#4A6741] bg-[#EBF1E8] px-2.5 py-0.5 rounded-full">
                 94% Present
               </span>
@@ -284,9 +314,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </div>
             <p className="text-[11px] text-[#7A7A72]">32 Present • 2 Absent • 0 Late</p>
           </div>
-
         </div>
-
       </div>
 
       {/* Grading Modal */}
@@ -294,9 +322,11 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-150 text-xs">
             <h3 className="font-bold text-base text-slate-900">Grade Student Submission</h3>
-            
+
             <div>
-              <label className="block font-semibold mb-1 text-slate-700">Marks Awarded (Out of 20):</label>
+              <label className="block font-semibold mb-1 text-slate-700">
+                Marks Awarded (Out of 20):
+              </label>
               <input
                 type="number"
                 value={gradeInput}
@@ -349,7 +379,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       {isTimetableModalOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-3xl bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-5 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
-            
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-[#EDEAE2] pb-3">
               <div>
@@ -358,7 +387,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   School Timetable & Bag Packing Editor
                 </h3>
                 <p className="text-xs text-[#7A7A72]">
-                  Upload and update periods for Grade 8-A. Students automatically see these changes upon viewing their dashboard for each day.
+                  Upload and update periods for Grade 8-A. Students automatically see these changes
+                  upon viewing their dashboard for each day.
                 </p>
               </div>
 
@@ -372,7 +402,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
             {/* Day Selector Tabs */}
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
-              {DAYS_LIST.map(day => (
+              {DAYS_LIST.map((day) => (
                 <button
                   key={day}
                   onClick={() => {
@@ -395,7 +425,10 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             {timetableSaveSuccess && (
               <div className="p-3 bg-[#EBF1E8] border border-[#88A070] text-[#4A6741] rounded-2xl text-xs font-bold flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-[#4A6741]" />
-                <span>Weekly timetable updated successfully for {editingDay}! Students will instantly see the reflected period routine and bag packing list.</span>
+                <span>
+                  Weekly timetable updated successfully for {editingDay}! Students will instantly
+                  see the reflected period routine and bag packing list.
+                </span>
               </div>
             )}
 
@@ -416,7 +449,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       subject: 'New Subject',
                       teacherName: currentUser.name,
                       room: 'Room 204',
-                      requiredBooks: 'Textbook & Notebook'
+                      requiredBooks: 'Textbook & Notebook',
                     };
                     setEditablePeriods([...editablePeriods, newP]);
                   }}
@@ -433,7 +466,10 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 </div>
               ) : (
                 editablePeriods.map((period, idx) => (
-                  <div key={period.id || idx} className="p-4 rounded-2xl border border-[#E5E1D8] bg-[#F9F7F2] space-y-3">
+                  <div
+                    key={period.id || idx}
+                    className="p-4 rounded-2xl border border-[#E5E1D8] bg-[#F9F7F2] space-y-3"
+                  >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="w-6 h-6 rounded-full bg-[#4A6741] text-white text-xs font-black flex items-center justify-center">
@@ -443,7 +479,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       </div>
 
                       <button
-                        onClick={() => setEditablePeriods(editablePeriods.filter((_, i) => i !== idx))}
+                        onClick={() =>
+                          setEditablePeriods(editablePeriods.filter((_, i) => i !== idx))
+                        }
                         className="text-rose-600 hover:text-rose-800 p-1"
                         title="Remove Period"
                       >
@@ -453,7 +491,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
                       <div>
-                        <label className="block text-[10px] font-bold text-[#7A7A72] uppercase mb-1">Subject Name</label>
+                        <label className="block text-[10px] font-bold text-[#7A7A72] uppercase mb-1">
+                          Subject Name
+                        </label>
                         <input
                           type="text"
                           value={period.subject}
@@ -467,7 +507,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-[#7A7A72] uppercase mb-1">Start Time</label>
+                        <label className="block text-[10px] font-bold text-[#7A7A72] uppercase mb-1">
+                          Start Time
+                        </label>
                         <input
                           type="text"
                           value={period.startTime}
@@ -481,7 +523,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-[#7A7A72] uppercase mb-1">End Time</label>
+                        <label className="block text-[10px] font-bold text-[#7A7A72] uppercase mb-1">
+                          End Time
+                        </label>
                         <input
                           type="text"
                           value={period.endTime}
@@ -495,7 +539,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-[#7A7A72] uppercase mb-1">Teacher Name</label>
+                        <label className="block text-[10px] font-bold text-[#7A7A72] uppercase mb-1">
+                          Teacher Name
+                        </label>
                         <input
                           type="text"
                           value={period.teacherName}
@@ -509,7 +555,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-[#7A7A72] uppercase mb-1">Room / Location</label>
+                        <label className="block text-[10px] font-bold text-[#7A7A72] uppercase mb-1">
+                          Room / Location
+                        </label>
                         <input
                           type="text"
                           value={period.room}
@@ -523,7 +571,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-[#E88D67] uppercase mb-1">🎒 Books / Copy to Pack</label>
+                        <label className="block text-[10px] font-bold text-[#E88D67] uppercase mb-1">
+                          🎒 Books / Copy to Pack
+                        </label>
                         <input
                           type="text"
                           value={period.requiredBooks || ''}
@@ -562,11 +612,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 <span>Save Timetable for {editingDay}</span>
               </button>
             </div>
-
           </div>
         </div>
       )}
-
     </div>
   );
 };

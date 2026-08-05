@@ -13,26 +13,29 @@ export const AttendanceRegister: React.FC = () => {
   const handleStatusChange = (
     studentId: string,
     studentName: string,
-    status: 'present' | 'absent' | 'late' | 'excused'
+    status: 'present' | 'absent' | 'late' | 'excused',
   ) => {
     markAttendance(studentId, studentName, selectedDate, status, remarksInput[studentId] || '');
   };
 
   const handleSendParentAlert = (studentName: string, parentPhone: string, studentId: string) => {
-    setAlertSentStatus(prev => ({ ...prev, [studentId]: true }));
+    setAlertSentStatus((prev) => ({ ...prev, [studentId]: true }));
   };
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
-      
       {/* Header Banner */}
       <div className="natural-banner rounded-3xl p-6 md:p-8 text-white shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[#FDEEDC] text-xs font-bold mb-2">
             <span>Mount Everest Sec. School Attendance Register</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold font-serif">Daily Student Attendance Register</h1>
-          <p className="text-xs md:text-sm text-[#F9F7F2]/90 mt-1">Mark daily attendance and notify parents automatically</p>
+          <h1 className="text-2xl md:text-3xl font-extrabold font-serif">
+            Daily Student Attendance Register
+          </h1>
+          <p className="text-xs md:text-sm text-[#F9F7F2]/90 mt-1">
+            Mark daily attendance and notify parents automatically
+          </p>
         </div>
 
         <div className="flex gap-2">
@@ -57,20 +60,19 @@ export const AttendanceRegister: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 text-xs font-bold">
-            <span className="px-3 py-1 rounded-full bg-[#EBF1E8] text-[#4A6741]">
-              3 Present
-            </span>
-            <span className="px-3 py-1 rounded-full bg-[#FDEEDC] text-[#E88D67]">
-              1 Absent
-            </span>
+            <span className="px-3 py-1 rounded-full bg-[#EBF1E8] text-[#4A6741]">3 Present</span>
+            <span className="px-3 py-1 rounded-full bg-[#FDEEDC] text-[#E88D67]">1 Absent</span>
           </div>
         </div>
 
         {/* Student Attendance List */}
         <div className="space-y-3">
           {studentProfiles.map((student) => {
-            const currentRecord = attendanceRecords.find(a => a.studentId === student.id && a.date === selectedDate);
-            const status = currentRecord?.status || (student.id === 'user-stu-4' ? 'absent' : 'present');
+            const currentRecord = attendanceRecords.find(
+              (a) => a.studentId === student.id && a.date === selectedDate,
+            );
+            const status =
+              currentRecord?.status || (student.id === 'user-stu-4' ? 'absent' : 'present');
 
             return (
               <div
@@ -78,11 +80,17 @@ export const AttendanceRegister: React.FC = () => {
                 className="p-4 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
               >
                 <div className="flex items-center gap-3">
-                  <img src={student.avatar} alt={student.name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                  <img
+                    src={student.avatar}
+                    alt={student.name}
+                    className="w-10 h-10 rounded-full object-cover shrink-0"
+                  />
                   <div>
                     <h3 className="font-bold text-xs text-[#2D2D2A] flex items-center gap-2">
                       {student.name}
-                      <span className="text-[10px] text-[#7A7A72] font-normal">Roll #{student.rollNumber}</span>
+                      <span className="text-[10px] text-[#7A7A72] font-normal">
+                        Roll #{student.rollNumber}
+                      </span>
                     </h3>
                     <p className="text-[11px] text-[#7A7A72]">
                       Parent: {student.parentName} ({student.parentPhone})
@@ -96,7 +104,7 @@ export const AttendanceRegister: React.FC = () => {
                     { id: 'present', label: 'Present', color: 'bg-[#4A6741] text-white' },
                     { id: 'absent', label: 'Absent', color: 'bg-[#E88D67] text-white' },
                     { id: 'late', label: 'Late', color: 'bg-[#E88D67] text-white' },
-                    { id: 'excused', label: 'Leave', color: 'bg-[#88A070] text-white' }
+                    { id: 'excused', label: 'Leave', color: 'bg-[#88A070] text-white' },
                   ].map((btn) => {
                     const isSel = status === btn.id;
                     return (
@@ -117,7 +125,9 @@ export const AttendanceRegister: React.FC = () => {
                   {/* Send Alert if Absent */}
                   {status === 'absent' && (
                     <button
-                      onClick={() => handleSendParentAlert(student.name, student.parentPhone, student.id)}
+                      onClick={() =>
+                        handleSendParentAlert(student.name, student.parentPhone, student.id)
+                      }
                       className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
                         alertSentStatus[student.id]
                           ? 'bg-[#EBF1E8] text-[#4A6741]'
@@ -125,7 +135,9 @@ export const AttendanceRegister: React.FC = () => {
                       }`}
                     >
                       <Bell className="w-3.5 h-3.5" />
-                      <span>{alertSentStatus[student.id] ? 'Parent SMS Sent ✓' : 'Notify Parent'}</span>
+                      <span>
+                        {alertSentStatus[student.id] ? 'Parent SMS Sent ✓' : 'Notify Parent'}
+                      </span>
                     </button>
                   )}
                 </div>
@@ -133,9 +145,7 @@ export const AttendanceRegister: React.FC = () => {
             );
           })}
         </div>
-
       </div>
-
     </div>
   );
 };
