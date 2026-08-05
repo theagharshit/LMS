@@ -1,19 +1,12 @@
 import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { GoogleGenAI, Type } from '@google/genai';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { logger } from './src/utils/logger';
-import { verifyFileIntegrity } from './src/middlewares/fileMiddleware';
-import { fileStorageDB } from './src/db/fileStorageDB';
-import { lmsDB } from './src/db/lmsDatabase';
+import { loadEnv } from '@utils/envResolver';
+loadEnv();
 
-const _filename = typeof __filename !== 'undefined' ? __filename : fileURLToPath(import.meta.url);
-const _dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(_filename);
-
-dotenv.config({ path: path.resolve(_dirname, '../../.env') }); // Relative to apps/backend/
+import { logger } from '@utils/logger';
+import { verifyFileIntegrity } from '@middlewares/fileMiddleware';
+import { fileStorageDB } from '@db/fileStorageDB';
+import { lmsDB } from '@db/lmsDatabase';
 
 async function startServer() {
   const app = express();
@@ -511,7 +504,7 @@ Language: ${language}`,
   // Separated Architecture:
   // In production, you might serve a built frontend, but for now we focus on the API.
   app.get('/', (_req, res) => {
-    res.json({ message: "LMS API Backend is running" });
+    res.json({ message: 'LMS API Backend is running' });
   });
 
   app.listen(PORT, '0.0.0.0', () => {

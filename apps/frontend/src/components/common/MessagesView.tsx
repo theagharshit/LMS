@@ -48,7 +48,7 @@ export const MessagesView: React.FC = () => {
     e.preventDefault();
     if (!inputText.trim()) return;
 
-    sendMessage(activeChannelId, "Unknown", inputText);
+    sendMessage(activeChannelId, 'Unknown', inputText);
     setInputText('');
   };
 

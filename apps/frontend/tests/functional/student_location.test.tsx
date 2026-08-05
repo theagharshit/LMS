@@ -16,6 +16,6 @@ describe('Student Location Tracker Functional Component (tests/functional/studen
     );
 
     expect(screen.getByText(/Where is Student\? • Live Tracker/i)).toBeInTheDocument();
-    expect(screen.getByText(/In Math Class \(Room 204\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/In Class \(Grade 8-A Room 204\)/i)).toBeInTheDocument();
   });
 });

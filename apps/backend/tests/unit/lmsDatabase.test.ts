@@ -35,7 +35,7 @@ describe('LMS Database Service (Async)', () => {
     const created = await lmsDB.addClassroom(newClassroom);
     expect(created.id).toBeDefined();
     expect(created.code).toBeDefined();
-    
+
     const classrooms = await lmsDB.getClassrooms();
     expect(classrooms.some((c) => c.id === created.id)).toBe(true);
   });
@@ -48,7 +48,7 @@ describe('LMS Database Service (Async)', () => {
       'Library',
       'library',
       'Mr. Ramesh',
-      'teacher'
+      'teacher',
     );
     expect(updated.currentLocation).toBe('Library');
     expect(updated.category).toBe('library');

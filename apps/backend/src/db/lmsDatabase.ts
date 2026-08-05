@@ -1,14 +1,9 @@
-import { config } from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { loadEnv } from '@utils/envResolver';
 
-const _filename = typeof __filename !== 'undefined' ? __filename : fileURLToPath(import.meta.url);
-const _dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(_filename);
-
-config({ path: path.resolve(_dirname, '../../../../.env') }); // Relative to apps/backend/src/db/
-
+// Automatically finds and loads the root .env file
+loadEnv();
 import { PrismaClient } from '@prisma/client';
-import { logger } from '../utils/logger';
+import { logger } from '@utils/logger';
 import {
   User,
   StudentProfile,
@@ -35,7 +30,7 @@ const prisma = new PrismaClient({ adapter });
 class LMSDatabaseService {
   public async getUsers(): Promise<User[]> {
     const users = await prisma.user.findMany();
-    return users.map(u => ({
+    return users.map((u) => ({
       id: u.id,
       name: u.name,
       email: u.email,
@@ -54,7 +49,7 @@ class LMSDatabaseService {
     const profiles = await prisma.studentProfile.findMany({
       include: { user: true, badges: true },
     });
-    return profiles.map(p => ({
+    return profiles.map((p) => ({
       id: p.user.id,
       name: p.user.name,
       email: p.user.email,
@@ -69,7 +64,7 @@ class LMSDatabaseService {
       xpPoints: p.xpPoints,
       parentName: p.parentName,
       parentPhone: p.parentPhone,
-      badges: p.badges.map(b => ({
+      badges: p.badges.map((b) => ({
         id: b.id,
         title: b.title,
         description: b.description,
@@ -84,33 +79,37 @@ class LMSDatabaseService {
     return prisma.classroom.findMany();
   }
 
-  public async addClassroom(classroom: Omit<Classroom, 'id' | 'code' | 'studentCount'>): Promise<Classroom> {
+  public async addClassroom(
+    classroom: Omit<Classroom, 'id' | 'code' | 'studentCount'>,
+  ): Promise<Classroom> {
     const code = `CLS${Math.floor(1000 + Math.random() * 9000)}`;
     return prisma.classroom.create({
       data: {
         ...classroom,
         studentCount: 30,
         code,
-      }
+      },
     });
   }
 
   public async getStreamPosts(): Promise<StreamPost[]> {
     const posts = await prisma.streamPost.findMany({
       include: { comments: true, attachments: true },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
-    return posts.map(p => ({
+    return posts.map((p) => ({
       ...p,
       role: p.authorRole as any,
       authorRole: p.authorRole as any,
       commentsCount: p.comments.length,
-      comments: p.comments.map(c => ({...c})),
-      attachments: p.attachments.map(a => ({...a, type: a.type as any})),
+      comments: p.comments.map((c) => ({ ...c })),
+      attachments: p.attachments.map((a) => ({ ...a, type: a.type as any })),
     }));
   }
 
-  public async addStreamPost(post: Omit<StreamPost, 'id' | 'createdAt' | 'commentsCount'>): Promise<StreamPost> {
+  public async addStreamPost(
+    post: Omit<StreamPost, 'id' | 'createdAt' | 'commentsCount'>,
+  ): Promise<StreamPost> {
     const created = await prisma.streamPost.create({
       data: {
         classroomId: post.classroomId,
@@ -122,38 +121,39 @@ class LMSDatabaseService {
         pinned: post.pinned,
         createdAt: new Date().toISOString(),
         attachments: {
-          create: post.attachments?.map(a => ({
-            title: a.title,
-            type: a.type,
-            url: a.url,
-            size: a.size,
-          })) || []
-        }
+          create:
+            post.attachments?.map((a) => ({
+              title: a.title,
+              type: a.type,
+              url: a.url,
+              size: a.size,
+            })) || [],
+        },
       },
-      include: { comments: true, attachments: true }
+      include: { comments: true, attachments: true },
     });
     return {
       ...created,
       authorRole: created.authorRole as any,
       commentsCount: created.comments.length,
       comments: created.comments,
-      attachments: created.attachments.map(a => ({...a, type: a.type as any})),
+      attachments: created.attachments.map((a) => ({ ...a, type: a.type as any })),
     };
   }
 
   public async getAssignments(): Promise<Assignment[]> {
     const assignments = await prisma.assignment.findMany({
-      include: { attachments: true }
+      include: { attachments: true },
     });
-    return assignments.map(a => ({
+    return assignments.map((a) => ({
       ...a,
-      attachments: a.attachments.map(at => ({...at, type: at.type as any}))
+      attachments: a.attachments.map((at) => ({ ...at, type: at.type as any })),
     }));
   }
 
   public async getSubmissions(): Promise<Submission[]> {
     const subs = await prisma.submission.findMany();
-    return subs.map(s => ({
+    return subs.map((s) => ({
       ...s,
       status: s.status as any,
       fileUrl: s.fileUrl || undefined,
@@ -172,9 +172,9 @@ class LMSDatabaseService {
     notes?: string,
   ): Promise<Submission> {
     const existing = await prisma.submission.findFirst({
-      where: { assignmentId, studentId }
+      where: { assignmentId, studentId },
     });
-    
+
     if (existing) {
       const updated = await prisma.submission.update({
         where: { id: existing.id },
@@ -183,10 +183,18 @@ class LMSDatabaseService {
           fileUrl,
           responseText: notes,
           submittedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          status: 'submitted'
-        }
+          status: 'submitted',
+        },
       });
-      return { ...updated, status: updated.status as any, fileUrl: updated.fileUrl || undefined, fileName: updated.fileName || undefined, responseText: updated.responseText || undefined, grade: updated.grade || undefined, feedback: updated.feedback || undefined };
+      return {
+        ...updated,
+        status: updated.status as any,
+        fileUrl: updated.fileUrl || undefined,
+        fileName: updated.fileName || undefined,
+        responseText: updated.responseText || undefined,
+        grade: updated.grade || undefined,
+        feedback: updated.feedback || undefined,
+      };
     }
 
     const created = await prisma.submission.create({
@@ -194,24 +202,33 @@ class LMSDatabaseService {
         assignmentId,
         studentId,
         studentName: 'Aarav Sharma', // Mock logic preservation
-        studentAvatar: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+        studentAvatar:
+          'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
         fileName,
         fileUrl,
         responseText: notes,
         submittedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        status: 'submitted'
-      }
+        status: 'submitted',
+      },
     });
-    return { ...created, status: created.status as any, fileUrl: created.fileUrl || undefined, fileName: created.fileName || undefined, responseText: created.responseText || undefined, grade: created.grade || undefined, feedback: created.feedback || undefined };
+    return {
+      ...created,
+      status: created.status as any,
+      fileUrl: created.fileUrl || undefined,
+      fileName: created.fileName || undefined,
+      responseText: created.responseText || undefined,
+      grade: created.grade || undefined,
+      feedback: created.feedback || undefined,
+    };
   }
 
   public async getQuizzes(): Promise<Quiz[]> {
     const quizzes = await prisma.quiz.findMany({
-      include: { questions: true }
+      include: { questions: true },
     });
-    return quizzes.map(q => ({
+    return quizzes.map((q) => ({
       ...q,
-      questions: q.questions.map(qt => ({...qt, type: qt.type as any}))
+      questions: q.questions.map((qt) => ({ ...qt, type: qt.type as any })),
     }));
   }
 
@@ -221,28 +238,31 @@ class LMSDatabaseService {
         ...quiz,
         createdAt: new Date().toISOString(),
         questions: {
-          create: quiz.questions.map(q => ({
+          create: quiz.questions.map((q) => ({
             text: q.text,
             type: q.type,
             options: q.options || [],
             correctAnswer: q.correctAnswer,
             explanation: q.explanation,
-            points: q.points
-          }))
-        }
+            points: q.points,
+          })),
+        },
       },
-      include: { questions: true }
+      include: { questions: true },
     });
-    return { ...created, questions: created.questions.map(qt => ({...qt, type: qt.type as any})) };
+    return {
+      ...created,
+      questions: created.questions.map((qt) => ({ ...qt, type: qt.type as any })),
+    };
   }
 
   public async getAttendance(): Promise<AttendanceRecord[]> {
     const records = await prisma.attendanceRecord.findMany();
-    return records.map(r => ({
+    return records.map((r) => ({
       ...r,
       status: r.status as any,
       remarks: r.remarks || undefined,
-      checkInTime: r.checkInTime || undefined
+      checkInTime: r.checkInTime || undefined,
     }));
   }
 
@@ -254,29 +274,42 @@ class LMSDatabaseService {
     remarks?: string,
   ): Promise<AttendanceRecord> {
     const existing = await prisma.attendanceRecord.findFirst({
-      where: { studentId, date }
+      where: { studentId, date },
     });
-    
+
     if (existing) {
       const updated = await prisma.attendanceRecord.update({
         where: { id: existing.id },
-        data: { status, remarks }
+        data: { status, remarks },
       });
-      return { ...updated, status: updated.status as any, remarks: updated.remarks || undefined, checkInTime: updated.checkInTime || undefined };
+      return {
+        ...updated,
+        status: updated.status as any,
+        remarks: updated.remarks || undefined,
+        checkInTime: updated.checkInTime || undefined,
+      };
     }
 
     const created = await prisma.attendanceRecord.create({
-      data: { studentId, studentName, date, status, remarks, markedBy: 'System' }
+      data: { studentId, studentName, date, status, remarks, markedBy: 'System' },
     });
-    return { ...created, status: created.status as any, remarks: created.remarks || undefined, checkInTime: created.checkInTime || undefined };
+    return {
+      ...created,
+      status: created.status as any,
+      remarks: created.remarks || undefined,
+      checkInTime: created.checkInTime || undefined,
+    };
   }
 
   public async getParentControls(): Promise<Record<string, ParentControlSettings>> {
     const controls = await prisma.parentControlSettings.findMany();
-    return controls.reduce((acc, c) => {
-      acc[c.studentId] = c;
-      return acc;
-    }, {} as Record<string, ParentControlSettings>);
+    return controls.reduce(
+      (acc, c) => {
+        acc[c.studentId] = c;
+        return acc;
+      },
+      {} as Record<string, ParentControlSettings>,
+    );
   }
 
   public async updateParentControls(
@@ -286,13 +319,13 @@ class LMSDatabaseService {
     return prisma.parentControlSettings.upsert({
       where: { studentId },
       update: settings,
-      create: { ...settings, studentId } // assuming settings contains everything needed except id
+      create: { ...settings, studentId }, // assuming settings contains everything needed except id
     });
   }
 
   public async getStudentLocations(): Promise<StudentLocationRecord[]> {
     const locations = await prisma.studentLocationRecord.findMany();
-    return locations.map(l => ({
+    return locations.map((l) => ({
       ...l,
       category: l.category as any,
       updatedByRole: l.updatedByRole as any,
@@ -301,9 +334,11 @@ class LMSDatabaseService {
     }));
   }
 
-  public async getStudentLocationById(studentId: string): Promise<StudentLocationRecord | undefined> {
+  public async getStudentLocationById(
+    studentId: string,
+  ): Promise<StudentLocationRecord | undefined> {
     const l = await prisma.studentLocationRecord.findFirst({
-      where: { studentId }
+      where: { studentId },
     });
     if (!l) return undefined;
     return {
@@ -326,21 +361,51 @@ class LMSDatabaseService {
     notes?: string,
   ): Promise<StudentLocationRecord> {
     const existing = await prisma.studentLocationRecord.findFirst({
-      where: { studentId }
+      where: { studentId },
     });
-    
+
     if (existing) {
       const updated = await prisma.studentLocationRecord.update({
         where: { id: existing.id },
-        data: { currentLocation: location, category, updatedBy, updatedByRole, busNumber, notes, updatedAt: new Date().toISOString() }
+        data: {
+          currentLocation: location,
+          category,
+          updatedBy,
+          updatedByRole,
+          busNumber,
+          notes,
+          updatedAt: new Date().toISOString(),
+        },
       });
-      return { ...updated, category: updated.category as any, updatedByRole: updated.updatedByRole as any, busNumber: updated.busNumber || undefined, notes: updated.notes || undefined };
+      return {
+        ...updated,
+        category: updated.category as any,
+        updatedByRole: updated.updatedByRole as any,
+        busNumber: updated.busNumber || undefined,
+        notes: updated.notes || undefined,
+      };
     }
 
     const created = await prisma.studentLocationRecord.create({
-      data: { studentId, studentName, currentLocation: location, category, updatedBy, updatedByRole, busNumber, notes, updatedAt: new Date().toISOString() }
+      data: {
+        studentId,
+        studentName,
+        currentLocation: location,
+        category,
+        updatedBy,
+        updatedByRole,
+        busNumber,
+        notes,
+        updatedAt: new Date().toISOString(),
+      },
     });
-    return { ...created, category: created.category as any, updatedByRole: created.updatedByRole as any, busNumber: created.busNumber || undefined, notes: created.notes || undefined };
+    return {
+      ...created,
+      category: created.category as any,
+      updatedByRole: created.updatedByRole as any,
+      busNumber: created.busNumber || undefined,
+      notes: created.notes || undefined,
+    };
   }
 
   public async addCommentToPost(
@@ -358,7 +423,9 @@ class LMSDatabaseService {
     });
   }
 
-  public async addAssignment(assignment: Omit<Assignment, 'id' | 'createdAt'>): Promise<Assignment> {
+  public async addAssignment(
+    assignment: Omit<Assignment, 'id' | 'createdAt'>,
+  ): Promise<Assignment> {
     const created = await prisma.assignment.create({
       data: {
         classroomId: assignment.classroomId,
@@ -372,12 +439,13 @@ class LMSDatabaseService {
         rubric: assignment.rubric || [],
         createdAt: new Date().toISOString(),
         attachments: {
-          create: assignment.attachments?.map((a) => ({
-            title: a.title,
-            type: a.type,
-            url: a.url,
-            size: a.size,
-          })) || [],
+          create:
+            assignment.attachments?.map((a) => ({
+              title: a.title,
+              type: a.type,
+              url: a.url,
+              size: a.size,
+            })) || [],
         },
       },
       include: { attachments: true },
@@ -396,7 +464,9 @@ class LMSDatabaseService {
     }));
   }
 
-  public async submitQuiz(submission: Omit<QuizSubmission, 'id' | 'completedAt'>): Promise<QuizSubmission> {
+  public async submitQuiz(
+    submission: Omit<QuizSubmission, 'id' | 'completedAt'>,
+  ): Promise<QuizSubmission> {
     const created = await prisma.quizSubmission.create({
       data: {
         quizId: submission.quizId,
@@ -424,7 +494,9 @@ class LMSDatabaseService {
     }));
   }
 
-  public async addDirectMessage(msg: Omit<DirectMessage, 'id' | 'createdAt'>): Promise<DirectMessage> {
+  public async addDirectMessage(
+    msg: Omit<DirectMessage, 'id' | 'createdAt'>,
+  ): Promise<DirectMessage> {
     const created = await prisma.directMessage.create({
       data: {
         senderId: msg.senderId,

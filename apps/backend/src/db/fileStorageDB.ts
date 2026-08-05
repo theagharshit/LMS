@@ -1,17 +1,13 @@
-import { config } from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { loadEnv } from '@utils/envResolver';
 
-const _filename = typeof __filename !== 'undefined' ? __filename : fileURLToPath(import.meta.url);
-const _dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(_filename);
-
-config({ path: path.resolve(_dirname, '../../../../.env') });
+// Automatically finds and loads the root .env file
+loadEnv();
 
 import { PrismaClient } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { StoredFileRecord } from '@lms/shared';
-import { logger } from '../utils/logger';
+import { logger } from '@utils/logger';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -27,7 +23,9 @@ class FileStorageDatabase {
   /**
    * Add a new file record to PostgreSQL database
    */
-  public async addFile(record: Omit<StoredFileRecord, 'id' | 'uploadedAt'>): Promise<StoredFileRecord> {
+  public async addFile(
+    record: Omit<StoredFileRecord, 'id' | 'uploadedAt'>,
+  ): Promise<StoredFileRecord> {
     const id = `file-db-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const newRecord = await prisma.storedFileRecord.create({
       data: {
@@ -37,7 +35,9 @@ class FileStorageDatabase {
       },
     });
 
-    logger.info(`[FileStorageDB] Stored new file record in PostgreSQL: ${newRecord.originalName} (ID: ${id})`);
+    logger.info(
+      `[FileStorageDB] Stored new file record in PostgreSQL: ${newRecord.originalName} (ID: ${id})`,
+    );
     return newRecord as StoredFileRecord;
   }
 

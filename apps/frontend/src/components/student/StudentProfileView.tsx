@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { StudentLocationTracker } from '../common/StudentLocationTracker';
+import { IdCardModal } from './IdCardModal';
 import {
   Flame,
   CheckCircle2,
@@ -48,6 +49,7 @@ export const StudentProfileView: React.FC = () => {
 
   const [streakCount, setStreakCount] = useState<number>(studentData.streakDays || 14);
   const [isCheckedInToday, setIsCheckedInToday] = useState<boolean>(false);
+  const [isIdCardOpen, setIsIdCardOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'progress' | 'attendance' | 'activities' | 'badges'>(
     'progress',
   );
@@ -179,7 +181,7 @@ export const StudentProfileView: React.FC = () => {
         </div>
 
         <button
-          onClick={() => alert(`Printing ID card for ${studentData.name}`)}
+          onClick={() => setIsIdCardOpen(true)}
           className="px-3.5 py-2 rounded-xl bg-[#F9F7F2] hover:bg-[#F0EDE5] border border-[#EDEAE2] text-xs font-bold text-[#2D2D2A] flex items-center gap-2 transition-colors cursor-pointer shrink-0"
         >
           <Printer className="w-4 h-4 text-[#7A7A72]" />
@@ -461,6 +463,12 @@ export const StudentProfileView: React.FC = () => {
           })}
         </div>
       )}
+
+      <IdCardModal
+        isOpen={isIdCardOpen}
+        onClose={() => setIsIdCardOpen(false)}
+        studentData={studentData}
+      />
     </div>
   );
 };
