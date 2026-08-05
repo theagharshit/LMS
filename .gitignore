@@ -12,3 +12,4 @@ package-lock.json
 .claude/
 .windsurf
 skills-lock.json
+.vscode
