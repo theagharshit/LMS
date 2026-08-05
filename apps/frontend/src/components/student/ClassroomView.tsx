@@ -49,6 +49,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
   const [activeTab, setActiveTab] = useState<'stream' | 'classwork' | 'people'>('stream');
   const [newPostText, setNewPostText] = useState('');
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   // Landing Page Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -335,9 +336,17 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                       <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md text-[#FDEEDC]">
                         {cls.subject}
                       </span>
-                      <span className="text-[10px] font-mono bg-black/20 text-[#FDEEDC] px-2 py-0.5 rounded-md border border-white/10">
-                        Code: {cls.code}
-                      </span>
+                      {currentUser.role === 'teacher' && (
+                        <span
+                          onClick={() => {
+                            navigator.clipboard.writeText(cls.code);
+                          }}
+                          title="Copy class code"
+                          className="text-[10px] font-mono bg-black/20 text-[#FDEEDC] px-2 py-0.5 rounded-md border border-white/10 cursor-pointer"
+                        >
+                          Code: {cls.code}
+                        </span>
+                      )}
                     </div>
 
                     <h2 className="text-lg font-bold font-serif mt-3 tracking-tight group-hover:underline">
@@ -455,9 +464,15 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
               <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[#FDEEDC]">
                 {currentClassroom.subject}
               </span>
-              <span className="text-xs font-mono opacity-90 text-[#FDEEDC]">
-                Code: {currentClassroom.code}
-              </span>
+              {currentUser.role === 'teacher' && (
+                <span
+                  onClick={() => navigator.clipboard.writeText(currentClassroom.code)}
+                  title="Copy class code"
+                  className="text-xs font-mono opacity-90 text-[#FDEEDC] cursor-pointer"
+                >
+                  Code: {currentClassroom.code}
+                </span>
+              )}
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight font-serif">
               {currentClassroom.name}
