@@ -179,7 +179,8 @@ html.dark .shadow-sm {
   body * {
     visibility: hidden;
   }
-  .print-id-card, .print-id-card * {
+  .print-id-card,
+  .print-id-card * {
     visibility: visible;
   }
   .print-id-card {

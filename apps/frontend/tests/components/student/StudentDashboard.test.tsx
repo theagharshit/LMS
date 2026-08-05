@@ -8,11 +8,7 @@ describe('StudentDashboard Component (src/components/student/StudentDashboard.ts
   it('renders student welcome banner and widgets', () => {
     render(
       <AppProvider>
-        <StudentDashboard
-           
-          onOpenAssignmentModal={vi.fn()}
-          onOpenQuizModal={vi.fn()}
-        />
+        <StudentDashboard onOpenAssignmentModal={vi.fn()} onOpenQuizModal={vi.fn()} />
       </AppProvider>,
     );
 

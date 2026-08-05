@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 
 /**
  * Dynamically traverses up the directory tree to find the nearest .env file
- * and loads it via dotenv. This removes the need for fragile relative paths 
+ * and loads it via dotenv. This removes the need for fragile relative paths
  * like '../../../../.env'.
  */
 export function loadEnv() {
@@ -20,7 +20,7 @@ export function loadEnv() {
     }
     currentDir = path.dirname(currentDir);
   }
-  
+
   // Fallback to current working directory
   config({ path: path.resolve(process.cwd(), '.env') });
 }

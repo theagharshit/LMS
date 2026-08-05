@@ -10,19 +10,14 @@ const TestWrapper = ({ onOpenParentSummaryModal, onOpenParentalControls }: any) 
     switchUser('user-parent-1');
   }, [switchUser]);
 
-  return (
-    <ParentDashboard
-       
-      onOpenParentalControls={onOpenParentalControls}
-    />
-  );
+  return <ParentDashboard onOpenParentalControls={onOpenParentalControls} />;
 };
 
 describe('ParentDashboard Component (src/components/parent/ParentDashboard.tsx)', () => {
   it('renders parent overview dashboard', () => {
     render(
       <AppProvider>
-        <TestWrapper   onOpenParentalControls={vi.fn()} />
+        <TestWrapper onOpenParentalControls={vi.fn()} />
       </AppProvider>,
     );
 

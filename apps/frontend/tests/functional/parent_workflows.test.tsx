@@ -24,10 +24,7 @@ describe('Parent Interactive Functional Workflows (tests/functional/parent_workf
     render(
       <AppProvider>
         <ParentWrapper>
-          <ParentDashboard
-             
-            onOpenParentalControls={handleOpenControls}
-          />
+          <ParentDashboard onOpenParentalControls={handleOpenControls} />
         </ParentWrapper>
       </AppProvider>,
     );

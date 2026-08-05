@@ -23,7 +23,9 @@ class FileStorageDatabase {
   /**
    * Add a new file record to PostgreSQL database
    */
-  public async addFile(record: Omit<StoredFileRecord, 'id' | 'uploadedAt'>): Promise<StoredFileRecord> {
+  public async addFile(
+    record: Omit<StoredFileRecord, 'id' | 'uploadedAt'>,
+  ): Promise<StoredFileRecord> {
     const id = `file-db-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const newRecord = await prisma.storedFileRecord.create({
       data: {
@@ -33,7 +35,9 @@ class FileStorageDatabase {
       },
     });
 
-    logger.info(`[FileStorageDB] Stored new file record in PostgreSQL: ${newRecord.originalName} (ID: ${id})`);
+    logger.info(
+      `[FileStorageDB] Stored new file record in PostgreSQL: ${newRecord.originalName} (ID: ${id})`,
+    );
     return newRecord as StoredFileRecord;
   }
 

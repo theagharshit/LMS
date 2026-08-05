@@ -70,7 +70,7 @@ async function main() {
         gradeLevel: profile.gradeLevel,
         section: profile.section,
         rollNumber: profile.rollNumber,
-      }
+      },
     });
 
     await prisma.studentProfile.create({
@@ -85,7 +85,7 @@ async function main() {
         parentName: profile.parentName,
         parentPhone: profile.parentPhone,
         badges: {
-          create: profile.badges.map(b => ({
+          create: profile.badges.map((b) => ({
             id: b.id,
             title: b.title,
             description: b.description,
@@ -134,7 +134,7 @@ async function main() {
         pinned: post.pinned || false,
         createdAt: post.createdAt,
         comments: {
-          create: (post.comments || []).map(c => ({
+          create: (post.comments || []).map((c) => ({
             id: c.id,
             authorName: c.authorName,
             authorAvatar: c.authorAvatar,
@@ -143,7 +143,7 @@ async function main() {
           })),
         },
         attachments: {
-          create: (post.attachments || []).map(a => ({
+          create: (post.attachments || []).map((a) => ({
             id: a.id,
             title: a.title,
             type: a.type,
@@ -171,7 +171,7 @@ async function main() {
         rubric: assignment.rubric || [],
         createdAt: assignment.createdAt,
         attachments: {
-          create: (assignment.attachments || []).map(a => ({
+          create: (assignment.attachments || []).map((a) => ({
             id: a.id,
             title: a.title,
             type: a.type,
@@ -220,7 +220,7 @@ async function main() {
         published: quiz.published,
         createdAt: quiz.createdAt || new Date().toISOString(),
         questions: {
-          create: quiz.questions.map(q => ({
+          create: quiz.questions.map((q) => ({
             id: q.id,
             text: q.text,
             type: q.type,

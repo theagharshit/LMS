@@ -504,7 +504,7 @@ Language: ${language}`,
   // Separated Architecture:
   // In production, you might serve a built frontend, but for now we focus on the API.
   app.get('/', (_req, res) => {
-    res.json({ message: "LMS API Backend is running" });
+    res.json({ message: 'LMS API Backend is running' });
   });
 
   app.listen(PORT, '0.0.0.0', () => {
