@@ -2,211 +2,49 @@
  * Sikshya LMS Nepal - Main Application Context State
  */
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import {
-  User,
-  StudentProfile,
-  Classroom,
-  StreamPost,
-  Assignment,
-  Submission,
-  Quiz,
-  QuizSubmission,
-  SchedulePeriod,
-  DayOfWeek,
-  WeeklySchedule,
-  AttendanceRecord,
-  ParentControlSettings,
-  CalendarEvent,
-  ModuleItem,
-  DirectMessage,
-  SubjectPerformance,
-  Badge,
-  StudentLocationRecord,
-  LocationStatusCategory,
-  TermProgress,
-  StudentActivity,
-} from '@lms/shared';
+import React, { createContext, useContext, useEffect } from 'react';
+import { User } from '@lms/shared';
+import { apiFetch } from '../utils/apiFetch';
+import { AppContextType } from './AppContextType';
 
-import {
-  MOCK_USERS,
-  MOCK_STUDENTS,
-  MOCK_CLASSROOMS,
-  MOCK_STREAM_POSTS,
-  MOCK_ASSIGNMENTS,
-  MOCK_SUBMISSIONS,
-  MOCK_QUIZZES,
-  MOCK_QUIZ_SUBMISSIONS,
-  MOCK_SCHEDULE,
-  MOCK_WEEKLY_SCHEDULE,
-  MOCK_ATTENDANCE,
-  MOCK_MODULES,
-  MOCK_PARENT_CONTROLS,
-  MOCK_CALENDAR_EVENTS,
-  MOCK_MESSAGES,
-  MOCK_SUBJECT_PERFORMANCE,
-} from '@lms/shared';
-
-interface AppContextType {
-  currentUser: User;
-  allUsers: User[];
-  switchUser: (userId: string) => void;
-  activeChild: StudentProfile;
-  setActiveChildId: (id: string) => void;
-  activeChildList: StudentProfile[];
-
-  // Navigation & UI State
-  activeView: string;
-  setActiveView: (view: string) => void;
-  selectedClassroomId: string | null;
-  setSelectedClassroomId: (id: string | null) => void;
-  theme: 'light' | 'dark' | 'soft';
-  setTheme: (theme: 'light' | 'dark' | 'soft') => void;
-
-  // Data lists & mutations
-  classrooms: Classroom[];
-  addClassroom: (classroom: Omit<Classroom, 'id' | 'code' | 'studentCount'>) => void;
-  joinClassroomByCode: (code: string) => boolean;
-
-  streamPosts: StreamPost[];
-  addStreamPost: (post: Omit<StreamPost, 'id' | 'createdAt' | 'commentsCount'>) => void;
-  addPostComment: (postId: string, commentText: string) => void;
-
-  assignments: Assignment[];
-  addAssignment: (asg: Omit<Assignment, 'id' | 'createdAt'>) => void;
-
-  submissions: Submission[];
-  submitHomework: (
-    assignmentId: string,
-    fileUrl: string,
-    fileName: string,
-    responseText: string,
-  ) => void;
-  gradeSubmission: (submissionId: string, grade: number, feedback: string) => void;
-
-  quizzes: Quiz[];
-  addQuiz: (quiz: Omit<Quiz, 'id'>) => void;
-  quizSubmissions: QuizSubmission[];
-  submitQuizAnswers: (
-    quizId: string,
-    answers: Record<string, string>,
-    score: number,
-    totalPoints: number,
-  ) => void;
-
-  attendanceRecords: AttendanceRecord[];
-  markAttendance: (
-    studentId: string,
-    studentName: string,
-    date: string,
-    status: 'present' | 'absent' | 'late' | 'excused',
-    remarks?: string,
-  ) => void;
-
-  parentControls: Record<string, ParentControlSettings>;
-  updateParentControls: (studentId: string, settings: Partial<ParentControlSettings>) => void;
-
-  messages: DirectMessage[];
-  sendMessage: (receiverId: string, receiverName: string, content: string) => void;
-
-  // Timetable Schedule Data
-  weeklySchedule: WeeklySchedule;
-  updateDaySchedule: (day: DayOfWeek, periods: SchedulePeriod[]) => void;
-  schedule: SchedulePeriod[];
-  modules: ModuleItem[];
-  calendarEvents: CalendarEvent[];
-  subjectPerformances: SubjectPerformance[];
-  termProgress: TermProgress[];
-  studentActivities: StudentActivity[];
-  studentProfiles: StudentProfile[];
-
-  // Real-Time Student Location Tracker
-  studentLocations: StudentLocationRecord[];
-  updateStudentLocation: (
-    studentId: string,
-    studentName: string,
-    location: string,
-    category: LocationStatusCategory,
-    updatedBy: string,
-    updatedByRole: 'teacher' | 'admin',
-    busNumber?: string,
-    notes?: string,
-  ) => void;
-
-  // AI Modal States
-  isAiTutorOpen: boolean;
-  setIsAiTutorOpen: (open: boolean) => void;
-  aiTutorInitialPrompt: string;
-  setAiTutorInitialPrompt: (prompt: string) => void;
-
-  isAiParentSummaryOpen: boolean;
-  setIsAiParentSummaryOpen: (open: boolean) => void;
-
-  notifications: {
-    id: string;
-    title: string;
-    body: string;
-    time: string;
-    read: boolean;
-    type: string;
-  }[];
-  markNotificationRead: (id: string) => void;
-  unreadCount: number;
-}
+import { useAuthState } from './hooks/useAuthState';
+import { useUIState } from './hooks/useUIState';
+import { useAcademicState } from './hooks/useAcademicState';
+import { useTrackingState } from './hooks/useTrackingState';
+import { useCommunicationState } from './hooks/useCommunicationState';
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const apiFetch = (url: string, options?: RequestInit) => {
-  if (
-    typeof window === 'undefined' ||
-    !window.location ||
-    !window.location.origin ||
-    window.location.origin === 'null'
-  ) {
-    return Promise.resolve(new Response());
-  }
-  try {
-    return window.fetch(url, options).catch(() => new Response());
-  } catch {
-    return Promise.resolve(new Response());
-  }
-};
-
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [allUsers, setAllUsers] = useState<User[]>(MOCK_USERS);
-  const [currentUser, setCurrentUser] = useState<User>(MOCK_USERS[0]);
-  const [studentProfiles, setStudentProfiles] = useState<StudentProfile[]>(MOCK_STUDENTS);
-  const [activeChildId, setActiveChildId] = useState<string>('user-stu-1');
+  const authState = useAuthState();
+  const uiState = useUIState();
+  const academicState = useAcademicState(authState.currentUser);
+  const trackingState = useTrackingState(authState.currentUser);
+  const communicationState = useCommunicationState(authState.currentUser);
 
-  const [activeView, setActiveView] = useState<string>('dashboard');
-  const [selectedClassroomId, setSelectedClassroomId] = useState<string | null>(null);
-  const [theme, setTheme] = useState<'light' | 'dark' | 'soft'>(() => {
-    const saved = localStorage.getItem('sikshya_theme');
-    return saved === 'dark' || saved === 'light' || saved === 'soft' ? saved : 'light';
-  });
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
+  // Define cross-domain functions
+  const switchUser = (userId: string) => {
+    const target = authState.allUsers.find((u) => u.id === userId);
+    if (target) {
+      authState.setCurrentUser(target);
+      if (target.role === 'parent' && target.childrenIds && target.childrenIds.length > 0) {
+        authState.setActiveChildId(target.childrenIds[0]);
+      }
+      uiState.setActiveView('dashboard');
     }
-    localStorage.setItem('sikshya_theme', theme);
-  }, [theme]);
+  };
 
-  const [classrooms, setClassrooms] = useState<Classroom[]>(MOCK_CLASSROOMS);
-  const [streamPosts, setStreamPosts] = useState<StreamPost[]>(MOCK_STREAM_POSTS);
-  const [assignments, setAssignments] = useState<Assignment[]>(MOCK_ASSIGNMENTS);
-  const [submissions, setSubmissions] = useState<Submission[]>(MOCK_SUBMISSIONS);
-  const [quizzes, setQuizzes] = useState<Quiz[]>(MOCK_QUIZZES);
-  const [quizSubmissions, setQuizSubmissions] = useState<QuizSubmission[]>(MOCK_QUIZ_SUBMISSIONS);
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(MOCK_ATTENDANCE);
-  const [parentControls, setParentControls] = useState<Record<string, ParentControlSettings>>({});
-  const [messages, setMessages] = useState<DirectMessage[]>([]);
-
-  const [weeklySchedule, setWeeklySchedule] = useState<WeeklySchedule>(MOCK_WEEKLY_SCHEDULE);
-  const [studentLocations, setStudentLocations] = useState<StudentLocationRecord[]>([]);
+  const joinClassroomByCode = (code: string): boolean => {
+    const found = academicState.classrooms.find(
+      (c) => c.code.toUpperCase() === code.trim().toUpperCase(),
+    );
+    if (found) {
+      uiState.setSelectedClassroomId(found.id);
+      uiState.setActiveView('classroom');
+      return true;
+    }
+    return false;
+  };
 
   // Fetch live state from PostgreSQL database on mount
   useEffect(() => {
@@ -216,487 +54,99 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       .then((data) => {
         if (data && data.status === 'success') {
           if (data.users?.length) {
-            setAllUsers(data.users);
-            const updatedCurrent = data.users.find((u: User) => u.id === currentUser.id);
-            if (updatedCurrent) setCurrentUser(updatedCurrent);
+            authState.setAllUsers(data.users);
+            const updatedCurrent = data.users.find((u: User) => u.id === authState.currentUser.id);
+            if (updatedCurrent) authState.setCurrentUser(updatedCurrent);
           }
-          if (data.studentProfiles) setStudentProfiles(data.studentProfiles);
-          if (data.classrooms) setClassrooms(data.classrooms);
-          if (data.streamPosts) setStreamPosts(data.streamPosts);
-          if (data.assignments) setAssignments(data.assignments);
-          if (data.submissions) setSubmissions(data.submissions);
-          if (data.quizzes) setQuizzes(data.quizzes);
-          if (data.quizSubmissions) setQuizSubmissions(data.quizSubmissions);
-          if (data.attendance) setAttendanceRecords(data.attendance);
-          if (data.parentControls) setParentControls(data.parentControls);
-          if (data.studentLocations) setStudentLocations(data.studentLocations);
-          if (data.messages) setMessages(data.messages);
-          if (data.termProgress) setTermProgress(data.termProgress);
-          if (data.studentActivities) setStudentActivities(data.studentActivities);
-          if (data.subjectPerformances) setSubjectPerformances(data.subjectPerformances);
+          if (data.studentProfiles) authState.setStudentProfiles(data.studentProfiles);
+          if (data.classrooms) academicState.setClassrooms(data.classrooms);
+          if (data.streamPosts) academicState.setStreamPosts(data.streamPosts);
+          if (data.assignments) academicState.setAssignments(data.assignments);
+          if (data.submissions) academicState.setSubmissions(data.submissions);
+          if (data.quizzes) academicState.setQuizzes(data.quizzes);
+          if (data.quizSubmissions) academicState.setQuizSubmissions(data.quizSubmissions);
+          if (data.attendance) trackingState.setAttendanceRecords(data.attendance);
+          if (data.parentControls) trackingState.setParentControls(data.parentControls);
+          if (data.studentLocations) trackingState.setStudentLocations(data.studentLocations);
+          if (data.messages) communicationState.setMessages(data.messages);
+          if (data.termProgress) academicState.setTermProgress(data.termProgress);
+          if (data.studentActivities) academicState.setStudentActivities(data.studentActivities);
+          if (data.subjectPerformances)
+            academicState.setSubjectPerformances(data.subjectPerformances);
         }
       })
       .catch((err) => {
         console.error('[AppContext] Failed to load DB state:', err);
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const updateStudentLocation = (
-    studentId: string,
-    studentName: string,
-    location: string,
-    category: LocationStatusCategory,
-    updatedBy: string,
-    updatedByRole: 'teacher' | 'admin',
-    busNumber?: string,
-    notes?: string,
-  ) => {
-    const updatedRecord: StudentLocationRecord = {
-      id: `loc-${Date.now()}`,
-      studentId,
-      studentName,
-      currentLocation: location,
-      category,
-      updatedBy,
-      updatedByRole,
-      updatedAt: new Date().toISOString(),
-      busNumber,
-      notes,
-    };
+  const value: AppContextType = {
+    // Auth State
+    currentUser: authState.currentUser,
+    allUsers: authState.allUsers,
+    switchUser,
+    activeChild: authState.activeChild,
+    setActiveChildId: authState.setActiveChildId,
+    activeChildList: authState.activeChildList,
 
-    setStudentLocations((prev) => {
-      const idx = prev.findIndex((l) => l.studentId === studentId);
-      if (idx >= 0) {
-        const copy = [...prev];
-        copy[idx] = updatedRecord;
-        return copy;
-      }
-      return [updatedRecord, ...prev];
-    });
+    // UI State
+    activeView: uiState.activeView,
+    setActiveView: uiState.setActiveView,
+    selectedClassroomId: uiState.selectedClassroomId,
+    setSelectedClassroomId: uiState.setSelectedClassroomId,
+    theme: uiState.theme,
+    setTheme: uiState.setTheme,
+    isAiTutorOpen: uiState.isAiTutorOpen,
+    setIsAiTutorOpen: uiState.setIsAiTutorOpen,
+    aiTutorInitialPrompt: uiState.aiTutorInitialPrompt,
+    setAiTutorInitialPrompt: uiState.setAiTutorInitialPrompt,
+    isAiParentSummaryOpen: uiState.isAiParentSummaryOpen,
+    setIsAiParentSummaryOpen: uiState.setIsAiParentSummaryOpen,
 
-    apiFetch('/api/db/student-locations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updatedRecord),
-    }).catch((err) =>
-      console.error('[AppContext] Failed to post student location to server DB', err),
-    );
+    // Academic State
+    classrooms: academicState.classrooms,
+    addClassroom: academicState.addClassroom,
+    joinClassroomByCode,
+    streamPosts: academicState.streamPosts,
+    addStreamPost: academicState.addStreamPost,
+    addPostComment: academicState.addPostComment,
+    assignments: academicState.assignments,
+    addAssignment: academicState.addAssignment,
+    submissions: academicState.submissions,
+    submitHomework: academicState.submitHomework,
+    gradeSubmission: academicState.gradeSubmission,
+    quizzes: academicState.quizzes,
+    addQuiz: academicState.addQuiz,
+    quizSubmissions: academicState.quizSubmissions,
+    submitQuizAnswers: academicState.submitQuizAnswers,
+    subjectPerformances: academicState.subjectPerformances,
+    termProgress: academicState.termProgress,
+    studentActivities: academicState.studentActivities,
+    studentProfiles: authState.studentProfiles,
+
+    // Tracking State
+    attendanceRecords: trackingState.attendanceRecords,
+    markAttendance: trackingState.markAttendance,
+    parentControls: trackingState.parentControls,
+    updateParentControls: trackingState.updateParentControls,
+    studentLocations: trackingState.studentLocations,
+    updateStudentLocation: trackingState.updateStudentLocation,
+    weeklySchedule: trackingState.weeklySchedule,
+    updateDaySchedule: trackingState.updateDaySchedule,
+    schedule: trackingState.schedule,
+    modules: trackingState.modules,
+    calendarEvents: trackingState.calendarEvents,
+
+    // Communication State
+    messages: communicationState.messages,
+    sendMessage: communicationState.sendMessage,
+    notifications: communicationState.notifications,
+    markNotificationRead: communicationState.markNotificationRead,
+    unreadCount: communicationState.unreadCount,
   };
 
-  const updateDaySchedule = (day: DayOfWeek, periods: SchedulePeriod[]) => {
-    setWeeklySchedule((prev) => ({
-      ...prev,
-      [day]: periods,
-    }));
-  };
-
-  // Readonly mock collections
-  const [schedule] = useState<SchedulePeriod[]>(MOCK_SCHEDULE);
-  const [modules] = useState<ModuleItem[]>(MOCK_MODULES);
-  const [calendarEvents] = useState<CalendarEvent[]>(MOCK_CALENDAR_EVENTS);
-  const [subjectPerformances, setSubjectPerformances] =
-    useState<SubjectPerformance[]>(MOCK_SUBJECT_PERFORMANCE);
-  const [termProgress, setTermProgress] = useState<TermProgress[]>([]);
-  const [studentActivities, setStudentActivities] = useState<StudentActivity[]>([]);
-
-  // AI Assistant states
-  const [isAiTutorOpen, setIsAiTutorOpen] = useState<boolean>(false);
-  const [aiTutorInitialPrompt, setAiTutorInitialPrompt] = useState<string>('');
-  const [isAiParentSummaryOpen, setIsAiParentSummaryOpen] = useState<boolean>(false);
-
-  // Notifications
-  const [notifications, setNotifications] = useState([
-    {
-      id: 'n1',
-      title: 'New Homework Assigned',
-      body: 'Mr. Ramesh Thapa posted Exercise 4.1 in Math Grade 8',
-      time: '10m ago',
-      read: false,
-      type: 'assignment',
-    },
-    {
-      id: 'n2',
-      title: 'Quiz Result Published',
-      body: 'You scored 20/20 in Algebra Mid-Term Quiz! 🎉',
-      time: '1h ago',
-      read: false,
-      type: 'quiz',
-    },
-    {
-      id: 'n3',
-      title: 'Attendance Marked',
-      body: 'Marked Present today at 09:42 AM',
-      time: '2h ago',
-      read: true,
-      type: 'attendance',
-    },
-    {
-      id: 'n4',
-      title: 'Janai Purnima Holiday Notice',
-      body: 'School will remain closed on 12th August for Raksha Bandhan',
-      time: 'Yesterday',
-      read: true,
-      type: 'announcement',
-    },
-  ]);
-
-  const activeChildList = studentProfiles.filter((s) => currentUser.childrenIds?.includes(s.id));
-  const activeChild = studentProfiles.find((s) => s.id === activeChildId) || studentProfiles[0];
-
-  const switchUser = (userId: string) => {
-    const target = allUsers.find((u) => u.id === userId);
-    if (target) {
-      setCurrentUser(target);
-      if (target.role === 'parent' && target.childrenIds && target.childrenIds.length > 0) {
-        setActiveChildId(target.childrenIds[0]);
-      }
-      setActiveView('dashboard');
-    }
-  };
-
-  const addClassroom = (classroomData: Omit<Classroom, 'id' | 'code' | 'studentCount'>) => {
-    const newId = `cls-${Date.now()}`;
-    const code = `CLS${Math.floor(1000 + Math.random() * 9000)}`;
-    const newCls: Classroom = {
-      ...classroomData,
-      id: newId,
-      code,
-      studentCount: 1,
-    };
-    setClassrooms((prev) => [newCls, ...prev]);
-
-    apiFetch('/api/db/classrooms', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(classroomData),
-    }).catch((err) => console.error('[AppContext] Failed to persist classroom', err));
-  };
-
-  const joinClassroomByCode = (code: string): boolean => {
-    const found = classrooms.find((c) => c.code.toUpperCase() === code.trim().toUpperCase());
-    if (found) {
-      setSelectedClassroomId(found.id);
-      setActiveView('classroom');
-      return true;
-    }
-    return false;
-  };
-
-  const addStreamPost = (postData: Omit<StreamPost, 'id' | 'createdAt' | 'commentsCount'>) => {
-    const newPost: StreamPost = {
-      ...postData,
-      id: `post-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      commentsCount: 0,
-      comments: [],
-    };
-    setStreamPosts((prev) => [newPost, ...prev]);
-
-    apiFetch('/api/db/stream-posts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(postData),
-    }).catch((err) => console.error('[AppContext] Failed to persist stream post', err));
-  };
-
-  const addPostComment = (postId: string, commentText: string) => {
-    const newComment = {
-      id: `c-${Date.now()}`,
-      authorName: currentUser.name,
-      authorAvatar: currentUser.avatar,
-      content: commentText,
-      createdAt: new Date().toISOString(),
-    };
-
-    setStreamPosts((prev) =>
-      prev.map((p) => {
-        if (p.id === postId) {
-          const newComments = [...(p.comments || []), newComment];
-          return {
-            ...p,
-            commentsCount: newComments.length,
-            comments: newComments,
-          };
-        }
-        return p;
-      }),
-    );
-
-    apiFetch(`/api/db/stream-posts/${postId}/comments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newComment),
-    }).catch((err) => console.error('[AppContext] Failed to persist comment', err));
-  };
-
-  const addAssignment = (asgData: Omit<Assignment, 'id' | 'createdAt'>) => {
-    const newAsg: Assignment = {
-      ...asgData,
-      id: `asg-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-    setAssignments((prev) => [newAsg, ...prev]);
-
-    apiFetch('/api/db/assignments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(asgData),
-    }).catch((err) => console.error('[AppContext] Failed to persist assignment', err));
-  };
-
-  const submitHomework = (
-    assignmentId: string,
-    fileUrl: string,
-    fileName: string,
-    responseText: string,
-  ) => {
-    const existingIndex = submissions.findIndex(
-      (s) => s.assignmentId === assignmentId && s.studentId === currentUser.id,
-    );
-    const newSub: Submission = {
-      id: existingIndex >= 0 ? submissions[existingIndex].id : `sub-${Date.now()}`,
-      assignmentId,
-      studentId: currentUser.id,
-      studentName: currentUser.name,
-      studentAvatar: currentUser.avatar,
-      submittedAt: new Date().toISOString(),
-      status: 'submitted',
-      fileUrl,
-      fileName,
-      responseText,
-    };
-
-    if (existingIndex >= 0) {
-      const updated = [...submissions];
-      updated[existingIndex] = newSub;
-      setSubmissions(updated);
-    } else {
-      setSubmissions((prev) => [newSub, ...prev]);
-    }
-
-    apiFetch('/api/db/submissions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        assignmentId,
-        fileName,
-        fileUrl,
-        studentId: currentUser.id,
-        notes: responseText,
-      }),
-    }).catch((err) => console.error('[AppContext] Failed to persist submission', err));
-  };
-
-  const gradeSubmission = (submissionId: string, grade: number, feedback: string) => {
-    setSubmissions((prev) =>
-      prev.map((s) => {
-        if (s.id === submissionId) {
-          return {
-            ...s,
-            status: 'graded',
-            grade,
-            feedback,
-            annotated: true,
-          };
-        }
-        return s;
-      }),
-    );
-  };
-
-  const addQuiz = (quizData: Omit<Quiz, 'id'>) => {
-    const newQuiz: Quiz = {
-      ...quizData,
-      id: `quiz-${Date.now()}`,
-    };
-    setQuizzes((prev) => [newQuiz, ...prev]);
-
-    apiFetch('/api/db/quizzes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(quizData),
-    }).catch((err) => console.error('[AppContext] Failed to persist quiz', err));
-  };
-
-  const submitQuizAnswers = (
-    quizId: string,
-    answers: Record<string, string>,
-    score: number,
-    totalPoints: number,
-  ) => {
-    const newSub: QuizSubmission = {
-      id: `qs-${Date.now()}`,
-      quizId,
-      studentId: currentUser.id,
-      score,
-      totalPoints,
-      completedAt: new Date().toISOString(),
-      answers,
-    };
-    setQuizSubmissions((prev) => [newSub, ...prev]);
-
-    apiFetch('/api/db/quiz-submissions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        quizId,
-        studentId: currentUser.id,
-        score,
-        totalPoints,
-        answers,
-      }),
-    }).catch((err) => console.error('[AppContext] Failed to persist quiz submission', err));
-  };
-
-  const markAttendance = (
-    studentId: string,
-    studentName: string,
-    date: string,
-    status: 'present' | 'absent' | 'late' | 'excused',
-    remarks?: string,
-  ) => {
-    setAttendanceRecords((prev) => {
-      const existingIdx = prev.findIndex((a) => a.studentId === studentId && a.date === date);
-      const newRec: AttendanceRecord = {
-        id: existingIdx >= 0 ? prev[existingIdx].id : `att-${Date.now()}`,
-        studentId,
-        studentName,
-        date,
-        status,
-        markedBy: currentUser.name,
-        remarks,
-        checkInTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      if (existingIdx >= 0) {
-        const updated = [...prev];
-        updated[existingIdx] = newRec;
-        return updated;
-      }
-      return [newRec, ...prev];
-    });
-
-    apiFetch('/api/db/attendance', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ studentId, studentName, date, status, remarks }),
-    }).catch((err) => console.error('[AppContext] Failed to persist attendance', err));
-  };
-
-  const updateParentControls = (studentId: string, settings: Partial<ParentControlSettings>) => {
-    const newSettings = {
-      ...(parentControls[studentId] || {
-        studentId,
-        allowTeacherDirectChat: true,
-        allowPeerDiscussion: false,
-        missingHomeworkAlerts: true,
-        lowAttendanceAlerts: true,
-        weeklyDigestEmail: true,
-        screenTimeLimitMinutes: 120,
-        requireApprovalForOutboundMsgs: true,
-      }),
-      ...settings,
-    };
-    setParentControls((prev) => ({
-      ...prev,
-      [studentId]: newSettings,
-    }));
-
-    apiFetch('/api/db/parent-controls', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ studentId, settings: newSettings }),
-    }).catch((err) => console.error('[AppContext] Failed to persist parent controls', err));
-  };
-
-  const sendMessage = (receiverId: string, receiverName: string, content: string) => {
-    const newMsg: DirectMessage = {
-      id: `msg-${Date.now()}`,
-      senderId: currentUser.id,
-      senderName: currentUser.name,
-      senderRole: currentUser.role,
-      senderAvatar: currentUser.avatar,
-      receiverId,
-      receiverName,
-      content,
-      createdAt: new Date().toISOString(),
-      read: false,
-    };
-    setMessages((prev) => [newMsg, ...prev]);
-
-    apiFetch('/api/db/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newMsg),
-    }).catch((err) => console.error('[AppContext] Failed to persist message', err));
-  };
-
-  const markNotificationRead = (id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-  };
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  return (
-    <AppContext.Provider
-      value={{
-        currentUser,
-        allUsers,
-        switchUser,
-        activeChild,
-        setActiveChildId,
-        activeChildList,
-        activeView,
-        setActiveView,
-        selectedClassroomId,
-        setSelectedClassroomId,
-        theme,
-        setTheme,
-        classrooms,
-        addClassroom,
-        joinClassroomByCode,
-        streamPosts,
-        addStreamPost,
-        addPostComment,
-        assignments,
-        addAssignment,
-        submissions,
-        submitHomework,
-        gradeSubmission,
-        quizzes,
-        addQuiz,
-        quizSubmissions,
-        submitQuizAnswers,
-        attendanceRecords,
-        markAttendance,
-        parentControls,
-        updateParentControls,
-        messages,
-        sendMessage,
-        weeklySchedule,
-        updateDaySchedule,
-        schedule,
-        modules,
-        calendarEvents,
-        subjectPerformances,
-        termProgress,
-        studentActivities,
-        studentProfiles,
-        studentLocations,
-        updateStudentLocation,
-        isAiTutorOpen,
-        setIsAiTutorOpen,
-        aiTutorInitialPrompt,
-        setAiTutorInitialPrompt,
-        isAiParentSummaryOpen,
-        setIsAiParentSummaryOpen,
-        notifications,
-        markNotificationRead,
-        unreadCount,
-      }}
-    >
-      {children}
-    </AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
 export const useApp = () => {
