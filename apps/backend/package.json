@@ -4,9 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "NODE_ENV=development LOG_LEVEL=normal tsx server.ts",
+    "dev:v": "NODE_ENV=development LOG_LEVEL=verbose tsx server.ts",
     "prod": "NODE_ENV=production LOG_LEVEL=normal node dist/server.cjs",
-    "dev:v": "NODE_ENV=production LOG_LEVEL=verbose node dist/server.cjs",
+    "prod:v": "NODE_ENV=production LOG_LEVEL=verbose node dist/server.cjs",
     "build": "esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --log-override:empty-import-meta=silent --outfile=dist/server.cjs",
+    "start": "npm run prod",
     "test": "vitest run"
   },
   "dependencies": {

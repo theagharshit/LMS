@@ -6,7 +6,14 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run dev:v -w lms-backend\" \"npm run dev -w lms-frontend\"",
+    "dev": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run dev -w lms-backend\" \"npm run dev -w lms-frontend\"",
+    "dev:v": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run dev:v -w lms-backend\" \"npm run dev:v -w lms-frontend\"",
+    "dev:backend": "npm run dev -w lms-backend",
+    "dev:frontend": "npm run dev -w lms-frontend",
+    "prod": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run prod -w lms-backend\" \"npm run prod -w lms-frontend\"",
+    "prod:v": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run prod:v -w lms-backend\" \"npm run prod:v -w lms-frontend\"",
+    "prod:backend": "npm run prod -w lms-backend",
+    "prod:frontend": "npm run prod -w lms-frontend",
     "build": "npm run build -ws",
     "lint": "tsc -b apps/frontend apps/backend packages/shared",
     "format": "prettier --write \"apps/**/*.{ts,tsx,css}\" \"packages/**/*.{ts,tsx}\"",
