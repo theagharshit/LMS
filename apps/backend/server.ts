@@ -123,6 +123,9 @@ async function startServer() {
         parentControls: await lmsDB.getParentControls(),
         studentLocations: await lmsDB.getStudentLocations(),
         messages: await lmsDB.getDirectMessages(),
+        termProgress: await lmsDB.getTermProgress(),
+        studentActivities: await lmsDB.getStudentActivities(),
+        subjectPerformances: await lmsDB.getSubjectPerformances(),
       });
     } catch (err) {
       console.error(err);
