@@ -11,6 +11,31 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    build: {
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (
+                id.includes('node_modules/react/') ||
+                id.includes('node_modules/react-dom/') ||
+                id.includes('node_modules/scheduler/')
+              ) {
+                return 'vendor-react';
+              }
+              if (id.includes('node_modules/recharts/')) {
+                return 'vendor-recharts';
+              }
+              if (id.includes('node_modules/lucide-react/')) {
+                return 'vendor-icons';
+              }
+              return 'vendor';
+            }
+          },
+        },
+      },
+    },
     server: {
       proxy: {
         '/api': {
