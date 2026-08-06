@@ -12,6 +12,7 @@ import {
   MOCK_SUBMISSIONS,
   MOCK_QUIZZES,
   MOCK_QUIZ_SUBMISSIONS,
+  MOCK_SUBJECT_PERFORMANCE,
 } from '@lms/shared';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -20,6 +21,9 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('Clearing database...');
+  await prisma.termProgress.deleteMany();
+  await prisma.studentActivity.deleteMany();
+  await prisma.subjectPerformance.deleteMany();
   await prisma.storedFileRecord.deleteMany();
   await prisma.badge.deleteMany();
   await prisma.postComment.deleteMany();
@@ -282,6 +286,89 @@ async function main() {
       },
     ],
   });
+
+  console.log('Seeding Subject Performances...');
+  for (const sp of MOCK_SUBJECT_PERFORMANCE) {
+    await prisma.subjectPerformance.create({
+      data: {
+        id: sp.id || `sp-${Date.now()}-${Math.random()}`,
+        studentId: 'user-stu-1', // Assuming for Aarav
+        subject: sp.subject,
+        scorePercentage: sp.scorePercentage,
+        grade: sp.grade,
+        assignmentsCompleted: sp.assignmentsCompleted,
+        totalAssignments: sp.totalAssignments,
+        quizzesScoreAvg: sp.quizzesScoreAvg,
+        teacherRemark: sp.teacherRemark,
+      },
+    });
+  }
+
+  console.log('Seeding Term Progress...');
+  const termProgressData = [
+    { term: '1st Term', score: 88 },
+    { term: 'Mid Term', score: 91 },
+    { term: '2nd Term', score: 93 },
+    { term: '3rd Term', score: 96 },
+  ];
+  for (const tp of termProgressData) {
+    await prisma.termProgress.create({
+      data: {
+        studentId: 'user-stu-1',
+        term: tp.term,
+        score: tp.score,
+      },
+    });
+  }
+
+  console.log('Seeding Student Activities...');
+  const activities = [
+    {
+      id: 'act-1',
+      title: 'Inter-House Science Exhibition 2026',
+      category: 'Science & Tech',
+      position: '1st Place 🥇',
+      date: 'May 2026',
+      description: 'Built automated solar drip irrigation model.',
+    },
+    {
+      id: 'act-2',
+      title: 'All-Nepal Junior Chess Championship',
+      category: 'Mind Games',
+      position: 'Runner-Up 🥈',
+      date: 'April 2026',
+      description: 'Secured 2nd rank among 64 Valley participants.',
+    },
+    {
+      id: 'act-3',
+      title: 'Intra-School Nepali Poetry Recitation',
+      category: 'Literature',
+      position: '2nd Place 🥈',
+      date: 'Baisakh 2083',
+      description: 'Recited original poem "Himal ko Chhaya".',
+    },
+    {
+      id: 'act-4',
+      title: 'Annual Inter-House Football Tournament',
+      category: 'Sports',
+      position: 'Semi-Finalist ⚽',
+      date: 'Falgun 2082',
+      description: 'Led Machhapuchhre Green House football squad.',
+    },
+  ];
+  for (const act of activities) {
+    await prisma.studentActivity.create({
+      data: {
+        id: act.id,
+        studentId: 'user-stu-1',
+        title: act.title,
+        category: act.category,
+        position: act.position,
+        date: act.date,
+        description: act.description,
+      },
+    });
+  }
 
   console.log('Database seeding complete!');
 }

@@ -30,7 +30,8 @@ import {
 } from 'recharts';
 
 export const StudentProfileView: React.FC = () => {
-  const { currentUser, studentProfiles } = useApp();
+  const { currentUser, studentProfiles, termProgress, studentActivities, subjectPerformances } =
+    useApp();
 
   const studentData = studentProfiles.find((s) => s.id === currentUser.id) || {
     id: currentUser.id || 'user-stu-1',
@@ -65,87 +66,54 @@ export const StudentProfileView: React.FC = () => {
     setIsCheckedInToday(true);
   };
 
-  const termProgressData = [
-    { term: '1st Term', score: 88 },
-    { term: 'Mid Term', score: 91 },
-    { term: '2nd Term', score: 93 },
-    { term: '3rd Term', score: 96 },
-  ];
+  const termProgressData = termProgress
+    .filter((t) => t.studentId === studentData.id)
+    .sort((a, b) => a.term.localeCompare(b.term));
 
-  const subjectPerformanceData = [
-    { subject: 'Maths', score: 95 },
-    { subject: 'Science', score: 92 },
-    { subject: 'Computer', score: 98 },
-    { subject: 'English', score: 94 },
-    { subject: 'Nepali', score: 88 },
-    { subject: 'Social', score: 90 },
-  ];
+  const subjectPerformanceData = subjectPerformances
+    .filter((s) => s.studentId === studentData.id)
+    .map((s) => ({
+      subject: s.subject,
+      score: s.scorePercentage,
+    }));
 
-  const activities = [
-    {
-      id: 'act-1',
-      title: 'Inter-House Science Exhibition 2026',
-      category: 'Science & Tech',
-      position: '1st Place 🥇',
-      date: 'May 2026',
-      description: 'Built automated solar drip irrigation model.',
-    },
-    {
-      id: 'act-2',
-      title: 'All-Nepal Junior Chess Championship',
-      category: 'Mind Games',
-      position: 'Runner-Up 🥈',
-      date: 'April 2026',
-      description: 'Secured 2nd rank among 64 Valley participants.',
-    },
-    {
-      id: 'act-3',
-      title: 'Intra-School Nepali Poetry Recitation',
-      category: 'Literature',
-      position: '2nd Place 🥈',
-      date: 'Baisakh 2083',
-      description: 'Recited original poem "Himal ko Chhaya".',
-    },
-    {
-      id: 'act-4',
-      title: 'Annual Inter-House Football Tournament',
-      category: 'Sports',
-      position: 'Semi-Finalist ⚽',
-      date: 'Falgun 2082',
-      description: 'Led Machhapuchhre Green House football squad.',
-    },
-  ];
+  const activities = studentActivities.filter((a) => a.studentId === studentData.id);
 
-  const badgesList = [
-    {
-      id: 'b-1',
-      title: 'Streak Legend',
-      desc: '14+ continuous check-in days',
-      icon: Flame,
-      color: 'text-amber-500 bg-amber-50',
-    },
-    {
-      id: 'b-2',
-      title: 'Academic Titan',
-      desc: 'A+ grade in Math & Science',
-      icon: Trophy,
-      color: 'text-emerald-600 bg-emerald-50',
-    },
-    {
-      id: 'b-3',
-      title: '100% Attendance',
-      desc: 'Perfect attendance in Jestha',
-      icon: UserCheck,
-      color: 'text-blue-600 bg-blue-50',
-    },
-    {
-      id: 'b-4',
-      title: 'Quiz Master',
-      desc: 'Top scorer in 5 quizzes',
-      icon: Zap,
-      color: 'text-purple-600 bg-purple-50',
-    },
-  ];
+  const getIcon = (iconStr: string) => {
+    switch (iconStr) {
+      case 'Flame':
+        return Flame;
+      case 'Trophy':
+        return Trophy;
+      case 'UserCheck':
+        return UserCheck;
+      case 'Zap':
+        return Zap;
+      default:
+        return Award;
+    }
+  };
+
+  const getColor = (category: string) => {
+    switch (category) {
+      case 'streak':
+        return 'text-amber-500 bg-amber-50';
+      case 'academic':
+        return 'text-emerald-600 bg-emerald-50';
+      case 'attendance':
+        return 'text-blue-600 bg-blue-50';
+      default:
+        return 'text-purple-600 bg-purple-50';
+    }
+  };
+
+  const badgesList = studentData.badges.map((b) => ({
+    id: b.id,
+    title: b.title,
+    desc: b.description,
+    icon: getIcon(b.icon),
+    color: getColor(b.category),
+  }));
 
   const weekDays = [
     { day: 'M', checked: true },

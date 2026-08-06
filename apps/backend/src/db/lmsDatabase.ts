@@ -517,6 +517,18 @@ class LMSDatabaseService {
       approvedByParent: created.approvedByParent ?? undefined,
     };
   }
+
+  public async getSubjectPerformances() {
+    return prisma.subjectPerformance.findMany();
+  }
+
+  public async getTermProgress() {
+    return prisma.termProgress.findMany();
+  }
+
+  public async getStudentActivities() {
+    return prisma.studentActivity.findMany();
+  }
 }
 
 export const lmsDB = new LMSDatabaseService();

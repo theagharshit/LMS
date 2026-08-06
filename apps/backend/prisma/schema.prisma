@@ -281,7 +281,6 @@ model SubjectPerformance {
   totalAssignments     Int
   quizzesScoreAvg      Float
   teacherRemark        String
-  trend                String 
 }
 
 model StoredFileRecord {
@@ -312,4 +311,21 @@ model StudentLocationRecord {
   notes           String?
   
   updatedAt       String
+}
+
+model TermProgress {
+  id        String @id @default(cuid())
+  studentId String
+  term      String
+  score     Float
+}
+
+model StudentActivity {
+  id          String @id @default(cuid())
+  studentId   String
+  title       String
+  category    String
+  position    String
+  date        String
+  description String
 }

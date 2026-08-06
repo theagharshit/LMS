@@ -24,6 +24,8 @@ import {
   Badge,
   StudentLocationRecord,
   LocationStatusCategory,
+  TermProgress,
+  StudentActivity,
 } from '@lms/shared';
 
 import {
@@ -114,6 +116,8 @@ interface AppContextType {
   modules: ModuleItem[];
   calendarEvents: CalendarEvent[];
   subjectPerformances: SubjectPerformance[];
+  termProgress: TermProgress[];
+  studentActivities: StudentActivity[];
   studentProfiles: StudentProfile[];
 
   // Real-Time Student Location Tracker
@@ -227,6 +231,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (data.parentControls) setParentControls(data.parentControls);
           if (data.studentLocations) setStudentLocations(data.studentLocations);
           if (data.messages) setMessages(data.messages);
+          if (data.termProgress) setTermProgress(data.termProgress);
+          if (data.studentActivities) setStudentActivities(data.studentActivities);
+          if (data.subjectPerformances) setSubjectPerformances(data.subjectPerformances);
         }
       })
       .catch((err) => {
@@ -287,7 +294,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [schedule] = useState<SchedulePeriod[]>(MOCK_SCHEDULE);
   const [modules] = useState<ModuleItem[]>(MOCK_MODULES);
   const [calendarEvents] = useState<CalendarEvent[]>(MOCK_CALENDAR_EVENTS);
-  const [subjectPerformances] = useState<SubjectPerformance[]>(MOCK_SUBJECT_PERFORMANCE);
+  const [subjectPerformances, setSubjectPerformances] =
+    useState<SubjectPerformance[]>(MOCK_SUBJECT_PERFORMANCE);
+  const [termProgress, setTermProgress] = useState<TermProgress[]>([]);
+  const [studentActivities, setStudentActivities] = useState<StudentActivity[]>([]);
 
   // AI Assistant states
   const [isAiTutorOpen, setIsAiTutorOpen] = useState<boolean>(false);
@@ -668,6 +678,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         modules,
         calendarEvents,
         subjectPerformances,
+        termProgress,
+        studentActivities,
         studentProfiles,
         studentLocations,
         updateStudentLocation,

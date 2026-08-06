@@ -231,6 +231,8 @@ export interface DirectMessage {
 }
 
 export interface SubjectPerformance {
+  id: string;
+  studentId: string;
   subject: string;
   scorePercentage: number;
   grade: string; // A+, A, B+, B, C+
@@ -238,7 +240,6 @@ export interface SubjectPerformance {
   totalAssignments: number;
   quizzesScoreAvg: number;
   teacherRemark: string;
-  trend: 'up' | 'stable' | 'down';
 }
 
 export interface StoredFileRecord {
@@ -276,4 +277,21 @@ export interface StudentLocationRecord {
   updatedByRole: 'teacher' | 'admin';
   updatedAt: string;
   notes?: string;
+}
+
+export interface TermProgress {
+  id: string;
+  studentId: string;
+  term: string;
+  score: number;
+}
+
+export interface StudentActivity {
+  id: string;
+  studentId: string;
+  title: string;
+  category: string;
+  position: string;
+  date: string;
+  description: string;
 }
