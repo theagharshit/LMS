@@ -1,7 +1,38 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { loadEnv } from '../../src/utils/envResolver';
+loadEnv();
 import { lmsDB } from '../../src/db/lmsDatabase';
+import { PrismaClient } from '@prisma/client';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 describe('LMS Database Service (Async)', () => {
+  beforeAll(async () => {
+    await prisma.user.upsert({
+      where: { id: 'user-stu-1' },
+      update: {},
+      create: { id: 'user-stu-1', name: 'Aarav Sharma', email: 'aarav@lms.com', role: 'student', avatar: 'a.png', schoolName: 'S1', gradeLevel: 8, section: 'A' },
+    });
+    await prisma.studentProfile.upsert({
+      where: { id: 'user-stu-1' },
+      update: {},
+      create: { id: 'user-stu-1', userId: 'user-stu-1', attendancePercentage: 95, streakDays: 10, xpPoints: 500, gradeLevel: 8, section: 'A', parentName: 'Bina', parentPhone: '980' },
+    });
+    await prisma.user.upsert({
+      where: { id: 'user-teach-1' },
+      update: {},
+      create: { id: 'user-teach-1', name: 'Mr. Ramesh Thapa', email: 'ramesh@lms.com', role: 'teacher', avatar: 'a.png', schoolName: 'S1' },
+    });
+    await prisma.classroom.upsert({
+      where: { id: 'cls-math-8a' },
+      update: {},
+      create: { id: 'cls-math-8a', name: 'Grade 8 Mathematics - Sec A', subject: 'Mathematics', gradeLevel: 8, section: 'A', teacherId: 'user-teach-1', teacherName: 'Mr. Ramesh Thapa', teacherAvatar: 'a.png', roomNumber: '204', colorTheme: 'blue', bannerImage: 'b.png', code: 'MATH8A' },
+    });
+  });
   it('should get users', async () => {
     const users = await lmsDB.getUsers();
     expect(users.length).toBeGreaterThan(0);
