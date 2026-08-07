@@ -22,7 +22,9 @@
       "@utils/*": ["./src/utils/*"],
       "@db/*": ["./src/db/*"],
       "@middlewares/*": ["./src/middlewares/*"],
-      "@types/*": ["./src/types/*"]
+      "@types/*": ["./src/types/*"],
+      "@controllers/*": ["./src/controllers/*"],
+      "@routes/*": ["./src/routes/*"]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
