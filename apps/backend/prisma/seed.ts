@@ -13,6 +13,7 @@ import {
   MOCK_QUIZZES,
   MOCK_QUIZ_SUBMISSIONS,
   MOCK_SUBJECT_PERFORMANCE,
+  MOCK_BADGE_DEFINITIONS,
 } from '@lms/shared';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -25,7 +26,8 @@ async function main() {
   await prisma.studentActivity.deleteMany();
   await prisma.subjectPerformance.deleteMany();
   await prisma.storedFileRecord.deleteMany();
-  await prisma.badge.deleteMany();
+  await prisma.studentBadge.deleteMany();
+  await prisma.badgeDefinition.deleteMany();
   await prisma.postComment.deleteMany();
   await prisma.attachment.deleteMany();
   await prisma.submission.deleteMany();
@@ -54,6 +56,21 @@ async function main() {
         rollNumber: user.rollNumber,
         childrenIds: user.childrenIds || [],
         subjectsTaught: user.subjectsTaught || [],
+      },
+    });
+  }
+
+  console.log('Seeding Badge Definitions...');
+  for (const b of MOCK_BADGE_DEFINITIONS) {
+    await prisma.badgeDefinition.create({
+      data: {
+        id: b.id,
+        title: b.title,
+        description: b.description,
+        icon: b.icon,
+        category: b.category,
+        isAutomatic: b.isAutomatic,
+        criteria: b.criteria || null,
       },
     });
   }
@@ -91,11 +108,10 @@ async function main() {
         badges: {
           create: profile.badges.map((b) => ({
             id: b.id,
-            title: b.title,
-            description: b.description,
-            icon: b.icon,
             earnedDate: b.earnedDate,
-            category: b.category,
+            badgeDefinitionId: b.badgeDefinitionId,
+            assignedBy: b.assignedBy,
+            remarks: b.remarks,
           })),
         },
       },

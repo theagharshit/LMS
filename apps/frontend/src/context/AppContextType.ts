@@ -20,6 +20,7 @@ import {
   LocationStatusCategory,
   TermProgress,
   StudentActivity,
+  BadgeDefinition,
 } from '@lms/shared';
 
 export interface AppContextType {
@@ -94,6 +95,8 @@ export interface AppContextType {
   termProgress: TermProgress[];
   studentActivities: StudentActivity[];
   studentProfiles: StudentProfile[];
+  badgeDefinitions: BadgeDefinition[];
+  assignBadge: (studentProfileId: string, badgeDefinitionId: string, remarks?: string) => Promise<void>;
 
   // Real-Time Student Location Tracker
   studentLocations: StudentLocationRecord[];

@@ -9,6 +9,7 @@ import { StudentProfileView } from './components/student/StudentProfileView';
 import { TeacherDashboard } from './components/teacher/TeacherDashboard';
 import { AttendanceRegister } from './components/teacher/AttendanceRegister';
 import { ParentDashboard } from './components/parent/ParentDashboard';
+import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AcademicCalendarView } from './components/common/AcademicCalendarView';
 import { MessagesView } from './components/common/MessagesView';
 import { NotificationDrawer } from './components/common/NotificationDrawer';
@@ -45,6 +46,8 @@ const AppContent: React.FC = () => {
               onOpenQuizBuilderModal={() => setIsQuizBuilderOpen(true)}
             />
           );
+        } else if (currentUser.role === 'admin') {
+          return <AdminDashboard />;
         } else {
           return <ParentDashboard onOpenParentalControls={() => setIsParentalControlsOpen(true)} />;
         }
