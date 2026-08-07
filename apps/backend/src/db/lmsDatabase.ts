@@ -81,20 +81,61 @@ class LMSDatabaseService {
   }
 
   public async getClassrooms(): Promise<Classroom[]> {
-    return prisma.classroom.findMany();
+    const classrooms = await prisma.classroom.findMany({
+      include: { enrollments: true },
+    });
+    return classrooms.map((c) => ({
+      id: c.id,
+      name: c.name,
+      subject: c.subject,
+      gradeLevel: c.gradeLevel,
+      section: c.section,
+      teacherId: c.teacherId,
+      teacherName: c.teacherName,
+      teacherAvatar: c.teacherAvatar,
+      roomNumber: c.roomNumber,
+      colorTheme: c.colorTheme,
+      bannerImage: c.bannerImage,
+      studentCount: c.enrollments.length,
+      meetLink: c.meetLink || undefined,
+      code: c.code,
+    }));
   }
 
   public async addClassroom(
     classroom: Omit<Classroom, 'id' | 'code' | 'studentCount'>,
   ): Promise<Classroom> {
     const code = `CLS${Math.floor(1000 + Math.random() * 9000)}`;
-    return prisma.classroom.create({
+    let validTeacherId = classroom.teacherId;
+    if (validTeacherId) {
+      const teacher = await prisma.user.findUnique({ where: { id: validTeacherId } });
+      if (!teacher) validTeacherId = 'user-teach-1';
+    } else {
+      validTeacherId = 'user-teach-1';
+    }
+
+    const created = await prisma.classroom.create({
       data: {
-        ...classroom,
-        studentCount: 30,
+        name: classroom.name,
+        subject: classroom.subject,
+        gradeLevel: classroom.gradeLevel,
+        section: classroom.section,
+        teacherId: validTeacherId,
+        teacherName: classroom.teacherName,
+        teacherAvatar: classroom.teacherAvatar,
+        roomNumber: classroom.roomNumber,
+        colorTheme: classroom.colorTheme,
+        bannerImage: classroom.bannerImage,
+        meetLink: classroom.meetLink,
         code,
       },
+      include: { enrollments: true },
     });
+    return {
+      ...created,
+      studentCount: created.enrollments.length,
+      meetLink: created.meetLink || undefined,
+    };
   }
 
   public async getStreamPosts(): Promise<StreamPost[]> {

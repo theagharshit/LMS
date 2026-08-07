@@ -29,8 +29,22 @@ model User {
 
   subjectsTaught String[]
   
-  studentProfile StudentProfile?
+  studentProfile        StudentProfile?
   parentControlSettings ParentControlSettings?
+  
+  taughtClassrooms      Classroom[]             @relation("TeacherClassrooms")
+  enrollments           ClassroomEnrollment[]   @relation("StudentEnrollments")
+  streamPosts           StreamPost[]            @relation("AuthorPosts")
+  postComments          PostComment[]           @relation("AuthorComments")
+  submissions           Submission[]            @relation("StudentSubmissions")
+  quizSubmissions       QuizSubmission[]        @relation("StudentQuizSubmissions")
+  attendanceRecords     AttendanceRecord[]      @relation("StudentAttendance")
+  sentMessages          DirectMessage[]         @relation("SentMessages")
+  receivedMessages      DirectMessage[]         @relation("ReceivedMessages")
+  locationRecords       StudentLocationRecord[] @relation("StudentLocations")
+  subjectPerformances   SubjectPerformance[]    @relation("StudentPerformances")
+  termProgresses        TermProgress[]          @relation("StudentTermProgress")
+  studentActivities     StudentActivity[]       @relation("StudentActivities")
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -59,7 +73,7 @@ model BadgeDefinition {
   icon        String
   category    String
   isAutomatic Boolean  @default(false)
-  criteria    String?  // JSON string for auto-assignment logic
+  criteria    String?
 
   studentBadges StudentBadge[]
 }
@@ -83,21 +97,46 @@ model Classroom {
   subject       String
   gradeLevel    Int
   section       String
+  
   teacherId     String
+  teacher       User     @relation("TeacherClassrooms", fields: [teacherId], references: [id], onDelete: Cascade)
   teacherName   String
   teacherAvatar String
+  
   roomNumber    String
   colorTheme    String
   bannerImage   String
-  studentCount  Int
   meetLink      String?
   code          String   @unique
+
+  enrollments   ClassroomEnrollment[]
+  streamPosts   StreamPost[]
+  assignments   Assignment[]
+  quizzes       Quiz[]
+  moduleItems   ModuleItem[]
+  storedFiles   StoredFileRecord[]
+}
+
+model ClassroomEnrollment {
+  id          String    @id @default(cuid())
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  
+  studentId   String
+  student     User      @relation("StudentEnrollments", fields: [studentId], references: [id], onDelete: Cascade)
+  
+  enrolledAt  DateTime  @default(now())
+
+  @@unique([classroomId, studentId])
 }
 
 model StreamPost {
   id            String   @id @default(cuid())
   classroomId   String
+  classroom     Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  
   authorId      String
+  author        User      @relation("AuthorPosts", fields: [authorId], references: [id], onDelete: Cascade)
   authorName    String
   authorAvatar  String
   authorRole    UserRole
@@ -115,6 +154,8 @@ model PostComment {
   streamPostId String
   streamPost   StreamPost @relation(fields: [streamPostId], references: [id], onDelete: Cascade)
   
+  authorId     String?
+  author       User?      @relation("AuthorComments", fields: [authorId], references: [id], onDelete: Cascade)
   authorName   String
   authorAvatar String
   content      String
@@ -142,6 +183,7 @@ model Attachment {
 model ModuleItem {
   id                    String       @id @default(cuid())
   classroomId           String
+  classroom             Classroom    @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   unitName              String
   title                 String
   description           String
@@ -154,6 +196,7 @@ model ModuleItem {
 model Assignment {
   id            String       @id @default(cuid())
   classroomId   String
+  classroom     Classroom    @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   classroomName String
   subject       String
   title         String
@@ -175,6 +218,7 @@ model Submission {
   assignment    Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   
   studentId     String
+  student       User       @relation("StudentSubmissions", fields: [studentId], references: [id], onDelete: Cascade)
   studentName   String
   studentAvatar String
   
@@ -192,6 +236,7 @@ model Submission {
 model Quiz {
   id              String         @id @default(cuid())
   classroomId     String
+  classroom       Classroom      @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   classroomName   String
   subject         String
   title           String
@@ -226,6 +271,7 @@ model QuizSubmission {
   quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
   
   studentId   String
+  student     User     @relation("StudentQuizSubmissions", fields: [studentId], references: [id], onDelete: Cascade)
   score       Float
   totalPoints Int
   completedAt String
@@ -236,6 +282,7 @@ model QuizSubmission {
 model AttendanceRecord {
   id          String   @id @default(cuid())
   studentId   String
+  student     User     @relation("StudentAttendance", fields: [studentId], references: [id], onDelete: Cascade)
   studentName String
   date        String 
   status      String 
@@ -272,10 +319,12 @@ model CalendarEvent {
 model DirectMessage {
   id               String   @id @default(cuid())
   senderId         String
+  sender           User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
   senderName       String
   senderRole       UserRole
   senderAvatar     String
   receiverId       String
+  receiver         User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
   receiverName     String
   content          String
   read             Boolean  @default(false)
@@ -287,6 +336,7 @@ model DirectMessage {
 model SubjectPerformance {
   id                   String @id @default(cuid())
   studentId            String
+  student              User   @relation("StudentPerformances", fields: [studentId], references: [id], onDelete: Cascade)
   subject              String
   scorePercentage      Float
   grade                String
@@ -297,7 +347,7 @@ model SubjectPerformance {
 }
 
 model StoredFileRecord {
-  id              String   @id @default(cuid())
+  id              String     @id @default(cuid())
   originalName    String
   storedName      String
   mimeType        String
@@ -305,6 +355,7 @@ model StoredFileRecord {
   sizeFormatted   String
   uploadedBy      String
   classroomId     String?
+  classroom       Classroom? @relation(fields: [classroomId], references: [id], onDelete: SetNull)
   checksum        String
   integrityStatus String 
   downloadUrl     String
@@ -315,6 +366,7 @@ model StoredFileRecord {
 model StudentLocationRecord {
   id              String   @id @default(cuid())
   studentId       String
+  student         User     @relation("StudentLocations", fields: [studentId], references: [id], onDelete: Cascade)
   studentName     String
   currentLocation String
   category        String 
@@ -329,6 +381,7 @@ model StudentLocationRecord {
 model TermProgress {
   id        String @id @default(cuid())
   studentId String
+  student   User   @relation("StudentTermProgress", fields: [studentId], references: [id], onDelete: Cascade)
   term      String
   score     Float
 }
@@ -336,6 +389,7 @@ model TermProgress {
 model StudentActivity {
   id          String @id @default(cuid())
   studentId   String
+  student     User   @relation("StudentActivities", fields: [studentId], references: [id], onDelete: Cascade)
   title       String
   category    String
   position    String

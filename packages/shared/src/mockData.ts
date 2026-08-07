@@ -62,6 +62,30 @@ export const MOCK_USERS: User[] = [
     rollNumber: 5,
   },
   {
+    id: 'user-stu-3',
+    name: 'Rohan Shrestha',
+    email: 'rohan.shrestha@mteverest.edu.np',
+    role: 'student',
+    avatar:
+      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+    schoolName: 'Mount Everest Secondary School, Kathmandu',
+    gradeLevel: 8,
+    section: 'A',
+    rollNumber: 24,
+  },
+  {
+    id: 'user-stu-4',
+    name: 'Bikas Rai',
+    email: 'bikas.rai@mteverest.edu.np',
+    role: 'student',
+    avatar:
+      'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=150&auto=format&fit=crop&q=80',
+    schoolName: 'Mount Everest Secondary School, Kathmandu',
+    gradeLevel: 8,
+    section: 'A',
+    rollNumber: 31,
+  },
+  {
     id: 'user-teach-1',
     name: 'Mr. Ramesh Thapa',
     email: 'ramesh.thapa@mteverest.edu.np',
@@ -70,6 +94,26 @@ export const MOCK_USERS: User[] = [
       'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     schoolName: 'Mount Everest Secondary School, Kathmandu',
     subjectsTaught: ['Mathematics', 'Computer Science'],
+  },
+  {
+    id: 'user-teach-2',
+    name: 'Mrs. Sabina Karki',
+    email: 'sabina.karki@mteverest.edu.np',
+    role: 'teacher',
+    avatar:
+      'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
+    schoolName: 'Mount Everest Secondary School, Kathmandu',
+    subjectsTaught: ['Science & Technology'],
+  },
+  {
+    id: 'user-teach-3',
+    name: 'Mr. Bishnu Prasad Gautam',
+    email: 'bishnu.gautam@mteverest.edu.np',
+    role: 'teacher',
+    avatar:
+      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+    schoolName: 'Mount Everest Secondary School, Kathmandu',
+    subjectsTaught: ['Nepali'],
   },
   {
     id: 'user-parent-1',
