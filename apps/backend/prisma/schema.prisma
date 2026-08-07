@@ -49,17 +49,30 @@ model StudentProfile {
   parentName           String
   parentPhone          String
 
-  badges               Badge[]
+  badges               StudentBadge[]
 }
 
-model Badge {
-  id          String         @id @default(cuid())
+model BadgeDefinition {
+  id          String   @id @default(cuid())
   title       String
   description String
   icon        String
-  earnedDate  String
   category    String
+  isAutomatic Boolean  @default(false)
+  criteria    String?  // JSON string for auto-assignment logic
+
+  studentBadges StudentBadge[]
+}
+
+model StudentBadge {
+  id          String   @id @default(cuid())
+  earnedDate  String
+  assignedBy  String?
+  remarks     String?
   
+  badgeDefinitionId String
+  badgeDefinition   BadgeDefinition @relation(fields: [badgeDefinitionId], references: [id], onDelete: Cascade)
+
   studentProfileId String
   studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
 }

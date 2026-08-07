@@ -24,20 +24,31 @@ export interface StudentProfile extends User {
   attendancePercentage: number;
   streakDays: number;
   xpPoints: number;
-  badges: Badge[];
+  badges: StudentBadge[];
   gradeLevel: number;
   section: string;
   parentName: string;
   parentPhone: string;
 }
 
-export interface Badge {
+export interface BadgeDefinition {
   id: string;
   title: string;
   description: string;
   icon: string;
+  category: string;
+  isAutomatic: boolean;
+  criteria?: string;
+}
+
+export interface StudentBadge {
+  id: string;
   earnedDate: string;
-  category: 'academic' | 'attendance' | 'streak' | 'participation';
+  badgeDefinitionId: string;
+  badgeDefinition: BadgeDefinition;
+  studentProfileId: string;
+  assignedBy?: string;
+  remarks?: string;
 }
 
 export interface Classroom {

@@ -113,6 +113,7 @@ async function startServer() {
         status: 'success',
         users: await lmsDB.getUsers(),
         studentProfiles: await lmsDB.getStudentProfiles(),
+        badgeDefinitions: await lmsDB.getBadgeDefinitions(),
         classrooms: await lmsDB.getClassrooms(),
         streamPosts: await lmsDB.getStreamPosts(),
         assignments: await lmsDB.getAssignments(),
@@ -229,6 +230,21 @@ async function startServer() {
   // GET /api/db/student-locations - List all student location records
   app.get('/api/db/student-locations', async (_req, res) => {
     res.json({ status: 'success', studentLocations: await lmsDB.getStudentLocations() });
+  });
+
+  // POST /api/db/student-badges
+  app.post('/api/db/student-badges', async (req, res) => {
+    try {
+      const { studentProfileId, badgeDefinitionId, assignedBy, remarks } = req.body;
+      if (!studentProfileId || !badgeDefinitionId || !assignedBy) {
+        return res.status(400).json({ status: 'error', message: 'Missing required fields' });
+      }
+      const badge = await lmsDB.assignBadge(studentProfileId, badgeDefinitionId, assignedBy, remarks);
+      res.json({ status: 'success', badge });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ status: 'error', message: 'Failed to assign badge' });
+    }
   });
 
   // GET /api/db/student-locations/:studentId - Get real-time location for specific student

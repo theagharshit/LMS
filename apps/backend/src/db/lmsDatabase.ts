@@ -47,7 +47,7 @@ class LMSDatabaseService {
 
   public async getStudentProfiles(): Promise<StudentProfile[]> {
     const profiles = await prisma.studentProfile.findMany({
-      include: { user: true, badges: true },
+      include: { user: true, badges: { include: { badgeDefinition: true } } },
     });
     return profiles.map((p) => ({
       id: p.user.id,
@@ -66,13 +66,18 @@ class LMSDatabaseService {
       parentPhone: p.parentPhone,
       badges: p.badges.map((b) => ({
         id: b.id,
-        title: b.title,
-        description: b.description,
-        icon: b.icon,
         earnedDate: b.earnedDate,
-        category: b.category as any,
+        badgeDefinitionId: b.badgeDefinitionId,
+        badgeDefinition: b.badgeDefinition,
+        studentProfileId: b.studentProfileId,
+        assignedBy: b.assignedBy || undefined,
+        remarks: b.remarks || undefined,
       })),
     }));
+  }
+
+  public async getBadgeDefinitions() {
+    return prisma.badgeDefinition.findMany();
   }
 
   public async getClassrooms(): Promise<Classroom[]> {
@@ -477,6 +482,12 @@ class LMSDatabaseService {
         answers: (submission.answers as any) || {},
       },
     });
+
+    // Auto-trigger: Quiz Master badge if score is 100%
+    if (submission.score === submission.totalPoints && submission.totalPoints > 0) {
+      await this.assignBadge(submission.studentId, 'bdg-def-2', 'System', 'Scored 100% on a quiz');
+    }
+
     return {
       ...created,
       answers: (created.answers as Record<string, string>) || {},
@@ -528,6 +539,30 @@ class LMSDatabaseService {
 
   public async getStudentActivities() {
     return prisma.studentActivity.findMany();
+  }
+
+  public async assignBadge(
+    studentProfileId: string,
+    badgeDefinitionId: string,
+    assignedBy: string,
+    remarks?: string,
+  ) {
+    const existing = await prisma.studentBadge.findFirst({
+      where: { studentProfileId, badgeDefinitionId },
+    });
+    if (existing) {
+      return existing;
+    }
+    
+    return prisma.studentBadge.create({
+      data: {
+        studentProfileId,
+        badgeDefinitionId,
+        earnedDate: new Date().toISOString().split('T')[0],
+        assignedBy,
+        remarks,
+      },
+    });
   }
 }
 

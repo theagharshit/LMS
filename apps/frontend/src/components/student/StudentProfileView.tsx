@@ -107,13 +107,16 @@ export const StudentProfileView: React.FC = () => {
     }
   };
 
-  const badgesList = studentData.badges.map((b) => ({
-    id: b.id,
-    title: b.title,
-    desc: b.description,
-    icon: getIcon(b.icon),
-    color: getColor(b.category),
-  }));
+  const badgesList = studentData.badges.map((b) => {
+    const def = b.badgeDefinition;
+    return {
+      id: b.id,
+      title: def?.title || 'Unknown',
+      desc: def?.description || '',
+      icon: def?.icon || '🏆',
+      color: getColor(def?.category || ''),
+    };
+  });
 
   const weekDays = [
     { day: 'M', checked: true },
@@ -417,23 +420,20 @@ export const StudentProfileView: React.FC = () => {
       {/* TAB CONTENT: BADGES */}
       {activeTab === 'badges' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {badgesList.map((b) => {
-            const Icon = b.icon;
-            return (
+          {badgesList.map((b) => (
               <div
                 key={b.id}
                 className="bg-white p-4 rounded-2xl border border-[#EDEAE2] flex items-center gap-3"
               >
-                <div className={`p-2.5 rounded-xl ${b.color} shrink-0`}>
-                  <Icon className="w-5 h-5" />
+                <div className={`p-2.5 rounded-xl ${b.color} shrink-0 text-xl flex items-center justify-center`}>
+                  {b.icon}
                 </div>
                 <div>
                   <h4 className="font-bold text-xs text-[#2D2D2A]">{b.title}</h4>
                   <p className="text-[11px] text-[#7A7A72]">{b.desc}</p>
                 </div>
               </div>
-            );
-          })}
+          ))}
         </div>
       )}
 

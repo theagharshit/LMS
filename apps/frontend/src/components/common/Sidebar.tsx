@@ -25,6 +25,7 @@ export const Sidebar: React.FC = () => {
   const isStudent = currentUser.role === 'student';
   const isTeacher = currentUser.role === 'teacher';
   const isParent = currentUser.role === 'parent';
+  const isAdmin = currentUser.role === 'admin';
 
   interface NavItem {
     id: string;
@@ -66,7 +67,12 @@ export const Sidebar: React.FC = () => {
     { id: 'messages', label: 'Teacher Messages', icon: MessageSquare },
   ];
 
-  const navItems = isStudent ? studentNav : isTeacher ? teacherNav : parentNav;
+  const adminNav: NavItem[] = [
+    { id: 'dashboard', label: 'Admin Hub', icon: ShieldAlert },
+    { id: 'calendar', label: 'Academic Calendar', icon: Calendar },
+  ];
+
+  const navItems = isStudent ? studentNav : isTeacher ? teacherNav : isAdmin ? adminNav : parentNav;
 
   return (
     <aside className="w-64 bg-[#F0EDE5] border border-[#E5E1D8] flex flex-col justify-between p-4 h-[calc(100vh-89px)] sticky top-[73px] rounded-2xl transition-colors shrink-0 hidden lg:flex overflow-y-auto">
@@ -85,7 +91,9 @@ export const Sidebar: React.FC = () => {
                   ? `Student: ${currentUser.name}`
                   : isTeacher
                     ? `Teacher: ${currentUser.name}`
-                    : `Parent: Bina Sharma`}
+                    : isAdmin
+                      ? `Admin: ${currentUser.name}`
+                      : `Parent: Bina Sharma`}
               </span>
             </div>
             {isParent && (
