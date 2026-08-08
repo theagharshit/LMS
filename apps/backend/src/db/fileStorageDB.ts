@@ -27,9 +27,16 @@ class FileStorageDatabase {
     record: Omit<StoredFileRecord, 'id' | 'uploadedAt'>,
   ): Promise<StoredFileRecord> {
     const id = `file-db-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    let validClassroomId = record.classroomId;
+    if (validClassroomId) {
+      const cls = await prisma.classroom.findUnique({ where: { id: validClassroomId } });
+      if (!cls) validClassroomId = undefined;
+    }
+
     const newRecord = await prisma.storedFileRecord.create({
       data: {
         ...record,
+        classroomId: validClassroomId,
         id,
         uploadedAt: new Date().toISOString(),
       },

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '@/context/AppContext';
+import { getAvatarUrl } from '@utils/avatarUtils';
 import { StudentLocationTracker } from '../common/StudentLocationTracker';
 import { DayOfWeek, SchedulePeriod } from '@lms/shared';
 import {
@@ -183,8 +184,11 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     >
                       <div className="flex items-center gap-3">
                         <img
-                          src={sub.studentAvatar}
+                          src={getAvatarUrl(sub.studentAvatar, sub.studentName)}
                           alt={sub.studentName}
+                          onError={(e) => {
+                            e.currentTarget.src = getAvatarUrl(undefined, sub.studentName);
+                          }}
                           className="w-10 h-10 rounded-full object-cover shrink-0"
                         />
                         <div>
@@ -268,8 +272,11 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <img
-                        src={st.avatar}
+                        src={getAvatarUrl(st.avatar, st.name)}
                         alt={st.name}
+                        onError={(e) => {
+                          e.currentTarget.src = getAvatarUrl(undefined, st.name);
+                        }}
                         className="w-8 h-8 rounded-full object-cover"
                       />
                       <div>

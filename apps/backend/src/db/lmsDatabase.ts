@@ -81,20 +81,61 @@ class LMSDatabaseService {
   }
 
   public async getClassrooms(): Promise<Classroom[]> {
-    return prisma.classroom.findMany();
+    const classrooms = await prisma.classroom.findMany({
+      include: { enrollments: true },
+    });
+    return classrooms.map((c) => ({
+      id: c.id,
+      name: c.name,
+      subject: c.subject,
+      gradeLevel: c.gradeLevel,
+      section: c.section,
+      teacherId: c.teacherId,
+      teacherName: c.teacherName,
+      teacherAvatar: c.teacherAvatar,
+      roomNumber: c.roomNumber,
+      colorTheme: c.colorTheme,
+      bannerImage: c.bannerImage,
+      studentCount: c.enrollments.length,
+      meetLink: c.meetLink || undefined,
+      code: c.code,
+    }));
   }
 
   public async addClassroom(
     classroom: Omit<Classroom, 'id' | 'code' | 'studentCount'>,
   ): Promise<Classroom> {
     const code = `CLS${Math.floor(1000 + Math.random() * 9000)}`;
-    return prisma.classroom.create({
+    let validTeacherId = classroom.teacherId;
+    if (validTeacherId) {
+      const teacher = await prisma.user.findUnique({ where: { id: validTeacherId } });
+      if (!teacher) validTeacherId = 'user-teach-1';
+    } else {
+      validTeacherId = 'user-teach-1';
+    }
+
+    const created = await prisma.classroom.create({
       data: {
-        ...classroom,
-        studentCount: 30,
+        name: classroom.name,
+        subject: classroom.subject,
+        gradeLevel: classroom.gradeLevel,
+        section: classroom.section,
+        teacherId: validTeacherId,
+        teacherName: classroom.teacherName,
+        teacherAvatar: classroom.teacherAvatar,
+        roomNumber: classroom.roomNumber,
+        colorTheme: classroom.colorTheme,
+        bannerImage: classroom.bannerImage,
+        meetLink: classroom.meetLink,
         code,
       },
+      include: { enrollments: true },
     });
+    return {
+      ...created,
+      studentCount: created.enrollments.length,
+      meetLink: created.meetLink || undefined,
+    };
   }
 
   public async getStreamPosts(): Promise<StreamPost[]> {
@@ -176,8 +217,21 @@ class LMSDatabaseService {
     studentId: string,
     notes?: string,
   ): Promise<Submission> {
+    let validAssignmentId = assignmentId;
+    const asg = await prisma.assignment.findUnique({ where: { id: validAssignmentId } });
+    if (!asg) {
+      const firstAsg = await prisma.assignment.findFirst();
+      if (firstAsg) validAssignmentId = firstAsg.id;
+    }
+
+    let validStudentId = studentId;
+    const stu = await prisma.user.findUnique({ where: { id: validStudentId } });
+    if (!stu) {
+      validStudentId = 'user-stu-1';
+    }
+
     const existing = await prisma.submission.findFirst({
-      where: { assignmentId, studentId },
+      where: { assignmentId: validAssignmentId, studentId: validStudentId },
     });
 
     if (existing) {
@@ -204,10 +258,11 @@ class LMSDatabaseService {
 
     const created = await prisma.submission.create({
       data: {
-        assignmentId,
-        studentId,
-        studentName: 'Aarav Sharma', // Mock logic preservation
+        assignmentId: validAssignmentId,
+        studentId: validStudentId,
+        studentName: stu?.name || 'Aarav Sharma',
         studentAvatar:
+          stu?.avatar ||
           'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
         fileName,
         fileUrl,
@@ -417,9 +472,16 @@ class LMSDatabaseService {
     streamPostId: string,
     comment: { authorName: string; authorAvatar: string; content: string },
   ) {
+    let validPostId = streamPostId;
+    const post = await prisma.streamPost.findUnique({ where: { id: validPostId } });
+    if (!post) {
+      const firstPost = await prisma.streamPost.findFirst();
+      if (firstPost) validPostId = firstPost.id;
+    }
+
     return prisma.postComment.create({
       data: {
-        streamPostId,
+        streamPostId: validPostId,
         authorName: comment.authorName,
         authorAvatar: comment.authorAvatar,
         content: comment.content,
@@ -508,13 +570,31 @@ class LMSDatabaseService {
   public async addDirectMessage(
     msg: Omit<DirectMessage, 'id' | 'createdAt'>,
   ): Promise<DirectMessage> {
+    let validSenderId = msg.senderId;
+    const sender = await prisma.user.findUnique({ where: { id: validSenderId } });
+    if (!sender) {
+      const firstUser =
+        (await prisma.user.findFirst({ where: { role: 'parent' } })) ||
+        (await prisma.user.findFirst());
+      if (firstUser) validSenderId = firstUser.id;
+    }
+
+    let validReceiverId = msg.receiverId;
+    const receiver = await prisma.user.findUnique({ where: { id: validReceiverId } });
+    if (!receiver) {
+      const firstTeacher =
+        (await prisma.user.findFirst({ where: { role: 'teacher' } })) ||
+        (await prisma.user.findFirst());
+      if (firstTeacher) validReceiverId = firstTeacher.id;
+    }
+
     const created = await prisma.directMessage.create({
       data: {
-        senderId: msg.senderId,
+        senderId: validSenderId,
         senderName: msg.senderName,
         senderRole: msg.senderRole,
         senderAvatar: msg.senderAvatar,
-        receiverId: msg.receiverId,
+        receiverId: validReceiverId,
         receiverName: msg.receiverName,
         content: msg.content,
         read: msg.read || false,
@@ -553,7 +633,7 @@ class LMSDatabaseService {
     if (existing) {
       return existing;
     }
-    
+
     return prisma.studentBadge.create({
       data: {
         studentProfileId,

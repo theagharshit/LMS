@@ -142,7 +142,7 @@ export interface Submission {
 }
 
 export interface QuizQuestion {
-  id: string;
+  id?: string;
   text: string;
   type: 'MCQ' | 'True/False' | 'ShortAnswer';
   options?: string[];

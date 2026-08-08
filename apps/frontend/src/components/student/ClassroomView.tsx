@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { getAvatarUrl } from '../../utils/avatarUtils';
 import { Attachment } from '@lms/shared';
 import {
   MessageSquare,
@@ -563,8 +564,11 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
             >
               <div className="flex gap-3">
                 <img
-                  src={currentUser.avatar}
+                  src={getAvatarUrl(currentUser.avatar, currentUser.name)}
                   alt={currentUser.name}
+                  onError={(e) => {
+                    e.currentTarget.src = getAvatarUrl(undefined, currentUser.name);
+                  }}
                   className="w-9 h-9 rounded-full object-cover shrink-0"
                 />
                 <textarea
@@ -632,8 +636,11 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <img
-                          src={post.authorAvatar}
+                          src={getAvatarUrl(post.authorAvatar, post.authorName)}
                           alt={post.authorName}
+                          onError={(e) => {
+                            e.currentTarget.src = getAvatarUrl(undefined, post.authorName);
+                          }}
                           className="w-9 h-9 rounded-full object-cover"
                         />
                         <div>
@@ -697,8 +704,11 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                             className="flex items-start gap-2.5 text-xs bg-[#F9F7F2] p-2.5 rounded-2xl"
                           >
                             <img
-                              src={c.authorAvatar}
+                              src={getAvatarUrl(c.authorAvatar, c.authorName)}
                               alt={c.authorName}
+                              onError={(e) => {
+                                e.currentTarget.src = getAvatarUrl(undefined, c.authorName);
+                              }}
                               className="w-6 h-6 rounded-full object-cover"
                             />
                             <div>
@@ -873,8 +883,11 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
             </h3>
             <div className="flex items-center gap-3">
               <img
-                src={currentClassroom.teacherAvatar}
+                src={getAvatarUrl(currentClassroom.teacherAvatar, currentClassroom.teacherName)}
                 alt={currentClassroom.teacherName}
+                onError={(e) => {
+                  e.currentTarget.src = getAvatarUrl(undefined, currentClassroom.teacherName);
+                }}
                 className="w-10 h-10 rounded-full object-cover border-2 border-[#4A6741]"
               />
               <div>
@@ -898,8 +911,11 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                 >
                   <div className="flex items-center gap-3">
                     <img
-                      src={s.avatar}
+                      src={getAvatarUrl(s.avatar, s.name)}
                       alt={s.name}
+                      onError={(e) => {
+                        e.currentTarget.src = getAvatarUrl(undefined, s.name);
+                      }}
                       className="w-8 h-8 rounded-full object-cover"
                     />
                     <div>

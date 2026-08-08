@@ -96,7 +96,11 @@ export interface AppContextType {
   studentActivities: StudentActivity[];
   studentProfiles: StudentProfile[];
   badgeDefinitions: BadgeDefinition[];
-  assignBadge: (studentProfileId: string, badgeDefinitionId: string, remarks?: string) => Promise<void>;
+  assignBadge: (
+    studentProfileId: string,
+    badgeDefinitionId: string,
+    remarks?: string,
+  ) => Promise<void>;
 
   // Real-Time Student Location Tracker
   studentLocations: StudentLocationRecord[];

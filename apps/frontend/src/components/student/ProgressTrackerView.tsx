@@ -134,18 +134,19 @@ export const ProgressTrackerView: React.FC = () => {
           {studentData.badges.map((b) => {
             const def = b.badgeDefinition;
             return (
-            <div
-              key={b.id}
-              className="p-4 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] text-center space-y-1"
-            >
-              <span className="text-3xl block">{def?.icon || '🏆'}</span>
-              <h3 className="font-bold text-xs text-[#2D2D2A]">{def?.title || 'Unknown'}</h3>
-              <p className="text-[10px] text-[#7A7A72] leading-snug">{def?.description}</p>
-              <span className="inline-block text-[9px] font-bold text-[#E88D67] mt-1">
-                Earned: {b.earnedDate}
-              </span>
-            </div>
-          )})}
+              <div
+                key={b.id}
+                className="p-4 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] text-center space-y-1"
+              >
+                <span className="text-3xl block">{def?.icon || '🏆'}</span>
+                <h3 className="font-bold text-xs text-[#2D2D2A]">{def?.title || 'Unknown'}</h3>
+                <p className="text-[10px] text-[#7A7A72] leading-snug">{def?.description}</p>
+                <span className="inline-block text-[9px] font-bold text-[#E88D67] mt-1">
+                  Earned: {b.earnedDate}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

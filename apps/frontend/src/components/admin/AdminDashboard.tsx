@@ -4,7 +4,7 @@ import { LucideAward, LucideShield } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
   const { allUsers, studentProfiles, badgeDefinitions, assignBadge, currentUser } = useApp();
-  
+
   const [selectedStudent, setSelectedStudent] = useState('');
   const [selectedBadge, setSelectedBadge] = useState('');
   const [remarks, setRemarks] = useState('');
@@ -38,7 +38,7 @@ export const AdminDashboard: React.FC = () => {
           <LucideAward className="w-6 h-6 text-yellow-500" />
           Manual Badge Awarding
         </h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Select Student</label>
@@ -48,8 +48,10 @@ export const AdminDashboard: React.FC = () => {
               onChange={(e) => setSelectedStudent(e.target.value)}
             >
               <option value="">-- Choose Student --</option>
-              {studentProfiles.map(p => (
-                <option key={p.id} value={p.id}>{p.name} ({p.gradeLevel}-{p.section})</option>
+              {studentProfiles.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} ({p.gradeLevel}-{p.section})
+                </option>
               ))}
             </select>
           </div>
@@ -61,8 +63,10 @@ export const AdminDashboard: React.FC = () => {
               onChange={(e) => setSelectedBadge(e.target.value)}
             >
               <option value="">-- Choose Badge --</option>
-              {badgeDefinitions.map(b => (
-                <option key={b.id} value={b.id}>{b.icon} {b.title}</option>
+              {badgeDefinitions.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.icon} {b.title}
+                </option>
               ))}
             </select>
           </div>
@@ -90,9 +94,11 @@ export const AdminDashboard: React.FC = () => {
 
       {/* List of Badges as reference */}
       <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mt-6">
-        <h2 className="text-xl font-bold font-heading text-gray-800 mb-4">Badge Definitions Dictionary</h2>
+        <h2 className="text-xl font-bold font-heading text-gray-800 mb-4">
+          Badge Definitions Dictionary
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {badgeDefinitions.map(b => (
+          {badgeDefinitions.map((b) => (
             <div key={b.id} className="p-4 border rounded-xl flex gap-4 items-start">
               <span className="text-3xl">{b.icon}</span>
               <div>

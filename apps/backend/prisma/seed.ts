@@ -22,10 +22,14 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('Clearing database...');
+  await prisma.classroomEnrollment.deleteMany();
   await prisma.termProgress.deleteMany();
   await prisma.studentActivity.deleteMany();
   await prisma.subjectPerformance.deleteMany();
   await prisma.storedFileRecord.deleteMany();
+  await prisma.studentLocationRecord.deleteMany();
+  await prisma.attendanceRecord.deleteMany();
+  await prisma.directMessage.deleteMany();
   await prisma.studentBadge.deleteMany();
   await prisma.badgeDefinition.deleteMany();
   await prisma.postComment.deleteMany();
@@ -97,7 +101,7 @@ async function main() {
     await prisma.studentProfile.create({
       data: {
         id: profile.id,
-        userId: profile.id, // Assuming userId is same as the student's id in mock
+        userId: profile.id,
         attendancePercentage: profile.attendancePercentage,
         streakDays: profile.streakDays,
         xpPoints: profile.xpPoints,
@@ -133,9 +137,18 @@ async function main() {
         roomNumber: room.roomNumber,
         colorTheme: room.colorTheme,
         bannerImage: room.bannerImage,
-        studentCount: room.studentCount,
         meetLink: room.meetLink,
         code: room.code,
+      },
+    });
+  }
+
+  console.log('Seeding Classroom Enrollments...');
+  for (const room of MOCK_CLASSROOMS) {
+    await prisma.classroomEnrollment.create({
+      data: {
+        classroomId: room.id,
+        studentId: 'user-stu-1',
       },
     });
   }
@@ -156,6 +169,7 @@ async function main() {
         comments: {
           create: (post.comments || []).map((c) => ({
             id: c.id,
+            authorId: post.authorId,
             authorName: c.authorName,
             authorAvatar: c.authorAvatar,
             content: c.content,
@@ -280,7 +294,7 @@ async function main() {
         sizeBytes: 1548576,
         sizeFormatted: '1.48 MB',
         uploadedBy: 'Ramesh Thapa',
-        classroomId: 'chan-1',
+        classroomId: 'cls-math-8a',
         checksum: 'sha256-a9f8b4c2e1d7532098471abcfe094857',
         integrityStatus: 'verified',
         uploadedAt: new Date(Date.now() - 86400000).toISOString(),
@@ -294,7 +308,7 @@ async function main() {
         sizeBytes: 2411724,
         sizeFormatted: '2.30 MB',
         uploadedBy: 'Saraswati Gurung',
-        classroomId: 'chan-2',
+        classroomId: 'cls-sci-8a',
         checksum: 'sha256-b7e3f1a098c4321156890defab123456',
         integrityStatus: 'verified',
         uploadedAt: new Date(Date.now() - 43200000).toISOString(),
@@ -308,7 +322,7 @@ async function main() {
     await prisma.subjectPerformance.create({
       data: {
         id: sp.id || `sp-${Date.now()}-${Math.random()}`,
-        studentId: 'user-stu-1', // Assuming for Aarav
+        studentId: 'user-stu-1',
         subject: sp.subject,
         scorePercentage: sp.scorePercentage,
         grade: sp.grade,

@@ -1,8 +1,5 @@
 import { Router } from 'express';
-import {
-  assignStudentBadge,
-  getAllStudentLocations,
-} from '@controllers/adminController';
+import { assignStudentBadge, getAllStudentLocations } from '@controllers/adminController';
 
 export const adminRoutes = Router();
 

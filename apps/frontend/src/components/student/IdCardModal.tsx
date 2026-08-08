@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Printer } from 'lucide-react';
 import { StudentProfile } from '@lms/shared';
+import { getAvatarUrl } from '@utils/avatarUtils';
 
 interface IdCardModalProps {
   isOpen: boolean;
@@ -52,8 +53,11 @@ export const IdCardModal: React.FC<IdCardModalProps> = ({ isOpen, onClose, stude
               {/* Photo */}
               <div className="absolute -top-12">
                 <img
-                  src={studentData.avatar}
+                  src={getAvatarUrl(studentData.avatar, studentData.name)}
                   alt={studentData.name}
+                  onError={(e) => {
+                    e.currentTarget.src = getAvatarUrl(undefined, studentData.name);
+                  }}
                   className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-sm bg-white"
                 />
               </div>

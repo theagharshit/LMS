@@ -23,7 +23,8 @@ import {
 import { apiFetch } from '../../utils/apiFetch';
 
 export const useAcademicState = (currentUser: User) => {
-  const [badgeDefinitions, setBadgeDefinitions] = useState<BadgeDefinition[]>(MOCK_BADGE_DEFINITIONS);
+  const [badgeDefinitions, setBadgeDefinitions] =
+    useState<BadgeDefinition[]>(MOCK_BADGE_DEFINITIONS);
   const [classrooms, setClassrooms] = useState<Classroom[]>(MOCK_CLASSROOMS);
   const [streamPosts, setStreamPosts] = useState<StreamPost[]>(MOCK_STREAM_POSTS);
   const [assignments, setAssignments] = useState<Assignment[]>(MOCK_ASSIGNMENTS);
