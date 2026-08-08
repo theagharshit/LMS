@@ -15,22 +15,61 @@ describe('LMS Database Service (Async)', () => {
     await prisma.user.upsert({
       where: { id: 'user-stu-1' },
       update: {},
-      create: { id: 'user-stu-1', name: 'Aarav Sharma', email: 'aarav@lms.com', role: 'student', avatar: 'a.png', schoolName: 'S1', gradeLevel: 8, section: 'A' },
+      create: {
+        id: 'user-stu-1',
+        name: 'Aarav Sharma',
+        email: 'aarav@lms.com',
+        role: 'student',
+        avatar: 'a.png',
+        schoolName: 'S1',
+        gradeLevel: 8,
+        section: 'A',
+      },
     });
     await prisma.studentProfile.upsert({
       where: { id: 'user-stu-1' },
       update: {},
-      create: { id: 'user-stu-1', userId: 'user-stu-1', attendancePercentage: 95, streakDays: 10, xpPoints: 500, gradeLevel: 8, section: 'A', parentName: 'Bina', parentPhone: '980' },
+      create: {
+        id: 'user-stu-1',
+        userId: 'user-stu-1',
+        attendancePercentage: 95,
+        streakDays: 10,
+        xpPoints: 500,
+        gradeLevel: 8,
+        section: 'A',
+        parentName: 'Bina',
+        parentPhone: '980',
+      },
     });
     await prisma.user.upsert({
       where: { id: 'user-teach-1' },
       update: {},
-      create: { id: 'user-teach-1', name: 'Mr. Ramesh Thapa', email: 'ramesh@lms.com', role: 'teacher', avatar: 'a.png', schoolName: 'S1' },
+      create: {
+        id: 'user-teach-1',
+        name: 'Mr. Ramesh Thapa',
+        email: 'ramesh@lms.com',
+        role: 'teacher',
+        avatar: 'a.png',
+        schoolName: 'S1',
+      },
     });
     await prisma.classroom.upsert({
       where: { id: 'cls-math-8a' },
       update: {},
-      create: { id: 'cls-math-8a', name: 'Grade 8 Mathematics - Sec A', subject: 'Mathematics', gradeLevel: 8, section: 'A', teacherId: 'user-teach-1', teacherName: 'Mr. Ramesh Thapa', teacherAvatar: 'a.png', roomNumber: '204', colorTheme: 'blue', bannerImage: 'b.png', code: 'MATH8A' },
+      create: {
+        id: 'cls-math-8a',
+        name: 'Grade 8 Mathematics - Sec A',
+        subject: 'Mathematics',
+        gradeLevel: 8,
+        section: 'A',
+        teacherId: 'user-teach-1',
+        teacherName: 'Mr. Ramesh Thapa',
+        teacherAvatar: 'a.png',
+        roomNumber: '204',
+        colorTheme: 'blue',
+        bannerImage: 'b.png',
+        code: 'MATH8A',
+      },
     });
   });
   it('should get users', async () => {

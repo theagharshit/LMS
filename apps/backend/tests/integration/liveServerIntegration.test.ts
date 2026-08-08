@@ -15,7 +15,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 let server: Server;
-const PORT =  3001;
+const PORT = 3001;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 
 describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () => {
@@ -23,13 +23,17 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
     // 1. Seed base database records
     await prisma.user.upsert({
       where: { id: 'live-stu-1' },
-      update: {},
+      update: {
+        avatar:
+          'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+      },
       create: {
         id: 'live-stu-1',
         name: 'Aarav Live',
         email: 'aarav.live@lms.com',
         role: 'student',
-        avatar: 'a.png',
+        avatar:
+          'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
         schoolName: 'S1',
         gradeLevel: 8,
         section: 'A',
@@ -54,20 +58,27 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
 
     await prisma.user.upsert({
       where: { id: 'live-tch-1' },
-      update: {},
+      update: {
+        avatar:
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      },
       create: {
         id: 'live-tch-1',
         name: 'Teacher Live',
         email: 'teacher.live@lms.com',
         role: 'teacher',
-        avatar: 't.png',
+        avatar:
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
         schoolName: 'S1',
       },
     });
 
     await prisma.classroom.upsert({
       where: { id: 'cls-live-1' },
-      update: {},
+      update: {
+        teacherAvatar:
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      },
       create: {
         id: 'cls-live-1',
         name: 'Math Live',
@@ -76,7 +87,8 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
         section: 'A',
         teacherId: 'live-tch-1',
         teacherName: 'Teacher Live',
-        teacherAvatar: 't.png',
+        teacherAvatar:
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
         roomNumber: '101',
         colorTheme: 'blue',
         bannerImage: 'b.png',

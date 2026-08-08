@@ -18,9 +18,31 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
     // Seed core badge definitions
     await prisma.badgeDefinition.createMany({
       data: [
-        { id: 'bdg-def-1', title: 'Top Scholar', description: 'Academic excellence', icon: '🌟', category: 'academic', isAutomatic: false },
-        { id: 'bdg-def-2', title: 'Quiz Master', description: 'Scored 100% on a quiz', icon: '🧠', category: 'academic', isAutomatic: true, criteria: 'score === 100%' },
-        { id: 'bdg-def-3', title: 'Perfect Attendance', description: '30 days 100% attendance', icon: '⏱️', category: 'attendance', isAutomatic: true },
+        {
+          id: 'bdg-def-1',
+          title: 'Top Scholar',
+          description: 'Academic excellence',
+          icon: '🌟',
+          category: 'academic',
+          isAutomatic: false,
+        },
+        {
+          id: 'bdg-def-2',
+          title: 'Quiz Master',
+          description: 'Scored 100% on a quiz',
+          icon: '🧠',
+          category: 'academic',
+          isAutomatic: true,
+          criteria: 'score === 100%',
+        },
+        {
+          id: 'bdg-def-3',
+          title: 'Perfect Attendance',
+          description: '30 days 100% attendance',
+          icon: '⏱️',
+          category: 'attendance',
+          isAutomatic: true,
+        },
       ],
     });
 
@@ -28,40 +50,109 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
     await prisma.user.upsert({
       where: { id: 'user-stu-1' },
       update: {},
-      create: { id: 'user-stu-1', name: 'Aarav Sharma', email: 'aarav@test.com', role: 'student', avatar: 'a.png', schoolName: 'S1', gradeLevel: 8, section: 'A' },
+      create: {
+        id: 'user-stu-1',
+        name: 'Aarav Sharma',
+        email: 'aarav@test.com',
+        role: 'student',
+        avatar: 'a.png',
+        schoolName: 'S1',
+        gradeLevel: 8,
+        section: 'A',
+      },
     });
     await prisma.studentProfile.upsert({
       where: { id: 'user-stu-1' },
       update: {},
-      create: { id: 'user-stu-1', userId: 'user-stu-1', attendancePercentage: 95, streakDays: 10, xpPoints: 500, gradeLevel: 8, section: 'A', parentName: 'Bina', parentPhone: '980' },
+      create: {
+        id: 'user-stu-1',
+        userId: 'user-stu-1',
+        attendancePercentage: 95,
+        streakDays: 10,
+        xpPoints: 500,
+        gradeLevel: 8,
+        section: 'A',
+        parentName: 'Bina',
+        parentPhone: '980',
+      },
     });
 
     await prisma.user.upsert({
       where: { id: 'user-stu-2' },
       update: {},
-      create: { id: 'user-stu-2', name: 'Sunita Sharma', email: 'sunita@test.com', role: 'student', avatar: 'a.png', schoolName: 'S1', gradeLevel: 5, section: 'B' },
+      create: {
+        id: 'user-stu-2',
+        name: 'Sunita Sharma',
+        email: 'sunita@test.com',
+        role: 'student',
+        avatar: 'a.png',
+        schoolName: 'S1',
+        gradeLevel: 5,
+        section: 'B',
+      },
     });
     await prisma.studentProfile.upsert({
       where: { id: 'user-stu-2' },
       update: {},
-      create: { id: 'user-stu-2', userId: 'user-stu-2', attendancePercentage: 90, streakDays: 5, xpPoints: 200, gradeLevel: 5, section: 'B', parentName: 'Bina', parentPhone: '980' },
+      create: {
+        id: 'user-stu-2',
+        userId: 'user-stu-2',
+        attendancePercentage: 90,
+        streakDays: 5,
+        xpPoints: 200,
+        gradeLevel: 5,
+        section: 'B',
+        parentName: 'Bina',
+        parentPhone: '980',
+      },
     });
 
     // Ensure classroom & quiz exists for auto-trigger tests
     await prisma.user.upsert({
       where: { id: 'user-teach-1' },
       update: {},
-      create: { id: 'user-teach-1', name: 'Mr. Ramesh Thapa', email: 'ramesh@test.com', role: 'teacher', avatar: 'a.png', schoolName: 'S1' },
+      create: {
+        id: 'user-teach-1',
+        name: 'Mr. Ramesh Thapa',
+        email: 'ramesh@test.com',
+        role: 'teacher',
+        avatar: 'a.png',
+        schoolName: 'S1',
+      },
     });
     await prisma.classroom.upsert({
       where: { id: 'cls-math-8a' },
       update: {},
-      create: { id: 'cls-math-8a', name: 'Math 8A', subject: 'Math', gradeLevel: 8, section: 'A', teacherId: 'user-teach-1', teacherName: 'Mr. Ramesh Thapa', teacherAvatar: 'a.png', roomNumber: '1', colorTheme: 'blue', bannerImage: 'b.png', code: 'MATH8A' },
+      create: {
+        id: 'cls-math-8a',
+        name: 'Math 8A',
+        subject: 'Math',
+        gradeLevel: 8,
+        section: 'A',
+        teacherId: 'user-teach-1',
+        teacherName: 'Mr. Ramesh Thapa',
+        teacherAvatar: 'a.png',
+        roomNumber: '1',
+        colorTheme: 'blue',
+        bannerImage: 'b.png',
+        code: 'MATH8A',
+      },
     });
     await prisma.quiz.upsert({
       where: { id: 'quiz-1' },
       update: {},
-      create: { id: 'quiz-1', classroomId: 'cls-math-8a', classroomName: 'Math 8A', subject: 'Math', title: 'Quiz 1', description: 'Desc', durationMinutes: 15, dueDate: '2026-08-10', totalQuestions: 1, createdAt: new Date().toISOString() },
+      create: {
+        id: 'quiz-1',
+        classroomId: 'cls-math-8a',
+        classroomName: 'Math 8A',
+        subject: 'Math',
+        title: 'Quiz 1',
+        description: 'Desc',
+        durationMinutes: 15,
+        dueDate: '2026-08-10',
+        totalQuestions: 1,
+        createdAt: new Date().toISOString(),
+      },
     });
   });
 
@@ -71,7 +162,12 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
   });
 
   it('2. assignBadge manually assigns badge to student profile', async () => {
-    const badge = await lmsDB.assignBadge('user-stu-1', 'bdg-def-1', 'Teacher Ramesh', 'Great job!');
+    const badge = await lmsDB.assignBadge(
+      'user-stu-1',
+      'bdg-def-1',
+      'Teacher Ramesh',
+      'Great job!',
+    );
     expect(badge.studentProfileId).toBe('user-stu-1');
     expect(badge.badgeDefinitionId).toBe('bdg-def-1');
     expect(badge.assignedBy).toBe('Teacher Ramesh');
@@ -130,7 +226,12 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
   });
 
   it('7. assignBadge supports optional remarks field', async () => {
-    const badge = await lmsDB.assignBadge('user-stu-1', 'bdg-def-3', 'Admin', 'Extraordinary streak');
+    const badge = await lmsDB.assignBadge(
+      'user-stu-1',
+      'bdg-def-3',
+      'Admin',
+      'Extraordinary streak',
+    );
     expect(badge.remarks).toBe('Extraordinary streak');
   });
 
@@ -143,18 +244,42 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
   });
 
   it('9. multiple students can independently earn the same Quiz Master auto-badge', async () => {
-    await lmsDB.submitQuiz({ quizId: 'quiz-1', studentId: 'user-stu-1', score: 50, totalPoints: 50, answers: {} });
-    await lmsDB.submitQuiz({ quizId: 'quiz-1', studentId: 'user-stu-2', score: 50, totalPoints: 50, answers: {} });
+    await lmsDB.submitQuiz({
+      quizId: 'quiz-1',
+      studentId: 'user-stu-1',
+      score: 50,
+      totalPoints: 50,
+      answers: {},
+    });
+    await lmsDB.submitQuiz({
+      quizId: 'quiz-1',
+      studentId: 'user-stu-2',
+      score: 50,
+      totalPoints: 50,
+      answers: {},
+    });
 
-    const b1 = await prisma.studentBadge.findFirst({ where: { studentProfileId: 'user-stu-1', badgeDefinitionId: 'bdg-def-2' } });
-    const b2 = await prisma.studentBadge.findFirst({ where: { studentProfileId: 'user-stu-2', badgeDefinitionId: 'bdg-def-2' } });
+    const b1 = await prisma.studentBadge.findFirst({
+      where: { studentProfileId: 'user-stu-1', badgeDefinitionId: 'bdg-def-2' },
+    });
+    const b2 = await prisma.studentBadge.findFirst({
+      where: { studentProfileId: 'user-stu-2', badgeDefinitionId: 'bdg-def-2' },
+    });
     expect(b1).not.toBeNull();
     expect(b2).not.toBeNull();
   });
 
   it('10. automatic badges set assignedBy to "System"', async () => {
-    await lmsDB.submitQuiz({ quizId: 'quiz-1', studentId: 'user-stu-1', score: 10, totalPoints: 10, answers: {} });
-    const badge = await prisma.studentBadge.findFirst({ where: { studentProfileId: 'user-stu-1', badgeDefinitionId: 'bdg-def-2' } });
+    await lmsDB.submitQuiz({
+      quizId: 'quiz-1',
+      studentId: 'user-stu-1',
+      score: 10,
+      totalPoints: 10,
+      answers: {},
+    });
+    const badge = await prisma.studentBadge.findFirst({
+      where: { studentProfileId: 'user-stu-1', badgeDefinitionId: 'bdg-def-2' },
+    });
     expect(badge?.assignedBy).toBe('System');
   });
 
@@ -166,7 +291,9 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
   it('12. student can earn multiple distinct badge definitions', async () => {
     await lmsDB.assignBadge('user-stu-1', 'bdg-def-1', 'Admin');
     await lmsDB.assignBadge('user-stu-1', 'bdg-def-3', 'Admin');
-    const badges = await prisma.studentBadge.findMany({ where: { studentProfileId: 'user-stu-1' } });
+    const badges = await prisma.studentBadge.findMany({
+      where: { studentProfileId: 'user-stu-1' },
+    });
     expect(badges.length).toBe(2);
   });
 
@@ -177,10 +304,27 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
 
   it('14. deleting StudentProfile cascades and deletes earned StudentBadges', async () => {
     const user = await prisma.user.create({
-      data: { id: 'stu-badge-cas', name: 'Student', email: 'stubadgecas@test.com', role: 'student', avatar: 'a.png', schoolName: 'S1' },
+      data: {
+        id: 'stu-badge-cas',
+        name: 'Student',
+        email: 'stubadgecas@test.com',
+        role: 'student',
+        avatar: 'a.png',
+        schoolName: 'S1',
+      },
     });
     const profile = await prisma.studentProfile.create({
-      data: { id: user.id, userId: user.id, attendancePercentage: 90, streakDays: 5, xpPoints: 100, gradeLevel: 8, section: 'A', parentName: 'P', parentPhone: '98' },
+      data: {
+        id: user.id,
+        userId: user.id,
+        attendancePercentage: 90,
+        streakDays: 5,
+        xpPoints: 100,
+        gradeLevel: 8,
+        section: 'A',
+        parentName: 'P',
+        parentPhone: '98',
+      },
     });
     await lmsDB.assignBadge(profile.id, 'bdg-def-1', 'Admin');
 
@@ -221,9 +365,23 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
   });
 
   it('19. repeat 100% quiz submissions for same student do not crash or create duplicate badges', async () => {
-    await lmsDB.submitQuiz({ quizId: 'quiz-1', studentId: 'user-stu-1', score: 10, totalPoints: 10, answers: {} });
-    await lmsDB.submitQuiz({ quizId: 'quiz-1', studentId: 'user-stu-1', score: 10, totalPoints: 10, answers: {} });
-    const count = await prisma.studentBadge.count({ where: { studentProfileId: 'user-stu-1', badgeDefinitionId: 'bdg-def-2' } });
+    await lmsDB.submitQuiz({
+      quizId: 'quiz-1',
+      studentId: 'user-stu-1',
+      score: 10,
+      totalPoints: 10,
+      answers: {},
+    });
+    await lmsDB.submitQuiz({
+      quizId: 'quiz-1',
+      studentId: 'user-stu-1',
+      score: 10,
+      totalPoints: 10,
+      answers: {},
+    });
+    const count = await prisma.studentBadge.count({
+      where: { studentProfileId: 'user-stu-1', badgeDefinitionId: 'bdg-def-2' },
+    });
     expect(count).toBe(1);
   });
 

@@ -17,11 +17,13 @@ const TestBadgeConsumer: React.FC = () => {
         Assign Badge
       </button>
       <div data-testid="student-badges">
-        {studentProfiles.find((p) => p.id === 'user-stu-1')?.badges.map((b) => (
-          <div key={b.id} data-testid="badge-item">
-            {b.badgeDefinition?.title || 'Unknown'}
-          </div>
-        ))}
+        {studentProfiles
+          .find((p) => p.id === 'user-stu-1')
+          ?.badges.map((b) => (
+            <div key={b.id} data-testid="badge-item">
+              {b.badgeDefinition?.title || 'Unknown'}
+            </div>
+          ))}
       </div>
     </div>
   );

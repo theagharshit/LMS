@@ -27,9 +27,7 @@ export const submitQuiz = async (req: Request, res: Response) => {
 export const getStudentLocation = async (req: Request, res: Response) => {
   const record = await lmsDB.getStudentLocationById(req.params.studentId);
   if (!record) {
-    return res
-      .status(404)
-      .json({ status: 'error', message: 'Student location record not found' });
+    return res.status(404).json({ status: 'error', message: 'Student location record not found' });
   }
   res.json({ status: 'success', location: record });
 };

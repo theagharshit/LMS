@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { UserCheck, CheckCircle2, XCircle, Clock, AlertCircle, Send, Bell } from 'lucide-react';
+import { getAvatarUrl } from '@utils/avatarUtils';
 
 export const AttendanceRegister: React.FC = () => {
   const { studentProfiles, attendanceRecords, markAttendance, currentUser } = useApp();
@@ -81,8 +82,11 @@ export const AttendanceRegister: React.FC = () => {
               >
                 <div className="flex items-center gap-3">
                   <img
-                    src={student.avatar}
+                    src={getAvatarUrl(student.avatar, student.name)}
                     alt={student.name}
+                    onError={(e) => {
+                      e.currentTarget.src = getAvatarUrl(undefined, student.name);
+                    }}
                     className="w-10 h-10 rounded-full object-cover shrink-0"
                   />
                   <div>

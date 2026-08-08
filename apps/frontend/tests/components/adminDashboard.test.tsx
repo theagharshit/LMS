@@ -12,7 +12,9 @@ describe('AdminDashboard Component Suite (15 Tests)', () => {
       </AppProvider>,
     );
     expect(screen.getByText(/Admin Dashboard/i)).toBeInTheDocument();
-    expect(screen.getByText(/Manage school-wide configurations and manual awards/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Manage school-wide configurations and manual awards/i),
+    ).toBeInTheDocument();
   });
 
   it('2. renders Manual Badge Awarding section heading', () => {
@@ -67,7 +69,9 @@ describe('AdminDashboard Component Suite (15 Tests)', () => {
         <AdminDashboard />
       </AppProvider>,
     );
-    const input = screen.getByPlaceholderText(/Reason for awarding this badge/i) as HTMLInputElement;
+    const input = screen.getByPlaceholderText(
+      /Reason for awarding this badge/i,
+    ) as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'Excellent behavior' } });
     expect(input.value).toBe('Excellent behavior');
   });
@@ -121,7 +125,7 @@ describe('AdminDashboard Component Suite (15 Tests)', () => {
     const selects = screen.getAllByRole('combobox');
     fireEvent.change(selects[0], { target: { value: 'user-stu-1' } });
     fireEvent.change(selects[1], { target: { value: 'bdg-def-1' } });
-    
+
     const btn = screen.getByRole('button', { name: /Award Badge/i });
     expect(btn).not.toBeDisabled();
   });

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '@context/AppContext';
+import { getAvatarUrl } from '@utils/avatarUtils';
 import { StudentLocationTracker } from '../common/StudentLocationTracker';
 import { IdCardModal } from './IdCardModal';
 import {
@@ -134,8 +135,11 @@ export const StudentProfileView: React.FC = () => {
       <div className="bg-white rounded-2xl p-6 border border-[#EDEAE2] shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
           <img
-            src={studentData.avatar}
+            src={getAvatarUrl(studentData.avatar, studentData.name)}
             alt={studentData.name}
+            onError={(e) => {
+              e.currentTarget.src = getAvatarUrl(undefined, studentData.name);
+            }}
             className="w-16 h-16 rounded-2xl object-cover border border-[#EDEAE2]"
           />
           <div className="space-y-1">
@@ -421,18 +425,20 @@ export const StudentProfileView: React.FC = () => {
       {activeTab === 'badges' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {badgesList.map((b) => (
+            <div
+              key={b.id}
+              className="bg-white p-4 rounded-2xl border border-[#EDEAE2] flex items-center gap-3"
+            >
               <div
-                key={b.id}
-                className="bg-white p-4 rounded-2xl border border-[#EDEAE2] flex items-center gap-3"
+                className={`p-2.5 rounded-xl ${b.color} shrink-0 text-xl flex items-center justify-center`}
               >
-                <div className={`p-2.5 rounded-xl ${b.color} shrink-0 text-xl flex items-center justify-center`}>
-                  {b.icon}
-                </div>
-                <div>
-                  <h4 className="font-bold text-xs text-[#2D2D2A]">{b.title}</h4>
-                  <p className="text-[11px] text-[#7A7A72]">{b.desc}</p>
-                </div>
+                {b.icon}
               </div>
+              <div>
+                <h4 className="font-bold text-xs text-[#2D2D2A]">{b.title}</h4>
+                <p className="text-[11px] text-[#7A7A72]">{b.desc}</p>
+              </div>
+            </div>
           ))}
         </div>
       )}

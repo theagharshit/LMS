@@ -25,10 +25,41 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
     // Create role actors
     await prisma.user.createMany({
       data: [
-        { id: 'u-stu-role-1', name: 'Aarav Student', email: 'aarav@role.com', role: 'student', avatar: 'a.png', schoolName: 'S1', gradeLevel: 8, section: 'A' },
-        { id: 'u-tch-role-1', name: 'Ramesh Teacher', email: 'ramesh@role.com', role: 'teacher', avatar: 'a.png', schoolName: 'S1' },
-        { id: 'u-prt-role-1', name: 'Bina Parent', email: 'bina@role.com', role: 'parent', avatar: 'a.png', schoolName: 'S1', childrenIds: ['u-stu-role-1'] },
-        { id: 'u-adm-role-1', name: 'Principal Admin', email: 'admin@role.com', role: 'admin', avatar: 'a.png', schoolName: 'S1' },
+        {
+          id: 'u-stu-role-1',
+          name: 'Aarav Student',
+          email: 'aarav@role.com',
+          role: 'student',
+          avatar: 'a.png',
+          schoolName: 'S1',
+          gradeLevel: 8,
+          section: 'A',
+        },
+        {
+          id: 'u-tch-role-1',
+          name: 'Ramesh Teacher',
+          email: 'ramesh@role.com',
+          role: 'teacher',
+          avatar: 'a.png',
+          schoolName: 'S1',
+        },
+        {
+          id: 'u-prt-role-1',
+          name: 'Bina Parent',
+          email: 'bina@role.com',
+          role: 'parent',
+          avatar: 'a.png',
+          schoolName: 'S1',
+          childrenIds: ['u-stu-role-1'],
+        },
+        {
+          id: 'u-adm-role-1',
+          name: 'Principal Admin',
+          email: 'admin@role.com',
+          role: 'admin',
+          avatar: 'a.png',
+          schoolName: 'S1',
+        },
       ],
     });
   });
@@ -37,7 +68,17 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
   describe('Student Role Workflows', () => {
     it('1. Student role can retrieve student profile', async () => {
       await prisma.studentProfile.create({
-        data: { id: 'u-stu-role-1', userId: 'u-stu-role-1', attendancePercentage: 96, streakDays: 14, xpPoints: 1200, gradeLevel: 8, section: 'A', parentName: 'Bina', parentPhone: '9841' },
+        data: {
+          id: 'u-stu-role-1',
+          userId: 'u-stu-role-1',
+          attendancePercentage: 96,
+          streakDays: 14,
+          xpPoints: 1200,
+          gradeLevel: 8,
+          section: 'A',
+          parentName: 'Bina',
+          parentPhone: '9841',
+        },
       });
       const profiles = await lmsDB.getStudentProfiles();
       const student = profiles.find((p) => p.id === 'u-stu-role-1');
@@ -46,32 +87,101 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
 
     it('2. Student role can submit homework', async () => {
       const cls = await prisma.classroom.create({
-        data: { id: 'c-role-1', name: 'Math', subject: 'Math', gradeLevel: 8, section: 'A', teacherId: 'u-tch-role-1', teacherName: 'Teacher', teacherAvatar: 'a.png', roomNumber: '1', colorTheme: 'blue', bannerImage: 'b.png', code: 'C_ROLE_1' },
+        data: {
+          id: 'c-role-1',
+          name: 'Math',
+          subject: 'Math',
+          gradeLevel: 8,
+          section: 'A',
+          teacherId: 'u-tch-role-1',
+          teacherName: 'Teacher',
+          teacherAvatar: 'a.png',
+          roomNumber: '1',
+          colorTheme: 'blue',
+          bannerImage: 'b.png',
+          code: 'C_ROLE_1',
+        },
       });
       const asg = await prisma.assignment.create({
-        data: { id: 'asg-role-1', classroomId: cls.id, classroomName: cls.name, subject: cls.subject, title: 'HW 1', instructions: 'Inst', dueDate: '2026-08-10', dueTime: '12:00', totalPoints: 100, rubric: [], createdAt: '10:00' },
+        data: {
+          id: 'asg-role-1',
+          classroomId: cls.id,
+          classroomName: cls.name,
+          subject: cls.subject,
+          title: 'HW 1',
+          instructions: 'Inst',
+          dueDate: '2026-08-10',
+          dueTime: '12:00',
+          totalPoints: 100,
+          rubric: [],
+          createdAt: '10:00',
+        },
       });
 
-      const sub = await lmsDB.submitHomework(asg.id, 'File.pdf', 'http://url.com/f.pdf', 'u-stu-role-1', 'Notes');
+      const sub = await lmsDB.submitHomework(
+        asg.id,
+        'File.pdf',
+        'http://url.com/f.pdf',
+        'u-stu-role-1',
+        'Notes',
+      );
       expect(sub.studentId).toBe('u-stu-role-1');
       expect(sub.status).toBe('submitted');
     });
 
     it('3. Student role can take and submit a quiz', async () => {
       const cls = await prisma.classroom.create({
-        data: { id: 'c-role-2', name: 'Sci', subject: 'Sci', gradeLevel: 8, section: 'A', teacherId: 'u-tch-role-1', teacherName: 'Teacher', teacherAvatar: 'a.png', roomNumber: '2', colorTheme: 'green', bannerImage: 'b.png', code: 'C_ROLE_2' },
+        data: {
+          id: 'c-role-2',
+          name: 'Sci',
+          subject: 'Sci',
+          gradeLevel: 8,
+          section: 'A',
+          teacherId: 'u-tch-role-1',
+          teacherName: 'Teacher',
+          teacherAvatar: 'a.png',
+          roomNumber: '2',
+          colorTheme: 'green',
+          bannerImage: 'b.png',
+          code: 'C_ROLE_2',
+        },
       });
       const quiz = await prisma.quiz.create({
-        data: { id: 'q-role-1', classroomId: cls.id, classroomName: cls.name, subject: cls.subject, title: 'Q1', description: 'D1', durationMinutes: 15, dueDate: '2026-08-10', totalQuestions: 1, createdAt: '10:00' },
+        data: {
+          id: 'q-role-1',
+          classroomId: cls.id,
+          classroomName: cls.name,
+          subject: cls.subject,
+          title: 'Q1',
+          description: 'D1',
+          durationMinutes: 15,
+          dueDate: '2026-08-10',
+          totalQuestions: 1,
+          createdAt: '10:00',
+        },
       });
 
-      const qsub = await lmsDB.submitQuiz({ quizId: quiz.id, studentId: 'u-stu-role-1', score: 90, totalPoints: 100, answers: { q1: 'A' } });
+      const qsub = await lmsDB.submitQuiz({
+        quizId: quiz.id,
+        studentId: 'u-stu-role-1',
+        score: 90,
+        totalPoints: 100,
+        answers: { q1: 'A' },
+      });
       expect(qsub.studentId).toBe('u-stu-role-1');
     });
 
     it('4. Student role can query individual real-time location record', async () => {
       await prisma.studentLocationRecord.create({
-        data: { studentId: 'u-stu-role-1', studentName: 'Aarav Student', currentLocation: 'Library', category: 'library', updatedBy: 'Staff', updatedByRole: 'teacher', updatedAt: '10:00' },
+        data: {
+          studentId: 'u-stu-role-1',
+          studentName: 'Aarav Student',
+          currentLocation: 'Library',
+          category: 'library',
+          updatedBy: 'Staff',
+          updatedByRole: 'teacher',
+          updatedAt: '10:00',
+        },
       });
       const loc = await lmsDB.getStudentLocationById('u-stu-role-1');
       expect(loc?.currentLocation).toBe('Library');
@@ -111,7 +221,20 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
 
     it('8. Teacher role can create assignments', async () => {
       const cls = await prisma.classroom.create({
-        data: { id: 'c-role-tch-1', name: 'Math', subject: 'Math', gradeLevel: 8, section: 'A', teacherId: 'u-tch-role-1', teacherName: 'Teacher', teacherAvatar: 'a.png', roomNumber: '1', colorTheme: 'blue', bannerImage: 'b.png', code: 'C_TCH_1' },
+        data: {
+          id: 'c-role-tch-1',
+          name: 'Math',
+          subject: 'Math',
+          gradeLevel: 8,
+          section: 'A',
+          teacherId: 'u-tch-role-1',
+          teacherName: 'Teacher',
+          teacherAvatar: 'a.png',
+          roomNumber: '1',
+          colorTheme: 'blue',
+          bannerImage: 'b.png',
+          code: 'C_TCH_1',
+        },
       });
       const asg = await lmsDB.addAssignment({
         classroomId: cls.id,
@@ -129,7 +252,20 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
 
     it('9. Teacher role can post stream announcements and comments', async () => {
       const cls = await prisma.classroom.create({
-        data: { id: 'c-role-tch-2', name: 'Sci', subject: 'Sci', gradeLevel: 8, section: 'A', teacherId: 'u-tch-role-1', teacherName: 'Teacher', teacherAvatar: 'a.png', roomNumber: '2', colorTheme: 'green', bannerImage: 'b.png', code: 'C_TCH_2' },
+        data: {
+          id: 'c-role-tch-2',
+          name: 'Sci',
+          subject: 'Sci',
+          gradeLevel: 8,
+          section: 'A',
+          teacherId: 'u-tch-role-1',
+          teacherName: 'Teacher',
+          teacherAvatar: 'a.png',
+          roomNumber: '2',
+          colorTheme: 'green',
+          bannerImage: 'b.png',
+          code: 'C_TCH_2',
+        },
       });
       const post = await lmsDB.addStreamPost({
         classroomId: cls.id,
@@ -150,18 +286,44 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
     });
 
     it('10. Teacher role can mark student attendance', async () => {
-      const record = await lmsDB.markAttendance('u-stu-role-1', 'Aarav Student', '2026-08-07', 'present', 'On time');
+      const record = await lmsDB.markAttendance(
+        'u-stu-role-1',
+        'Aarav Student',
+        '2026-08-07',
+        'present',
+        'On time',
+      );
       expect(record.status).toBe('present');
     });
 
     it('11. Teacher role can update student real-time location', async () => {
-      const loc = await lmsDB.updateStudentLocation('u-stu-role-1', 'Aarav Student', 'Science Lab', 'in_class', 'Ramesh Teacher', 'teacher');
+      const loc = await lmsDB.updateStudentLocation(
+        'u-stu-role-1',
+        'Aarav Student',
+        'Science Lab',
+        'in_class',
+        'Ramesh Teacher',
+        'teacher',
+      );
       expect(loc.currentLocation).toBe('Science Lab');
     });
 
     it('12. Teacher role can create quizzes with multiple question types', async () => {
       const cls = await prisma.classroom.create({
-        data: { id: 'c-role-tch-3', name: 'Math', subject: 'Math', gradeLevel: 8, section: 'A', teacherId: 'u-tch-role-1', teacherName: 'Teacher', teacherAvatar: 'a.png', roomNumber: '1', colorTheme: 'blue', bannerImage: 'b.png', code: 'C_TCH_3' },
+        data: {
+          id: 'c-role-tch-3',
+          name: 'Math',
+          subject: 'Math',
+          gradeLevel: 8,
+          section: 'A',
+          teacherId: 'u-tch-role-1',
+          teacherName: 'Teacher',
+          teacherAvatar: 'a.png',
+          roomNumber: '1',
+          colorTheme: 'blue',
+          bannerImage: 'b.png',
+          code: 'C_TCH_3',
+        },
       });
       const quiz = await lmsDB.addQuiz({
         classroomId: cls.id,
@@ -174,8 +336,22 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
         totalQuestions: 2,
         published: true,
         questions: [
-          { text: 'x+1=2', type: 'MCQ', options: ['0', '1'], correctAnswer: '1', explanation: 'x=1', points: 5 },
-          { text: 'Earth is round', type: 'True/False', options: ['True', 'False'], correctAnswer: 'True', explanation: 'Fact', points: 5 },
+          {
+            text: 'x+1=2',
+            type: 'MCQ',
+            options: ['0', '1'],
+            correctAnswer: '1',
+            explanation: 'x=1',
+            points: 5,
+          },
+          {
+            text: 'Earth is round',
+            type: 'True/False',
+            options: ['True', 'False'],
+            correctAnswer: 'True',
+            explanation: 'Fact',
+            points: 5,
+          },
         ],
       });
       expect(quiz.questions.length).toBe(2);
@@ -259,26 +435,62 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
   describe('Admin Role Workflows', () => {
     it('19. Admin role can award badges to students', async () => {
       const def = await prisma.badgeDefinition.create({
-        data: { id: 'bdg-adm-1', title: 'Admin Honors', description: 'Honor', icon: '🏅', category: 'admin' },
+        data: {
+          id: 'bdg-adm-1',
+          title: 'Admin Honors',
+          description: 'Honor',
+          icon: '🏅',
+          category: 'admin',
+        },
       });
       const profile = await prisma.studentProfile.create({
-        data: { id: 'u-stu-role-1', userId: 'u-stu-role-1', attendancePercentage: 96, streakDays: 14, xpPoints: 1200, gradeLevel: 8, section: 'A', parentName: 'Bina', parentPhone: '9841' },
+        data: {
+          id: 'u-stu-role-1',
+          userId: 'u-stu-role-1',
+          attendancePercentage: 96,
+          streakDays: 14,
+          xpPoints: 1200,
+          gradeLevel: 8,
+          section: 'A',
+          parentName: 'Bina',
+          parentPhone: '9841',
+        },
       });
 
-      const badge = await lmsDB.assignBadge(profile.id, def.id, 'Principal Admin', 'Awarded by Principal');
+      const badge = await lmsDB.assignBadge(
+        profile.id,
+        def.id,
+        'Principal Admin',
+        'Awarded by Principal',
+      );
       expect(badge.assignedBy).toBe('Principal Admin');
     });
 
     it('20. Admin role can query all real-time student locations', async () => {
       await prisma.studentLocationRecord.create({
-        data: { studentId: 'u-stu-role-1', studentName: 'Aarav Student', currentLocation: 'Grounds', category: 'sports_ground', updatedBy: 'Admin', updatedByRole: 'admin', updatedAt: '10:00' },
+        data: {
+          studentId: 'u-stu-role-1',
+          studentName: 'Aarav Student',
+          currentLocation: 'Grounds',
+          category: 'sports_ground',
+          updatedBy: 'Admin',
+          updatedByRole: 'admin',
+          updatedAt: '10:00',
+        },
       });
       const locs = await lmsDB.getStudentLocations();
       expect(locs.length).toBeGreaterThan(0);
     });
 
     it('21. Admin role can update student location with admin role metadata', async () => {
-      const loc = await lmsDB.updateStudentLocation('u-stu-role-1', 'Aarav Student', 'Assembly Hall', 'assembly_hall', 'Principal Admin', 'admin');
+      const loc = await lmsDB.updateStudentLocation(
+        'u-stu-role-1',
+        'Aarav Student',
+        'Assembly Hall',
+        'assembly_hall',
+        'Principal Admin',
+        'admin',
+      );
       expect(loc.updatedByRole).toBe('admin');
     });
 
@@ -310,22 +522,61 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
     await prisma.user.upsert({
       where: { id: 'user-stu-1' },
       update: {},
-      create: { id: 'user-stu-1', name: 'Aarav Sharma', email: 'aarav@mteverest.edu.np', role: 'student', avatar: 'a.png', schoolName: 'S1', gradeLevel: 8, section: 'A' },
+      create: {
+        id: 'user-stu-1',
+        name: 'Aarav Sharma',
+        email: 'aarav@mteverest.edu.np',
+        role: 'student',
+        avatar: 'a.png',
+        schoolName: 'S1',
+        gradeLevel: 8,
+        section: 'A',
+      },
     });
     await prisma.studentProfile.upsert({
       where: { id: 'user-stu-1' },
       update: {},
-      create: { id: 'user-stu-1', userId: 'user-stu-1', attendancePercentage: 95, streakDays: 10, xpPoints: 500, gradeLevel: 8, section: 'A', parentName: 'Bina', parentPhone: '980' },
+      create: {
+        id: 'user-stu-1',
+        userId: 'user-stu-1',
+        attendancePercentage: 95,
+        streakDays: 10,
+        xpPoints: 500,
+        gradeLevel: 8,
+        section: 'A',
+        parentName: 'Bina',
+        parentPhone: '980',
+      },
     });
     await prisma.user.upsert({
       where: { id: 'user-teach-1' },
       update: {},
-      create: { id: 'user-teach-1', name: 'Mr. Ramesh Thapa', email: 'ramesh@mteverest.edu.np', role: 'teacher', avatar: 'a.png', schoolName: 'S1' },
+      create: {
+        id: 'user-teach-1',
+        name: 'Mr. Ramesh Thapa',
+        email: 'ramesh@mteverest.edu.np',
+        role: 'teacher',
+        avatar: 'a.png',
+        schoolName: 'S1',
+      },
     });
     await prisma.classroom.upsert({
       where: { id: 'cls-math-8a' },
       update: {},
-      create: { id: 'cls-math-8a', name: 'Grade 8 Mathematics - Sec A', subject: 'Mathematics', gradeLevel: 8, section: 'A', teacherId: 'user-teach-1', teacherName: 'Mr. Ramesh Thapa', teacherAvatar: 'a.png', roomNumber: '204', colorTheme: 'blue', bannerImage: 'b.png', code: 'MATH8A' },
+      create: {
+        id: 'cls-math-8a',
+        name: 'Grade 8 Mathematics - Sec A',
+        subject: 'Mathematics',
+        gradeLevel: 8,
+        section: 'A',
+        teacherId: 'user-teach-1',
+        teacherName: 'Mr. Ramesh Thapa',
+        teacherAvatar: 'a.png',
+        roomNumber: '204',
+        colorTheme: 'blue',
+        bannerImage: 'b.png',
+        code: 'MATH8A',
+      },
     });
   });
 });

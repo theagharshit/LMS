@@ -34,60 +34,176 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
     // Populate base users
     await prisma.user.upsert({
       where: { id: 'user-stu-1' },
-      update: {},
-      create: { id: 'user-stu-1', name: 'Aarav Sharma', email: 'aarav@ctrl.com', role: 'student', avatar: 'a.png', schoolName: 'S1', gradeLevel: 8, section: 'A' },
+      update: {
+        avatar:
+          'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+      },
+      create: {
+        id: 'user-stu-1',
+        name: 'Aarav Sharma',
+        email: 'aarav@ctrl.com',
+        role: 'student',
+        avatar:
+          'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+        schoolName: 'S1',
+        gradeLevel: 8,
+        section: 'A',
+      },
     });
     await prisma.studentProfile.upsert({
       where: { id: 'user-stu-1' },
       update: {},
-      create: { id: 'user-stu-1', userId: 'user-stu-1', attendancePercentage: 95, streakDays: 10, xpPoints: 500, gradeLevel: 8, section: 'A', parentName: 'Bina', parentPhone: '980' },
+      create: {
+        id: 'user-stu-1',
+        userId: 'user-stu-1',
+        attendancePercentage: 95,
+        streakDays: 10,
+        xpPoints: 500,
+        gradeLevel: 8,
+        section: 'A',
+        parentName: 'Bina',
+        parentPhone: '980',
+      },
     });
     await prisma.user.upsert({
       where: { id: 'user-teach-1' },
-      update: {},
-      create: { id: 'user-teach-1', name: 'Mr. Ramesh Thapa', email: 'ramesh@ctrl.com', role: 'teacher', avatar: 'a.png', schoolName: 'S1' },
+      update: {
+        avatar:
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      },
+      create: {
+        id: 'user-teach-1',
+        name: 'Mr. Ramesh Thapa',
+        email: 'ramesh@ctrl.com',
+        role: 'teacher',
+        avatar:
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+        schoolName: 'S1',
+      },
     });
     await prisma.user.upsert({
       where: { id: 'user-parent-1' },
-      update: {},
-      create: { id: 'user-parent-1', name: 'Bina Sharma', email: 'bina@ctrl.com', role: 'parent', avatar: 'a.png', schoolName: 'S1', childrenIds: ['user-stu-1'] },
+      update: {
+        avatar:
+          'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+      },
+      create: {
+        id: 'user-parent-1',
+        name: 'Bina Sharma',
+        email: 'bina@ctrl.com',
+        role: 'parent',
+        avatar:
+          'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+        schoolName: 'S1',
+        childrenIds: ['user-stu-1'],
+      },
     });
     await prisma.user.upsert({
       where: { id: 'user-admin-1' },
-      update: {},
-      create: { id: 'user-admin-1', name: 'Dr. K.P. Bhattarai', email: 'admin@ctrl.com', role: 'admin', avatar: 'a.png', schoolName: 'S1' },
+      update: {
+        avatar:
+          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+      },
+      create: {
+        id: 'user-admin-1',
+        name: 'Dr. K.P. Bhattarai',
+        email: 'admin@ctrl.com',
+        role: 'admin',
+        avatar:
+          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+        schoolName: 'S1',
+      },
     });
 
     // Populate base classroom, assignment, quiz, badge definition
     await prisma.classroom.upsert({
       where: { id: 'cls-math-8a' },
       update: {},
-      create: { id: 'cls-math-8a', name: 'Grade 8 Mathematics - Sec A', subject: 'Mathematics', gradeLevel: 8, section: 'A', teacherId: 'user-teach-1', teacherName: 'Mr. Ramesh Thapa', teacherAvatar: 'a.png', roomNumber: '204', colorTheme: 'blue', bannerImage: 'b.png', code: 'MATH8A' },
+      create: {
+        id: 'cls-math-8a',
+        name: 'Grade 8 Mathematics - Sec A',
+        subject: 'Mathematics',
+        gradeLevel: 8,
+        section: 'A',
+        teacherId: 'user-teach-1',
+        teacherName: 'Mr. Ramesh Thapa',
+        teacherAvatar: 'a.png',
+        roomNumber: '204',
+        colorTheme: 'blue',
+        bannerImage: 'b.png',
+        code: 'MATH8A',
+      },
     });
     await prisma.assignment.upsert({
       where: { id: 'asg-1' },
       update: {},
-      create: { id: 'asg-1', classroomId: 'cls-math-8a', classroomName: 'Math 8A', subject: 'Math', title: 'Algebra Homework', instructions: 'Inst', dueDate: '2026-08-15', dueTime: '17:00', totalPoints: 100, rubric: [], createdAt: new Date().toISOString() },
+      create: {
+        id: 'asg-1',
+        classroomId: 'cls-math-8a',
+        classroomName: 'Math 8A',
+        subject: 'Math',
+        title: 'Algebra Homework',
+        instructions: 'Inst',
+        dueDate: '2026-08-15',
+        dueTime: '17:00',
+        totalPoints: 100,
+        rubric: [],
+        createdAt: new Date().toISOString(),
+      },
     });
     await prisma.quiz.upsert({
       where: { id: 'quiz-1' },
       update: {},
-      create: { id: 'quiz-1', classroomId: 'cls-math-8a', classroomName: 'Math 8A', subject: 'Math', title: 'Quiz 1', description: 'Desc', durationMinutes: 15, dueDate: '2026-08-10', totalQuestions: 1, createdAt: new Date().toISOString() },
+      create: {
+        id: 'quiz-1',
+        classroomId: 'cls-math-8a',
+        classroomName: 'Math 8A',
+        subject: 'Math',
+        title: 'Quiz 1',
+        description: 'Desc',
+        durationMinutes: 15,
+        dueDate: '2026-08-10',
+        totalQuestions: 1,
+        createdAt: new Date().toISOString(),
+      },
     });
     await prisma.badgeDefinition.upsert({
       where: { id: 'bdg-def-1' },
       update: {},
-      create: { id: 'bdg-def-1', title: 'Top Scholar', description: 'Academic excellence', icon: '🌟', category: 'academic', isAutomatic: false },
+      create: {
+        id: 'bdg-def-1',
+        title: 'Top Scholar',
+        description: 'Academic excellence',
+        icon: '🌟',
+        category: 'academic',
+        isAutomatic: false,
+      },
     });
     await prisma.badgeDefinition.upsert({
       where: { id: 'bdg-def-2' },
       update: {},
-      create: { id: 'bdg-def-2', title: 'Quiz Master', description: 'Scored 100% on a quiz', icon: '🧠', category: 'academic', isAutomatic: true },
+      create: {
+        id: 'bdg-def-2',
+        title: 'Quiz Master',
+        description: 'Scored 100% on a quiz',
+        icon: '🧠',
+        category: 'academic',
+        isAutomatic: true,
+      },
     });
     await prisma.streamPost.upsert({
       where: { id: 'post-1' },
       update: {},
-      create: { id: 'post-1', classroomId: 'cls-math-8a', authorId: 'user-teach-1', authorName: 'Mr. Ramesh Thapa', authorAvatar: 'a.png', authorRole: 'teacher', content: 'Post 1', createdAt: new Date().toISOString() },
+      create: {
+        id: 'post-1',
+        classroomId: 'cls-math-8a',
+        authorId: 'user-teach-1',
+        authorName: 'Mr. Ramesh Thapa',
+        authorAvatar: 'a.png',
+        authorRole: 'teacher',
+        content: 'Post 1',
+        createdAt: new Date().toISOString(),
+      },
     });
   });
   // 1. SYSTEM ROUTES
@@ -153,13 +269,15 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
     });
 
     it('8. POST /api/db/quiz-submissions handles student quiz submission', async () => {
-      const res = await request(app).post('/api/db/quiz-submissions').send({
-        quizId: 'quiz-1',
-        studentId: 'user-stu-1',
-        score: 80,
-        totalPoints: 100,
-        answers: { 'q-1': 'Option A' },
-      });
+      const res = await request(app)
+        .post('/api/db/quiz-submissions')
+        .send({
+          quizId: 'quiz-1',
+          studentId: 'user-stu-1',
+          score: 80,
+          totalPoints: 100,
+          answers: { 'q-1': 'Option A' },
+        });
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
     });
@@ -251,20 +369,29 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
     });
 
     it('16. POST /api/db/quizzes creates new quiz', async () => {
-      const res = await request(app).post('/api/db/quizzes').send({
-        classroomId: 'cls-math-8a',
-        classroomName: 'Grade 8 Math',
-        subject: 'Mathematics',
-        title: 'Equations Quiz',
-        description: 'Linear equations assessment',
-        durationMinutes: 20,
-        dueDate: '2026-08-12',
-        totalQuestions: 2,
-        published: true,
-        questions: [
-          { text: 'Solve x+2=5', type: 'MCQ', options: ['1', '2', '3', '4'], correctAnswer: '3', explanation: 'x=3', points: 5 },
-        ],
-      });
+      const res = await request(app)
+        .post('/api/db/quizzes')
+        .send({
+          classroomId: 'cls-math-8a',
+          classroomName: 'Grade 8 Math',
+          subject: 'Mathematics',
+          title: 'Equations Quiz',
+          description: 'Linear equations assessment',
+          durationMinutes: 20,
+          dueDate: '2026-08-12',
+          totalQuestions: 2,
+          published: true,
+          questions: [
+            {
+              text: 'Solve x+2=5',
+              type: 'MCQ',
+              options: ['1', '2', '3', '4'],
+              correctAnswer: '3',
+              explanation: 'x=3',
+              points: 5,
+            },
+          ],
+        });
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
     });
@@ -314,10 +441,12 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
     });
 
     it('21. POST /api/ai/teacher-assistant drafts lesson feedback', async () => {
-      const res = await request(app).post('/api/ai/teacher-assistant').send({
-        task: 'lesson_plan',
-        context: { topic: 'Quadratic Equations', gradeLevel: 9 },
-      });
+      const res = await request(app)
+        .post('/api/ai/teacher-assistant')
+        .send({
+          task: 'lesson_plan',
+          context: { topic: 'Quadratic Equations', gradeLevel: 9 },
+        });
       expect(res.status).toBe(200);
       expect(res.body.text).toBeDefined();
     });
@@ -326,18 +455,20 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
   // 4. PARENT ROUTES
   describe('Parent Routes', () => {
     it('22. POST /api/db/parent-controls updates parent settings', async () => {
-      const res = await request(app).post('/api/db/parent-controls').send({
-        studentId: 'user-stu-1',
-        settings: {
-          allowTeacherDirectChat: true,
-          allowPeerDiscussion: false,
-          missingHomeworkAlerts: true,
-          lowAttendanceAlerts: true,
-          weeklyDigestEmail: true,
-          screenTimeLimitMinutes: 90,
-          requireApprovalForOutboundMsgs: true,
-        },
-      });
+      const res = await request(app)
+        .post('/api/db/parent-controls')
+        .send({
+          studentId: 'user-stu-1',
+          settings: {
+            allowTeacherDirectChat: true,
+            allowPeerDiscussion: false,
+            missingHomeworkAlerts: true,
+            lowAttendanceAlerts: true,
+            weeklyDigestEmail: true,
+            screenTimeLimitMinutes: 90,
+            requireApprovalForOutboundMsgs: true,
+          },
+        });
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
     });
@@ -482,21 +613,25 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
     });
 
     it('34. POST /api/ai/quiz-generator handles custom question types', async () => {
-      const res = await request(app).post('/api/ai/quiz-generator').send({
-        topic: 'Nepal History',
-        subject: 'Social Studies',
-        gradeLevel: 8,
-        questionCount: 4,
-        questionTypes: ['MCQ'],
-      });
+      const res = await request(app)
+        .post('/api/ai/quiz-generator')
+        .send({
+          topic: 'Nepal History',
+          subject: 'Social Studies',
+          gradeLevel: 8,
+          questionCount: 4,
+          questionTypes: ['MCQ'],
+        });
       expect(res.status).toBe(200);
     });
 
     it('35. POST /api/ai/teacher-assistant handles announcement drafting task', async () => {
-      const res = await request(app).post('/api/ai/teacher-assistant').send({
-        task: 'write_announcement',
-        context: { event: 'Sports Day', date: '2026-09-10' },
-      });
+      const res = await request(app)
+        .post('/api/ai/teacher-assistant')
+        .send({
+          task: 'write_announcement',
+          context: { event: 'Sports Day', date: '2026-09-10' },
+        });
       expect(res.status).toBe(200);
     });
 
@@ -530,31 +665,35 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
     });
 
     it('38. POST /api/db/stream-posts handles post attachments', async () => {
-      const res = await request(app).post('/api/db/stream-posts').send({
-        classroomId: 'cls-math-8a',
-        authorId: 'user-teach-1',
-        authorName: 'Mr. Ramesh Thapa',
-        authorAvatar: 'a.png',
-        authorRole: 'teacher',
-        content: 'Check attachment',
-        attachments: [{ title: 'Notes.pdf', type: 'pdf', url: 'http://test.com/notes.pdf' }],
-      });
+      const res = await request(app)
+        .post('/api/db/stream-posts')
+        .send({
+          classroomId: 'cls-math-8a',
+          authorId: 'user-teach-1',
+          authorName: 'Mr. Ramesh Thapa',
+          authorAvatar: 'a.png',
+          authorRole: 'teacher',
+          content: 'Check attachment',
+          attachments: [{ title: 'Notes.pdf', type: 'pdf', url: 'http://test.com/notes.pdf' }],
+        });
       expect(res.status).toBe(200);
       expect(res.body.post.attachments.length).toBe(1);
     });
 
     it('39. POST /api/db/assignments supports rubric items array', async () => {
-      const res = await request(app).post('/api/db/assignments').send({
-        classroomId: 'cls-math-8a',
-        classroomName: 'Math 8A',
-        subject: 'Math',
-        title: 'Project Rubric',
-        instructions: 'Follow rubric',
-        dueDate: '2026-09-01',
-        dueTime: '12:00',
-        totalPoints: 100,
-        rubric: ['Clarity (20pts)', 'Accuracy (80pts)'],
-      });
+      const res = await request(app)
+        .post('/api/db/assignments')
+        .send({
+          classroomId: 'cls-math-8a',
+          classroomName: 'Math 8A',
+          subject: 'Math',
+          title: 'Project Rubric',
+          instructions: 'Follow rubric',
+          dueDate: '2026-09-01',
+          dueTime: '12:00',
+          totalPoints: 100,
+          rubric: ['Clarity (20pts)', 'Accuracy (80pts)'],
+        });
       expect(res.status).toBe(200);
       expect(res.body.assignment.rubric.length).toBe(2);
     });
@@ -575,13 +714,15 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
     });
 
     it('42. POST /api/db/quiz-submissions returns answers Record object correctly', async () => {
-      const res = await request(app).post('/api/db/quiz-submissions').send({
-        quizId: 'quiz-1',
-        studentId: 'user-stu-1',
-        score: 100,
-        totalPoints: 100,
-        answers: { 'q-1': 'Option A', 'q-2': 'Option B' },
-      });
+      const res = await request(app)
+        .post('/api/db/quiz-submissions')
+        .send({
+          quizId: 'quiz-1',
+          studentId: 'user-stu-1',
+          score: 100,
+          totalPoints: 100,
+          answers: { 'q-1': 'Option A', 'q-2': 'Option B' },
+        });
       expect(res.status).toBe(200);
       expect(res.body.quizSubmission.answers['q-1']).toBe('Option A');
     });

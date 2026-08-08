@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { getAvatarUrl } from '../../utils/avatarUtils';
 import {
   GraduationCap,
   Bell,
@@ -156,8 +157,11 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
               className="flex items-center gap-2 pl-2 pr-2.5 py-1 rounded-full border border-[#E5E1D8] bg-white hover:bg-[#F9F7F2] transition-all text-xs text-[#2D2D2A]"
             >
               <img
-                src={currentUser.avatar}
+                src={getAvatarUrl(currentUser.avatar, currentUser.name)}
                 alt={currentUser.name}
+                onError={(e) => {
+                  e.currentTarget.src = getAvatarUrl(undefined, currentUser.name);
+                }}
                 className="w-6 h-6 rounded-full object-cover border border-[#4A6741]"
               />
               <div className="text-left hidden sm:block">
@@ -210,8 +214,11 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
                     >
                       <div className="flex items-center gap-2.5">
                         <img
-                          src={user.avatar}
+                          src={getAvatarUrl(user.avatar, user.name)}
                           alt={user.name}
+                          onError={(e) => {
+                            e.currentTarget.src = getAvatarUrl(undefined, user.name);
+                          }}
                           className="w-7 h-7 rounded-full object-cover"
                         />
                         <div>

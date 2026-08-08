@@ -82,7 +82,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const assignBadge = async (studentProfileId: string, badgeDefinitionId: string, remarks?: string) => {
+  const assignBadge = async (
+    studentProfileId: string,
+    badgeDefinitionId: string,
+    remarks?: string,
+  ) => {
     try {
       const res = await apiFetch('/api/db/student-badges', {
         method: 'POST',
@@ -91,22 +95,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           studentProfileId,
           badgeDefinitionId,
           assignedBy: authState.currentUser.name,
-          remarks
+          remarks,
         }),
       });
       if (res.ok) {
         const data = await res.json().catch(() => null);
         if (data && data.status === 'success' && data.badge) {
-          const updatedProfiles = authState.studentProfiles.map(p => {
+          const updatedProfiles = authState.studentProfiles.map((p) => {
             if (p.id === studentProfileId) {
-              const def = academicState.badgeDefinitions.find(bd => bd.id === badgeDefinitionId);
+              const def = academicState.badgeDefinitions.find((bd) => bd.id === badgeDefinitionId);
               if (!def) return p;
               return {
                 ...p,
-                badges: [
-                  ...p.badges,
-                  { ...data.badge, badgeDefinition: def }
-                ]
+                badges: [...p.badges, { ...data.badge, badgeDefinition: def }],
               };
             }
             return p;

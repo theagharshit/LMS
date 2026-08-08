@@ -262,7 +262,8 @@ class LMSDatabaseService {
         studentId: validStudentId,
         studentName: stu?.name || 'Aarav Sharma',
         studentAvatar:
-          stu?.avatar || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+          stu?.avatar ||
+          'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
         fileName,
         fileUrl,
         responseText: notes,
@@ -572,14 +573,18 @@ class LMSDatabaseService {
     let validSenderId = msg.senderId;
     const sender = await prisma.user.findUnique({ where: { id: validSenderId } });
     if (!sender) {
-      const firstUser = await prisma.user.findFirst({ where: { role: 'parent' } }) || await prisma.user.findFirst();
+      const firstUser =
+        (await prisma.user.findFirst({ where: { role: 'parent' } })) ||
+        (await prisma.user.findFirst());
       if (firstUser) validSenderId = firstUser.id;
     }
 
     let validReceiverId = msg.receiverId;
     const receiver = await prisma.user.findUnique({ where: { id: validReceiverId } });
     if (!receiver) {
-      const firstTeacher = await prisma.user.findFirst({ where: { role: 'teacher' } }) || await prisma.user.findFirst();
+      const firstTeacher =
+        (await prisma.user.findFirst({ where: { role: 'teacher' } })) ||
+        (await prisma.user.findFirst());
       if (firstTeacher) validReceiverId = firstTeacher.id;
     }
 
@@ -628,7 +633,7 @@ class LMSDatabaseService {
     if (existing) {
       return existing;
     }
-    
+
     return prisma.studentBadge.create({
       data: {
         studentProfileId,
