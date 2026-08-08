@@ -30,6 +30,7 @@ app.get('/', (_req, res) => {
 
 describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
   beforeAll(async () => {
+    delete process.env.GEMINI_API_KEY;
     // Populate base users
     await prisma.user.upsert({
       where: { id: 'user-stu-1' },
@@ -77,6 +78,11 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       where: { id: 'bdg-def-1' },
       update: {},
       create: { id: 'bdg-def-1', title: 'Top Scholar', description: 'Academic excellence', icon: '🌟', category: 'academic', isAutomatic: false },
+    });
+    await prisma.badgeDefinition.upsert({
+      where: { id: 'bdg-def-2' },
+      update: {},
+      create: { id: 'bdg-def-2', title: 'Quiz Master', description: 'Scored 100% on a quiz', icon: '🧠', category: 'academic', isAutomatic: true },
     });
     await prisma.streamPost.upsert({
       where: { id: 'post-1' },

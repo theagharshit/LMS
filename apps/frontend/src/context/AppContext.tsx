@@ -95,8 +95,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }),
       });
       if (res.ok) {
-        const data = await res.json();
-        if (data.status === 'success' && data.badge) {
+        const data = await res.json().catch(() => null);
+        if (data && data.status === 'success' && data.badge) {
           const updatedProfiles = authState.studentProfiles.map(p => {
             if (p.id === studentProfileId) {
               const def = academicState.badgeDefinitions.find(bd => bd.id === badgeDefinitionId);
