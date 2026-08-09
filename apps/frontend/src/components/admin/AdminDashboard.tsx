@@ -94,7 +94,9 @@ export const AdminDashboard: React.FC = () => {
   const [annTitle, setAnnTitle] = useState('');
   const [annContent, setAnnContent] = useState('');
   const [annPriority, setAnnPriority] = useState<'urgent' | 'high' | 'normal'>('normal');
-  const [annAudience, setAnnAudience] = useState<'all' | 'students' | 'teachers' | 'parents'>('all');
+  const [annAudience, setAnnAudience] = useState<'all' | 'students' | 'teachers' | 'parents'>(
+    'all',
+  );
 
   // New Classroom Form State
   const [clsName, setClsName] = useState('');
@@ -122,7 +124,8 @@ export const AdminDashboard: React.FC = () => {
     (t) =>
       t.name.toLowerCase().includes(teacherSearch.toLowerCase()) ||
       t.email.toLowerCase().includes(teacherSearch.toLowerCase()) ||
-      (t.subjectsTaught && t.subjectsTaught.some((sub) => sub.toLowerCase().includes(teacherSearch.toLowerCase()))),
+      (t.subjectsTaught &&
+        t.subjectsTaught.some((sub) => sub.toLowerCase().includes(teacherSearch.toLowerCase()))),
   );
 
   const filteredParents = parentUsers.filter(
@@ -258,7 +261,8 @@ export const AdminDashboard: React.FC = () => {
             Administrative Management Hub
           </h1>
           <p className="text-xs text-[#F9F7F2]/90 mt-1">
-            Complete institutional control over students, faculty, family allocations, classrooms, and badge awards.
+            Complete institutional control over students, faculty, family allocations, classrooms,
+            and badge awards.
           </p>
         </div>
 
@@ -384,7 +388,9 @@ export const AdminDashboard: React.FC = () => {
               </div>
               <div>
                 <p className="text-[11px] text-[#7A7A72] font-semibold">Total Students</p>
-                <h3 className="text-xl font-bold text-[#2D2D2A] font-serif">{studentProfiles.length}</h3>
+                <h3 className="text-xl font-bold text-[#2D2D2A] font-serif">
+                  {studentProfiles.length}
+                </h3>
               </div>
             </div>
 
@@ -394,7 +400,9 @@ export const AdminDashboard: React.FC = () => {
               </div>
               <div>
                 <p className="text-[11px] text-[#7A7A72] font-semibold">Faculty Members</p>
-                <h3 className="text-xl font-bold text-[#2D2D2A] font-serif">{teacherUsers.length}</h3>
+                <h3 className="text-xl font-bold text-[#2D2D2A] font-serif">
+                  {teacherUsers.length}
+                </h3>
               </div>
             </div>
 
@@ -404,7 +412,9 @@ export const AdminDashboard: React.FC = () => {
               </div>
               <div>
                 <p className="text-[11px] text-[#7A7A72] font-semibold">Parents Linked</p>
-                <h3 className="text-xl font-bold text-[#2D2D2A] font-serif">{parentUsers.length}</h3>
+                <h3 className="text-xl font-bold text-[#2D2D2A] font-serif">
+                  {parentUsers.length}
+                </h3>
               </div>
             </div>
 
@@ -517,7 +527,12 @@ export const AdminDashboard: React.FC = () => {
 
                     <div className="flex items-center gap-1 text-[10px] text-[#7A7A72] shrink-0">
                       <Clock className="w-3 h-3" />
-                      <span>{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span>
+                        {new Date(log.timestamp).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -637,7 +652,9 @@ export const AdminDashboard: React.FC = () => {
 
                   <button
                     onClick={() => {
-                      if (confirm(`Are you sure you want to archive student record for ${s.name}?`)) {
+                      if (
+                        confirm(`Are you sure you want to archive student record for ${s.name}?`)
+                      ) {
                         deleteStudentProfile(s.id);
                       }
                     }}
@@ -718,7 +735,9 @@ export const AdminDashboard: React.FC = () => {
 
                     {/* Linked Children List */}
                     <div className="space-y-2">
-                      <p className="font-bold text-[#2D2D2A] text-[11px]">Linked Enrolled Children:</p>
+                      <p className="font-bold text-[#2D2D2A] text-[11px]">
+                        Linked Enrolled Children:
+                      </p>
                       {children.length > 0 ? (
                         <div className="space-y-1.5">
                           {children.map((child) => (
@@ -984,10 +1003,12 @@ export const AdminDashboard: React.FC = () => {
                       Instructor: <strong className="text-[#2D2D2A]">{c.teacherName}</strong>
                     </p>
                     <p className="text-[#7A7A72]">
-                      Room: <strong className="text-[#2D2D2A]">{c.roomNumber}</strong> • Grade {c.gradeLevel}-{c.section}
+                      Room: <strong className="text-[#2D2D2A]">{c.roomNumber}</strong> • Grade{' '}
+                      {c.gradeLevel}-{c.section}
                     </p>
                     <p className="text-[#7A7A72]">
-                      Enrolled Roster: <strong className="text-[#4A6741]">{c.studentCount} Students</strong>
+                      Enrolled Roster:{' '}
+                      <strong className="text-[#4A6741]">{c.studentCount} Students</strong>
                     </p>
                   </div>
                 </div>
@@ -1158,7 +1179,9 @@ export const AdminDashboard: React.FC = () => {
 
             <form onSubmit={handleCreateAnnouncement} className="space-y-3">
               <div>
-                <label className="block font-semibold text-[#2D2D2A] mb-1">Announcement Title *</label>
+                <label className="block font-semibold text-[#2D2D2A] mb-1">
+                  Announcement Title *
+                </label>
                 <input
                   type="text"
                   required
@@ -1170,7 +1193,9 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-[#2D2D2A] mb-1">Announcement Message *</label>
+                <label className="block font-semibold text-[#2D2D2A] mb-1">
+                  Announcement Message *
+                </label>
                 <textarea
                   required
                   rows={3}

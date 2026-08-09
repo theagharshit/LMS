@@ -141,7 +141,10 @@ export interface AppContextType {
   adminAuditLogs: AdminAuditLog[];
   schoolAnnouncements: SchoolAnnouncement[];
   addStudentProfile: (
-    student: Omit<StudentProfile, 'id' | 'attendancePercentage' | 'streakDays' | 'xpPoints' | 'badges'>,
+    student: Omit<
+      StudentProfile,
+      'id' | 'attendancePercentage' | 'streakDays' | 'xpPoints' | 'badges'
+    >,
   ) => void;
   updateStudentProfile: (id: string, updates: Partial<StudentProfile>) => void;
   deleteStudentProfile: (id: string) => void;

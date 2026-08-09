@@ -68,10 +68,12 @@ export const AdminParentLinkModal: React.FC<AdminParentLinkModalProps> = ({
         <div className="p-5 space-y-4 text-xs overflow-y-auto max-h-[75vh]">
           <div className="p-3.5 rounded-2xl bg-[#FDEEDC] border border-[#E88D67]/40 text-[#2D2D2A]">
             <p className="font-bold text-xs text-[#E88D67]">
-              Enrolled Children Counter: {selectedChildIds.length} {selectedChildIds.length === 1 ? 'Child' : 'Children'} Linked
+              Enrolled Children Counter: {selectedChildIds.length}{' '}
+              {selectedChildIds.length === 1 ? 'Child' : 'Children'} Linked
             </p>
             <p className="text-[11px] opacity-90 mt-0.5">
-              Select or deselect students below to update this parent's active family portal access and emergency contacts.
+              Select or deselect students below to update this parent's active family portal access
+              and emergency contacts.
             </p>
           </div>
 
@@ -101,7 +103,8 @@ export const AdminParentLinkModal: React.FC<AdminParentLinkModalProps> = ({
                       <div>
                         <p className="font-bold text-[#2D2D2A] text-xs">{student.name}</p>
                         <p className="text-[10px] text-[#7A7A72]">
-                          Grade {student.gradeLevel}-{student.section} • Roll #{student.rollNumber || 'N/A'}
+                          Grade {student.gradeLevel}-{student.section} • Roll #
+                          {student.rollNumber || 'N/A'}
                         </p>
                       </div>
                     </div>

@@ -94,7 +94,10 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs overflow-y-auto max-h-[80vh]">
+        <form
+          onSubmit={handleSubmit}
+          className="p-5 space-y-4 text-xs overflow-y-auto max-h-[80vh]"
+        >
           <div>
             <label className="block font-semibold text-[#2D2D2A] mb-1">Full Student Name *</label>
             <input
@@ -158,7 +161,9 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3 pt-1">
             <div>
-              <label className="block font-semibold text-[#2D2D2A] mb-1">Parent / Guardian Name</label>
+              <label className="block font-semibold text-[#2D2D2A] mb-1">
+                Parent / Guardian Name
+              </label>
               <input
                 type="text"
                 value={parentName}
@@ -168,7 +173,9 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
               />
             </div>
             <div>
-              <label className="block font-semibold text-[#2D2D2A] mb-1">Parent Contact Phone</label>
+              <label className="block font-semibold text-[#2D2D2A] mb-1">
+                Parent Contact Phone
+              </label>
               <input
                 type="text"
                 value={parentPhone}

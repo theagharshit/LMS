@@ -25,11 +25,7 @@ export const useAdminState = (
   const [schoolAnnouncements, setSchoolAnnouncements] =
     useState<SchoolAnnouncement[]>(MOCK_ANNOUNCEMENTS);
 
-  const addAuditLog = (
-    action: string,
-    category: AdminAuditLog['category'],
-    details: string,
-  ) => {
+  const addAuditLog = (action: string, category: AdminAuditLog['category'], details: string) => {
     const newLog: AdminAuditLog = {
       id: `log-${Date.now()}`,
       action,
@@ -145,7 +141,11 @@ export const useAdminState = (
   const deleteParentProfile = (id: string) => {
     const target = allUsers.find((u) => u.id === id);
     setAllUsers((prev) => prev.filter((u) => u.id !== id));
-    addAuditLog('Removed Parent Account', 'parent', `Removed parent account ${target?.name || id}.`);
+    addAuditLog(
+      'Removed Parent Account',
+      'parent',
+      `Removed parent account ${target?.name || id}.`,
+    );
   };
 
   const addBadgeDefinition = (badge: Omit<BadgeDefinition, 'id'>) => {
@@ -164,7 +164,11 @@ export const useAdminState = (
   const deleteBadgeDefinition = (id: string) => {
     const badge = badgeDefinitions.find((b) => b.id === id);
     setBadgeDefinitions((prev) => prev.filter((b) => b.id !== id));
-    addAuditLog('Deleted Badge Definition', 'badge', `Removed badge definition ${badge?.title || id}.`);
+    addAuditLog(
+      'Deleted Badge Definition',
+      'badge',
+      `Removed badge definition ${badge?.title || id}.`,
+    );
   };
 
   const deleteClassroom = (id: string) => {

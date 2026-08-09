@@ -562,7 +562,8 @@ export const MOCK_SUBMISSIONS: Submission[] = [
     status: 'graded',
     fileUrl: 'Aarav_Math_Homework_Ch4_Final.pdf',
     fileName: 'Aarav_Math_Homework_Ch4_Final.pdf',
-    responseText: 'Respected Sir, I have solved all 10 problems from Exercise 4.1 and 4.2 with corrections.',
+    responseText:
+      'Respected Sir, I have solved all 10 problems from Exercise 4.1 and 4.2 with corrections.',
     grade: 19,
     feedback:
       'Excellent step-by-step problem breakdown, Aarav! Just remember to check signs when taking common factors in Q6.',
@@ -575,10 +576,12 @@ export const MOCK_SUBMISSIONS: Submission[] = [
         submittedAt: '2026-07-30T18:45:00Z',
         fileUrl: 'Aarav_Math_Homework_Ch4_Final.pdf',
         fileName: 'Aarav_Math_Homework_Ch4_Final.pdf',
-        responseText: 'Respected Sir, I have solved all 10 problems from Exercise 4.1 and 4.2 with corrections.',
+        responseText:
+          'Respected Sir, I have solved all 10 problems from Exercise 4.1 and 4.2 with corrections.',
         status: 'graded',
         grade: 19,
-        feedback: 'Excellent step-by-step problem breakdown, Aarav! Just remember to check signs when taking common factors in Q6.',
+        feedback:
+          'Excellent step-by-step problem breakdown, Aarav! Just remember to check signs when taking common factors in Q6.',
         isLate: false,
       },
       {
@@ -1486,7 +1489,8 @@ export const MOCK_ANNOUNCEMENTS: SchoolAnnouncement[] = [
   {
     id: 'ann-1',
     title: 'Upcoming Parent-Teacher Meeting (PTM) & Mid-Term Review',
-    content: 'All parents are cordially invited for the First Term PTM on August 15th from 10:00 AM to 2:00 PM.',
+    content:
+      'All parents are cordially invited for the First Term PTM on August 15th from 10:00 AM to 2:00 PM.',
     priority: 'urgent',
     author: 'Principal K.P. Sharma',
     createdAt: '2026-08-07T08:00:00Z',

@@ -13,7 +13,8 @@ export const InDevelopmentView: React.FC<InDevelopmentViewProps> = ({ title }) =
       </div>
       <h2 className="text-2xl font-bold text-[#2D2D2A] font-serif">{title}</h2>
       <p className="text-[#7A7A72] text-sm max-w-md text-center">
-        This page is currently in development. We are working hard to bring this feature to you soon!
+        This page is currently in development. We are working hard to bring this feature to you
+        soon!
       </p>
     </div>
   );
