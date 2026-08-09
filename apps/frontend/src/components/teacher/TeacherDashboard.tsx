@@ -124,11 +124,11 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </button>
 
             <button
-              onClick={onOpenQuizBuilderModal}
-              className="px-4 py-3 rounded-2xl bg-[#E88D67] text-white font-extrabold text-xs flex items-center gap-2 shadow-sm hover:bg-[#D87B55] transition-all cursor-pointer"
+              onClick={() => setActiveView('quizzes')}
+              className="px-4 py-3 rounded-2xl bg-white/20 backdrop-blur-md hover:bg-white/30 text-white font-extrabold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-[#FDEEDC]" />
-              <span>AI Quiz Generator</span>
+              <span>Quiz Creator & Assessment Hub</span>
             </button>
 
             <button

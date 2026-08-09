@@ -19,6 +19,7 @@ import { AssignmentDetailModal } from './components/student/AssignmentDetailModa
 import { QuizRunnerModal } from './components/student/QuizRunnerModal';
 import { CompletedQuizzesModal } from './components/student/CompletedQuizzesModal';
 import { QuizBuilderModal } from './components/teacher/QuizBuilderModal';
+import { TeacherQuizHubView } from './components/teacher/TeacherQuizHubView';
 import { ParentalControlsModal } from './components/parent/ParentalControlsModal';
 import { InDevelopmentView } from './components/common/InDevelopmentView';
 
@@ -74,7 +75,15 @@ const AppContent: React.FC = () => {
         );
 
       case 'quizzes':
-        return <InDevelopmentView title="Quiz Creator & AI" />;
+        if (currentUser.role === 'teacher') {
+          return <TeacherQuizHubView />;
+        }
+        return (
+          <StudentDashboard
+            onOpenAssignmentModal={(id) => setActiveAssignmentId(id)}
+            onOpenQuizModal={(id) => setActiveQuizId(id)}
+          />
+        );
 
       case 'parental-controls':
         return <InDevelopmentView title="Parental Controls" />;

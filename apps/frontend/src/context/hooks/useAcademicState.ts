@@ -225,6 +225,10 @@ export const useAcademicState = (currentUser: User) => {
     );
   };
 
+  const updateQuizMarksMode = (quizId: string, revealMarksMode: 'immediate' | 'later') => {
+    setQuizzes((prev) => prev.map((q) => (q.id === quizId ? { ...q, revealMarksMode } : q)));
+  };
+
   const addQuiz = (quizData: Omit<Quiz, 'id'>) => {
     const newQuiz: Quiz = {
       ...quizData,
