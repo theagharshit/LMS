@@ -5,52 +5,62 @@ import { AdminDashboard } from '../../src/components/admin/AdminDashboard';
 import { AppProvider } from '../../src/context/AppContext';
 
 describe('AdminDashboard Component Suite (15 Tests)', () => {
-  it('1. renders Admin Dashboard title and header description', () => {
+  it('1. renders Administrative Management Hub title and header banner', () => {
     render(
       <AppProvider>
         <AdminDashboard />
       </AppProvider>,
     );
-    expect(screen.getByText(/Admin Dashboard/i)).toBeInTheDocument();
+    expect(screen.getByText(/Administrative Management Hub/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Manage school-wide configurations and manual awards/i),
+      screen.getByText(/Complete institutional control over students/i),
     ).toBeInTheDocument();
   });
 
-  it('2. renders Manual Badge Awarding section heading', () => {
+  it('2. renders sub-tab navigation items', () => {
     render(
       <AppProvider>
         <AdminDashboard />
       </AppProvider>,
     );
-    expect(screen.getByText(/Manual Badge Awarding/i)).toBeInTheDocument();
+    expect(screen.getByText(/Overview & Stats/i)).toBeInTheDocument();
+    expect(screen.getByText(/Student Directory/i)).toBeInTheDocument();
+    expect(screen.getByText(/Family & Parents/i)).toBeInTheDocument();
+    expect(screen.getByText(/Faculty Staff/i)).toBeInTheDocument();
   });
 
-  it('3. renders Student select dropdown with placeholder option', () => {
+  it('3. renders Overview metrics cards', () => {
     render(
       <AppProvider>
         <AdminDashboard />
       </AppProvider>,
     );
-    expect(screen.getByText(/-- Choose Student --/i)).toBeInTheDocument();
+    expect(screen.getByText(/Total Students/i)).toBeInTheDocument();
+    expect(screen.getByText(/Faculty Members/i)).toBeInTheDocument();
+    expect(screen.getByText(/Parents Linked/i)).toBeInTheDocument();
   });
 
-  it('4. renders Badge select dropdown with placeholder option', () => {
+  it('4. switches to Badges & Awards tab when tab button is clicked', () => {
     render(
       <AppProvider>
         <AdminDashboard />
       </AppProvider>,
     );
-    expect(screen.getByText(/-- Choose Badge --/i)).toBeInTheDocument();
+    const badgeTab = screen.getByText(/Badges & Awards/i);
+    fireEvent.click(badgeTab);
+    expect(screen.getByText(/Manual Student Badge Awarding Desk/i)).toBeInTheDocument();
   });
 
-  it('5. renders Remarks optional input field', () => {
+  it('5. renders Remarks optional input field in Badges tab', () => {
     render(
       <AppProvider>
         <AdminDashboard />
       </AppProvider>,
     );
-    expect(screen.getByPlaceholderText(/Reason for awarding this badge/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByText(/Badges & Awards/i));
+    expect(
+      screen.getByPlaceholderText(/Awarded for exemplary discipline/i),
+    ).toBeInTheDocument();
   });
 
   it('6. Award Badge button is disabled when student or badge is not selected', () => {
@@ -59,7 +69,8 @@ describe('AdminDashboard Component Suite (15 Tests)', () => {
         <AdminDashboard />
       </AppProvider>,
     );
-    const btn = screen.getByRole('button', { name: /Award Badge/i });
+    fireEvent.click(screen.getByText(/Badges & Awards/i));
+    const btn = screen.getByRole('button', { name: /Award Badge to Student/i });
     expect(btn).toBeDisabled();
   });
 
@@ -69,49 +80,53 @@ describe('AdminDashboard Component Suite (15 Tests)', () => {
         <AdminDashboard />
       </AppProvider>,
     );
+    fireEvent.click(screen.getByText(/Badges & Awards/i));
     const input = screen.getByPlaceholderText(
-      /Reason for awarding this badge/i,
+      /Awarded for exemplary discipline/i,
     ) as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'Excellent behavior' } });
     expect(input.value).toBe('Excellent behavior');
   });
 
-  it('8. renders Badge Definitions Dictionary gallery', () => {
+  it('8. renders Define New Custom Badge section', () => {
     render(
       <AppProvider>
         <AdminDashboard />
       </AppProvider>,
     );
-    expect(screen.getByText(/Badge Definitions Dictionary/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByText(/Badges & Awards/i));
+    expect(screen.getByText(/Define New Custom Badge/i)).toBeInTheDocument();
   });
 
-  it('9. renders automatic vs manual tags on badge items', () => {
+  it('9. switches to Student Directory tab and lists student records', () => {
     render(
       <AppProvider>
         <AdminDashboard />
       </AppProvider>,
     );
-    const tags = screen.getAllByText(/(Automatic|Manual)/i);
-    expect(tags.length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByText(/Student Directory/i));
+    expect(screen.getByText(/Student Directory & Enrolled Records/i)).toBeInTheDocument();
   });
 
-  it('10. populated student options display student name and grade level', () => {
+  it('10. populated student options display student name in combobox', () => {
     render(
       <AppProvider>
         <AdminDashboard />
       </AppProvider>,
     );
+    fireEvent.click(screen.getByText(/Badges & Awards/i));
     const selects = screen.getAllByRole('combobox');
     expect(selects[0]).toBeInTheDocument();
     expect(screen.getByText(/-- Choose Student --/i)).toBeInTheDocument();
   });
 
-  it('11. populated badge options display emoji icon and title', () => {
+  it('11. populated badge options display emoji icon and title in combobox', () => {
     render(
       <AppProvider>
         <AdminDashboard />
       </AppProvider>,
     );
+    fireEvent.click(screen.getByText(/Badges & Awards/i));
     const selects = screen.getAllByRole('combobox');
     expect(selects.length).toBeGreaterThanOrEqual(2);
   });
@@ -122,11 +137,12 @@ describe('AdminDashboard Component Suite (15 Tests)', () => {
         <AdminDashboard />
       </AppProvider>,
     );
+    fireEvent.click(screen.getByText(/Badges & Awards/i));
     const selects = screen.getAllByRole('combobox');
     fireEvent.change(selects[0], { target: { value: 'user-stu-1' } });
     fireEvent.change(selects[1], { target: { value: 'bdg-def-1' } });
 
-    const btn = screen.getByRole('button', { name: /Award Badge/i });
+    const btn = screen.getByRole('button', { name: /Award Badge to Student/i });
     expect(btn).not.toBeDisabled();
   });
 
@@ -137,11 +153,12 @@ describe('AdminDashboard Component Suite (15 Tests)', () => {
         <AdminDashboard />
       </AppProvider>,
     );
+    fireEvent.click(screen.getByText(/Badges & Awards/i));
     const selects = screen.getAllByRole('combobox');
     fireEvent.change(selects[0], { target: { value: 'user-stu-1' } });
     fireEvent.change(selects[1], { target: { value: 'bdg-def-1' } });
 
-    const btn = screen.getByRole('button', { name: /Award Badge/i });
+    const btn = screen.getByRole('button', { name: /Award Badge to Student/i });
     fireEvent.click(btn);
 
     await waitFor(() => {
@@ -158,7 +175,7 @@ describe('AdminDashboard Component Suite (15 Tests)', () => {
     expect(container.querySelector('.grid')).toBeInTheDocument();
   });
 
-  it('15. renders LucideShield and LucideAward icons inside Admin header', () => {
+  it('15. renders icons inside Admin header banner', () => {
     const { container } = render(
       <AppProvider>
         <AdminDashboard />

@@ -645,6 +645,141 @@ class LMSDatabaseService {
       },
     });
   }
+
+  // Admin DB Methods
+  public async addStudentProfile(data: any) {
+    const user = await prisma.user.create({
+      data: {
+        id: data.id || `user-stu-${Date.now()}`,
+        name: data.name,
+        email: data.email,
+        role: 'student',
+        avatar: data.avatar || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+        schoolName: data.schoolName || 'Everest International Academy',
+        gradeLevel: data.gradeLevel || 8,
+        section: data.section || 'A',
+        rollNumber: data.rollNumber,
+      },
+    });
+
+    const profile = await prisma.studentProfile.create({
+      data: {
+        user: { connect: { id: user.id } },
+        attendancePercentage: data.attendancePercentage || 100,
+        streakDays: data.streakDays || 1,
+        xpPoints: data.xpPoints || 0,
+        gradeLevel: data.gradeLevel || 8,
+        section: data.section || 'A',
+        parentName: data.parentName || 'Parent',
+        parentPhone: data.parentPhone || '+977-9800000000',
+      },
+    });
+
+    return { ...user, ...profile };
+  }
+
+  public async updateStudentProfile(id: string, data: any) {
+    const userUpdate: any = {};
+    if (data.name) userUpdate.name = data.name;
+    if (data.email) userUpdate.email = data.email;
+    if (data.gradeLevel) userUpdate.gradeLevel = data.gradeLevel;
+    if (data.section) userUpdate.section = data.section;
+    if (data.rollNumber !== undefined) userUpdate.rollNumber = data.rollNumber;
+    if (data.avatar) userUpdate.avatar = data.avatar;
+
+    if (Object.keys(userUpdate).length > 0) {
+      await prisma.user.updateMany({ where: { id }, data: userUpdate });
+    }
+
+    const profileUpdate: any = {};
+    if (data.gradeLevel) profileUpdate.gradeLevel = data.gradeLevel;
+    if (data.section) profileUpdate.section = data.section;
+    if (data.parentName) profileUpdate.parentName = data.parentName;
+    if (data.parentPhone) profileUpdate.parentPhone = data.parentPhone;
+
+    if (Object.keys(profileUpdate).length > 0) {
+      await prisma.studentProfile.updateMany({ where: { id }, data: profileUpdate });
+    }
+
+    return { id, ...data };
+  }
+
+  public async deleteStudentProfile(id: string) {
+    await prisma.studentProfile.deleteMany({ where: { id } });
+    return prisma.user.deleteMany({ where: { id } });
+  }
+
+  public async addTeacherProfile(data: any) {
+    return prisma.user.create({
+      data: {
+        id: data.id || `user-teach-${Date.now()}`,
+        name: data.name,
+        email: data.email,
+        role: 'teacher',
+        avatar: data.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+        schoolName: data.schoolName || 'Everest International Academy',
+      },
+    });
+  }
+
+  public async updateTeacherProfile(id: string, data: any) {
+    const userUpdate: any = {};
+    if (data.name) userUpdate.name = data.name;
+    if (data.email) userUpdate.email = data.email;
+    if (data.avatar) userUpdate.avatar = data.avatar;
+    if (data.schoolName) userUpdate.schoolName = data.schoolName;
+
+    if (Object.keys(userUpdate).length > 0) {
+      await prisma.user.updateMany({ where: { id }, data: userUpdate });
+    }
+    return { id, ...data };
+  }
+
+  public async deleteTeacherProfile(id: string) {
+    return prisma.user.deleteMany({ where: { id } });
+  }
+
+  public async addParentProfile(data: any) {
+    return prisma.user.create({
+      data: {
+        id: data.id || `user-parent-${Date.now()}`,
+        name: data.name,
+        email: data.email,
+        role: 'parent',
+        avatar: data.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+        schoolName: data.schoolName || 'Everest International Academy',
+      },
+    });
+  }
+
+  public async deleteParentProfile(id: string) {
+    return prisma.user.deleteMany({ where: { id } });
+  }
+
+  public async createBadgeDefinition(data: any) {
+    return prisma.badgeDefinition.create({
+      data: {
+        id: data.id || `bdg-def-${Date.now()}`,
+        title: data.title,
+        description: data.description || '',
+        icon: data.icon || '🌟',
+        category: data.category || 'academic',
+        isAutomatic: data.isAutomatic || false,
+        criteria: data.criteria,
+      },
+    });
+  }
+
+  public async deleteBadgeDefinition(id: string) {
+    await prisma.studentBadge.deleteMany({ where: { badgeDefinitionId: id } });
+    return prisma.badgeDefinition.deleteMany({ where: { id } });
+  }
+
+  public async deleteClassroom(id: string) {
+    await prisma.classroomEnrollment.deleteMany({ where: { classroomId: id } });
+    await prisma.assignment.deleteMany({ where: { classroomId: id } });
+    return prisma.classroom.deleteMany({ where: { id } });
+  }
 }
 
 export const lmsDB = new LMSDatabaseService();
