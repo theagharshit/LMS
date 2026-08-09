@@ -505,48 +505,96 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           {/* Quizzes List */}
           {activeTaskTab === 'quizzes' && (
             <div className="space-y-3">
-              {availableQuizzes.length === 0 ? (
+              {quizSubmissions.some((s) => s.studentId === currentUser.id) && (
+                <div className="p-2.5 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                    <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>You have completed online quizzes</span>
+                  </span>
+                  <button
+                    onClick={() => setIsCompletedQuizzesOpen(true)}
+                    className="px-3 py-1 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition-colors shadow-xs"
+                  >
+                    My Completed Quizzes Dashboard
+                  </button>
+                </div>
+              )}
+
+              {quizzes.length === 0 ? (
                 <div className="text-center py-6 text-[#7A7A72] text-xs">
                   <CheckCircle className="w-8 h-8 text-[#E88D67] mx-auto mb-2" />
-                  <p className="font-bold text-[#2D2D2A]">No Pending Quizzes!</p>
-                  <p className="text-[11px]">All online tests completed.</p>
+                  <p className="font-bold text-[#2D2D2A]">No Quizzes Available!</p>
+                  <p className="text-[11px]">Check back later for new online tests.</p>
                 </div>
               ) : (
-                availableQuizzes.map((quiz) => (
-                  <div
-                    key={quiz.id}
-                    className="p-4 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] hover:border-[#E88D67] transition-all space-y-2"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <span className="text-[10px] font-bold text-[#E88D67] uppercase tracking-wider">
-                          {quiz.subject}
-                        </span>
-                        <h3 className="font-bold text-xs text-[#2D2D2A] font-serif">
-                          {quiz.title}
-                        </h3>
+                quizzes.map((quiz) => {
+                  const sub = quizSubmissions.find(
+                    (s) => s.quizId === quiz.id && s.studentId === currentUser.id,
+                  );
+                  const isCompleted = Boolean(sub);
+                  const totalPoints = quiz.questions.reduce((acc, q) => acc + q.points, 0);
+
+                  return (
+                    <div
+                      key={quiz.id}
+                      className={`p-4 rounded-2xl border transition-all space-y-2 ${
+                        isCompleted
+                          ? 'border-emerald-200 bg-emerald-50/50'
+                          : 'border-[#EDEAE2] bg-[#F9F7F2] hover:border-[#E88D67]'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="text-[10px] font-bold text-[#E88D67] uppercase tracking-wider">
+                            {quiz.subject}
+                          </span>
+                          <h3 className="font-bold text-xs text-[#2D2D2A] font-serif">
+                            {quiz.title}
+                          </h3>
+                        </div>
+                        {isCompleted ? (
+                          <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-600 text-white shrink-0 shadow-xs">
+                            Attempted
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FDEEDC] text-[#E88D67] shrink-0">
+                            {quiz.durationMinutes} mins
+                          </span>
+                        )}
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FDEEDC] text-[#E88D67] shrink-0">
-                        {quiz.durationMinutes} mins
-                      </span>
-                    </div>
 
-                    <p className="text-[11px] text-[#7A7A72]">{quiz.description}</p>
+                      <p className="text-[11px] text-[#7A7A72]">{quiz.description}</p>
 
-                    <div className="pt-2 flex items-center justify-between">
-                      <span className="text-[10px] text-[#7A7A72] font-semibold">
-                        {quiz.questions.length} Questions
-                      </span>
-                      <button
-                        onClick={() => onOpenQuizModal(quiz.id)}
-                        className="px-3.5 py-1.5 rounded-xl bg-[#E88D67] text-white font-bold text-xs hover:bg-[#D87B55] transition-colors shadow-sm flex items-center gap-1.5"
-                      >
-                        <PlayCircle className="w-3.5 h-3.5" />
-                        <span>Start Quiz</span>
-                      </button>
+                      <div className="pt-2 flex items-center justify-between">
+                        <span className="text-[10px] text-[#7A7A72] font-semibold">
+                          {quiz.questions.length} Questions
+                        </span>
+
+                        {isCompleted ? (
+                          <button
+                            onClick={() => setIsCompletedQuizzesOpen(true)}
+                            className="px-3.5 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 font-extrabold text-xs hover:bg-emerald-200 transition-colors shadow-xs flex items-center gap-1.5"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>
+                              {quiz.revealMarksMode === 'later'
+                                ? 'Completed • Grade Pending'
+                                : `Completed • ${sub?.score}/${totalPoints} Marks`}
+                            </span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => onOpenQuizModal(quiz.id)}
+                            className="px-3.5 py-1.5 rounded-xl bg-[#E88D67] text-white font-bold text-xs hover:bg-[#D87B55] transition-colors shadow-sm flex items-center gap-1.5"
+                          >
+                            <PlayCircle className="w-3.5 h-3.5" />
+                            <span>Start Quiz</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           )}

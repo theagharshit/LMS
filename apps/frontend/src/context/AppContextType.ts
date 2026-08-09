@@ -126,6 +126,9 @@ export interface AppContextType {
   isAiParentSummaryOpen: boolean;
   setIsAiParentSummaryOpen: (open: boolean) => void;
 
+  isCompletedQuizzesOpen: boolean;
+  setIsCompletedQuizzesOpen: (open: boolean) => void;
+
   notifications: {
     id: string;
     title: string;

@@ -5,6 +5,8 @@ import { Question } from '../../src/components/quiz/types/quizTypes';
 import { questionTypeRegistry } from '../../src/components/quiz/registry/questionTypeRegistry';
 import { QuestionRenderer } from '../../src/components/quiz/QuestionRenderer';
 import { QuizContainer } from '../../src/components/quiz/QuizContainer';
+import { CompletedQuizzesModal } from '../../src/components/student/CompletedQuizzesModal';
+import { AppProvider } from '../../src/context/AppContext';
 
 const mockQuestions: Question[] = [
   {
@@ -257,5 +259,15 @@ describe('LMS Modular Quiz System Suite', () => {
     expect(screen.getByText(/Attempt Submitted!/i)).toBeInTheDocument();
     expect(screen.getByText(/Scores & Answers Pending Teacher Release/i)).toBeInTheDocument();
     expect(screen.queryByText(/Review Answers & Solutions/i)).not.toBeInTheDocument();
+  });
+
+  it('13. CompletedQuizzesModal renders student completed quiz dashboard cleanly', () => {
+    render(
+      <AppProvider>
+        <CompletedQuizzesModal isOpen={true} onClose={vi.fn()} onReviewQuiz={vi.fn()} />
+      </AppProvider>,
+    );
+
+    expect(screen.getByText(/My Completed Quizzes & Evaluation Dashboard/i)).toBeInTheDocument();
   });
 });

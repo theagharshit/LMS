@@ -144,6 +144,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAiTutorInitialPrompt: uiState.setAiTutorInitialPrompt,
     isAiParentSummaryOpen: uiState.isAiParentSummaryOpen,
     setIsAiParentSummaryOpen: uiState.setIsAiParentSummaryOpen,
+    isCompletedQuizzesOpen: uiState.isCompletedQuizzesOpen,
+    setIsCompletedQuizzesOpen: uiState.setIsCompletedQuizzesOpen,
 
     // Academic State
     classrooms: academicState.classrooms,

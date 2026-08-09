@@ -176,7 +176,9 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
           <div className="flex items-center gap-2.5">
             <BookOpen className="w-5 h-5 text-amber-300" />
             <div>
-              <h3 className="font-bold text-base">Sikshya AI Quiz Creator for Teachers & Assessment Builder</h3>
+              <h3 className="font-bold text-base">
+                Sikshya AI Quiz Creator for Teachers & Assessment Builder
+              </h3>
               <p className="text-xs text-purple-100">
                 Create, customize, and configure quiz questions & mark release modes
               </p>
