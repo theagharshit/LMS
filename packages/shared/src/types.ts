@@ -64,6 +64,7 @@ export interface Classroom {
   colorTheme: string;
   bannerImage: string;
   studentCount: number;
+  enrolledStudentIds?: string[];
   meetLink?: string;
   code: string;
 }

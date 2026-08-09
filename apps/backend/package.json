@@ -9,6 +9,7 @@
     "prod:v": "NODE_ENV=production LOG_LEVEL=verbose node dist/server.cjs",
     "build": "esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --log-override:empty-import-meta=silent --outfile=dist/server.cjs",
     "start": "npm run prod",
+    "seed": "NODE_ENV=development tsx prisma/seed.ts",
     "test": "vitest run"
   },
   "dependencies": {
