@@ -1,5 +1,13 @@
 import { loadEnv } from '@utils/envResolver';
+
+// Temporarily suppress logs from other modules
+const _originalLog = console.log;
+const _originalInfo = console.info;
+console.log = () => {};
+console.info = () => {};
+
 loadEnv();
+
 import { PrismaClient } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -9,6 +17,13 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  const spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  let spinnerIndex = 0;
+  const interval = setInterval(() => {
+    process.stdout.write(`\r\x1b[36m${spinner[spinnerIndex]}\x1b[0m Cleaning and seeding database... `);
+    spinnerIndex = (spinnerIndex + 1) % spinner.length;
+  }, 100);
+
   const dbUrl = process.env.DATABASE_URL || '';
   const isExplicitLocalDev =
     (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.NODE_ENV) &&
@@ -1010,6 +1025,11 @@ async function main() {
       },
     ],
   });
+
+  clearInterval(interval);
+  process.stdout.write('\r\x1b[32m✔\x1b[0m Database seeding complete!                                \n');
+  console.log = _originalLog;
+  console.info = _originalInfo;
 
   console.log('✨ Database seeding complete! Summary:');
   console.log('- 1 Principal: Principal K.P. Sharma (user-principal-1)');
