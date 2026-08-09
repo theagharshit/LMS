@@ -97,6 +97,7 @@ class LMSDatabaseService {
       colorTheme: c.colorTheme,
       bannerImage: c.bannerImage,
       studentCount: c.enrollments.length,
+      enrolledStudentIds: c.enrollments.map((e) => e.studentId),
       meetLink: c.meetLink || undefined,
       code: c.code,
     }));

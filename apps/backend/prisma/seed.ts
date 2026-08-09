@@ -20,22 +20,36 @@ async function main() {
   const spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
   let spinnerIndex = 0;
   const interval = setInterval(() => {
-    process.stdout.write(`\r\x1b[36m${spinner[spinnerIndex]}\x1b[0m Cleaning and seeding database... `);
+    process.stdout.write(
+      `\r\x1b[36m${spinner[spinnerIndex]}\x1b[0m Cleaning and seeding database... `,
+    );
     spinnerIndex = (spinnerIndex + 1) % spinner.length;
   }, 100);
 
   const dbUrl = process.env.DATABASE_URL || '';
   const isExplicitLocalDev =
-    (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.NODE_ENV) &&
-    (dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1') || dbUrl.includes('host.docker.internal'));
+    (process.env.NODE_ENV === 'development' ||
+      process.env.NODE_ENV === 'test' ||
+      !process.env.NODE_ENV) &&
+    (dbUrl.includes('localhost') ||
+      dbUrl.includes('127.0.0.1') ||
+      dbUrl.includes('host.docker.internal'));
 
   // Double check: Never allow non-local database URLs without explicit override flag
-  const isRemoteDatabase = !dbUrl.includes('localhost') && !dbUrl.includes('127.0.0.1') && !dbUrl.includes('host.docker.internal');
+  const isRemoteDatabase =
+    !dbUrl.includes('localhost') &&
+    !dbUrl.includes('127.0.0.1') &&
+    !dbUrl.includes('host.docker.internal');
 
-  if ((isRemoteDatabase || process.env.NODE_ENV === 'production') && process.env.ALLOW_PRODUCTION_SEED !== 'true') {
+  if (
+    (isRemoteDatabase || process.env.NODE_ENV === 'production') &&
+    process.env.ALLOW_PRODUCTION_SEED !== 'true'
+  ) {
     console.error('❌ DANGER PREVENTED: Database clearing & seeding is BLOCKED!');
     console.error('Reason: Target database is remote or NODE_ENV is set to production.');
-    console.error('If you REALLY intend to wipe this database, set ALLOW_PRODUCTION_SEED=true explicitly.');
+    console.error(
+      'If you REALLY intend to wipe this database, set ALLOW_PRODUCTION_SEED=true explicitly.',
+    );
     process.exit(1);
   }
 
@@ -73,7 +87,8 @@ async function main() {
       name: 'Principal K.P. Sharma',
       email: 'principal@lms.com',
       role: 'admin' as const,
-      avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80',
+      avatar:
+        'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80',
       schoolName: 'Everest International Academy',
     },
     // 1 Admin Normal
@@ -82,7 +97,8 @@ async function main() {
       name: 'Bikram Shrestha',
       email: 'admin@lms.com',
       role: 'admin' as const,
-      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+      avatar:
+        'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
       schoolName: 'Everest International Academy',
     },
     // 2 Teachers
@@ -91,7 +107,8 @@ async function main() {
       name: 'Dr. Ramesh Thapa',
       email: 'ramesh.teacher@lms.com',
       role: 'teacher' as const,
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      avatar:
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       schoolName: 'Everest International Academy',
       subjectsTaught: ['Mathematics', 'Algebra', 'Geometry'],
     },
@@ -100,7 +117,8 @@ async function main() {
       name: 'Saraswati Gurung',
       email: 'saraswati.teacher@lms.com',
       role: 'teacher' as const,
-      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
+      avatar:
+        'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
       schoolName: 'Everest International Academy',
       subjectsTaught: ['Science', 'Physics', 'Chemistry'],
     },
@@ -110,7 +128,8 @@ async function main() {
       name: 'Bina Sharma',
       email: 'bina.parent@lms.com',
       role: 'parent' as const,
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+      avatar:
+        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
       schoolName: 'Everest International Academy',
       childrenIds: ['user-stu-1', 'user-stu-2'],
     },
@@ -119,7 +138,8 @@ async function main() {
       name: 'Hari Adhikari',
       email: 'hari.parent@lms.com',
       role: 'parent' as const,
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      avatar:
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
       schoolName: 'Everest International Academy',
       childrenIds: ['user-stu-3', 'user-stu-4'],
     },
@@ -129,7 +149,8 @@ async function main() {
       name: 'Aarav Sharma',
       email: 'aarav.student@lms.com',
       role: 'student' as const,
-      avatar: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+      avatar:
+        'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
       schoolName: 'Everest International Academy',
       gradeLevel: 8,
       section: 'A',
@@ -140,7 +161,8 @@ async function main() {
       name: 'Ananya Sharma',
       email: 'ananya.student@lms.com',
       role: 'student' as const,
-      avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+      avatar:
+        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
       schoolName: 'Everest International Academy',
       gradeLevel: 8,
       section: 'A',
@@ -151,7 +173,8 @@ async function main() {
       name: 'Biban Adhikari',
       email: 'biban.student@lms.com',
       role: 'student' as const,
-      avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+      avatar:
+        'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
       schoolName: 'Everest International Academy',
       gradeLevel: 9,
       section: 'B',
@@ -162,7 +185,8 @@ async function main() {
       name: 'Diya Adhikari',
       email: 'diya.student@lms.com',
       role: 'student' as const,
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+      avatar:
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
       schoolName: 'Everest International Academy',
       gradeLevel: 9,
       section: 'B',
@@ -382,10 +406,12 @@ async function main() {
       section: 'A',
       teacherId: 'user-teach-1',
       teacherName: 'Dr. Ramesh Thapa',
-      teacherAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      teacherAvatar:
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       roomNumber: 'Room 301',
       colorTheme: '#2D5A27',
-      bannerImage: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&auto=format&fit=crop&q=80',
+      bannerImage:
+        'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&auto=format&fit=crop&q=80',
       meetLink: 'https://meet.google.com/lms-math-8a',
       code: 'MATH8A-2026',
     },
@@ -397,10 +423,12 @@ async function main() {
       section: 'B',
       teacherId: 'user-teach-2',
       teacherName: 'Saraswati Gurung',
-      teacherAvatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
+      teacherAvatar:
+        'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
       roomNumber: 'Lab 102',
       colorTheme: '#1E3A8A',
-      bannerImage: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&auto=format&fit=crop&q=80',
+      bannerImage:
+        'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&auto=format&fit=crop&q=80',
       meetLink: 'https://meet.google.com/lms-sci-9b',
       code: 'SCI9B-2026',
     },
@@ -414,6 +442,9 @@ async function main() {
   const enrollments = [
     { classroomId: 'cls-math-8a', studentId: 'user-stu-1' },
     { classroomId: 'cls-math-8a', studentId: 'user-stu-2' },
+    { classroomId: 'cls-math-8a', studentId: 'user-stu-4' },
+    { classroomId: 'cls-sci-9b', studentId: 'user-stu-1' },
+    { classroomId: 'cls-sci-9b', studentId: 'user-stu-2' },
     { classroomId: 'cls-sci-9b', studentId: 'user-stu-3' },
     { classroomId: 'cls-sci-9b', studentId: 'user-stu-4' },
   ];
@@ -429,9 +460,11 @@ async function main() {
       classroomId: 'cls-math-8a',
       authorId: 'user-teach-1',
       authorName: 'Dr. Ramesh Thapa',
-      authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      authorAvatar:
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       authorRole: 'teacher' as const,
-      content: 'Welcome to Grade 8 Mathematics! Please review the Pythagorean Theorem worksheet attached below before our next class on Friday.',
+      content:
+        'Welcome to Grade 8 Mathematics! Please review the Pythagorean Theorem worksheet attached below before our next class on Friday.',
       pinned: true,
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
       comments: [
@@ -439,7 +472,8 @@ async function main() {
           id: 'cmt-math-1',
           authorId: 'user-stu-1',
           authorName: 'Aarav Sharma',
-          authorAvatar: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+          authorAvatar:
+            'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
           content: 'Thank you Sir! Will we need graph paper for question 3?',
           createdAt: new Date(Date.now() - 86400000).toISOString(),
         },
@@ -447,7 +481,8 @@ async function main() {
           id: 'cmt-math-2',
           authorId: 'user-stu-2',
           authorName: 'Ananya Sharma',
-          authorAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+          authorAvatar:
+            'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
           content: 'Submitted my work, thank you Dr. Ramesh!',
           createdAt: new Date(Date.now() - 43200000).toISOString(),
         },
@@ -467,9 +502,11 @@ async function main() {
       classroomId: 'cls-sci-9b',
       authorId: 'user-teach-2',
       authorName: 'Saraswati Gurung',
-      authorAvatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
+      authorAvatar:
+        'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
       authorRole: 'teacher' as const,
-      content: 'Important Notice: Lab safety goggles are mandatory for tomorrow\'s Photosynthesis experiment in Lab 102.',
+      content:
+        "Important Notice: Lab safety goggles are mandatory for tomorrow's Photosynthesis experiment in Lab 102.",
       pinned: true,
       createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
       comments: [
@@ -477,8 +514,9 @@ async function main() {
           id: 'cmt-sci-1',
           authorId: 'user-stu-3',
           authorName: 'Biban Adhikari',
-          authorAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
-          content: 'Understood Ma\'am, lab coats ready as well!',
+          authorAvatar:
+            'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+          content: "Understood Ma'am, lab coats ready as well!",
           createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
         },
       ],
@@ -514,11 +552,16 @@ async function main() {
       classroomName: 'Grade 8 Mathematics & Algebra',
       subject: 'Mathematics',
       title: 'Pythagorean Theorem Worksheet & Proofs',
-      instructions: 'Solve problems 1 through 10 on page 45. Include step-by-step geometric proofs for questions 8 and 9.',
+      instructions:
+        'Solve problems 1 through 10 on page 45. Include step-by-step geometric proofs for questions 8 and 9.',
       dueDate: '2026-08-15',
       dueTime: '23:59',
       totalPoints: 100,
-      rubric: ['Clarity of Proofs (40 pts)', 'Numerical Accuracy (40 pts)', 'Neatness & Diagrams (20 pts)'],
+      rubric: [
+        'Clarity of Proofs (40 pts)',
+        'Numerical Accuracy (40 pts)',
+        'Neatness & Diagrams (20 pts)',
+      ],
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
       attachments: [
         {
@@ -537,7 +580,8 @@ async function main() {
       classroomName: 'Grade 9 General Science & Physics',
       subject: 'Science',
       title: 'Photosynthesis & Solar Energy Experiment Report',
-      instructions: 'Write a 2-page detailed report explaining light absorption spectrum in chlorophyll during lab experiment 4.',
+      instructions:
+        'Write a 2-page detailed report explaining light absorption spectrum in chlorophyll during lab experiment 4.',
       dueDate: '2026-08-20',
       dueTime: '17:00',
       totalPoints: 50,
@@ -573,7 +617,8 @@ async function main() {
       assignmentId: 'asgn-math-1',
       studentId: 'user-stu-1',
       studentName: 'Aarav Sharma',
-      studentAvatar: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+      studentAvatar:
+        'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
       status: 'graded',
       fileUrl: '/uploads/Aarav_Math_HW1_Solved.pdf',
       fileName: 'Aarav_Math_HW1_Solved.pdf',
@@ -588,7 +633,8 @@ async function main() {
       assignmentId: 'asgn-math-1',
       studentId: 'user-stu-2',
       studentName: 'Ananya Sharma',
-      studentAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+      studentAvatar:
+        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
       status: 'submitted',
       fileUrl: '/uploads/Ananya_Math_HW1.pdf',
       fileName: 'Ananya_Math_HW1.pdf',
@@ -604,7 +650,8 @@ async function main() {
       assignmentId: 'asgn-sci-1',
       studentId: 'user-stu-3',
       studentName: 'Biban Adhikari',
-      studentAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+      studentAvatar:
+        'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
       status: 'graded',
       fileUrl: '/uploads/Biban_Science_Lab_Report.pdf',
       fileName: 'Biban_Science_Lab_Report.pdf',
@@ -619,7 +666,8 @@ async function main() {
       assignmentId: 'asgn-sci-1',
       studentId: 'user-stu-4',
       studentName: 'Diya Adhikari',
-      studentAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+      studentAvatar:
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
       status: 'graded',
       fileUrl: '/uploads/Diya_Science_Report.pdf',
       fileName: 'Diya_Science_Report.pdf',
@@ -644,7 +692,8 @@ async function main() {
       classroomName: 'Grade 8 Mathematics & Algebra',
       subject: 'Mathematics',
       title: 'Algebra & Geometry Speed Quiz',
-      description: 'Tests core concepts of linear equations, right-angled triangles, and exponent rules.',
+      description:
+        'Tests core concepts of linear equations, right-angled triangles, and exponent rules.',
       durationMinutes: 15,
       dueDate: '2026-08-18',
       totalQuestions: 3,
@@ -657,7 +706,8 @@ async function main() {
           type: 'mcq',
           options: ['5 cm', '6 cm', '7 cm', '25 cm'],
           correctAnswer: '5 cm',
-          explanation: 'Using Pythagoras theorem: c^2 = 3^2 + 4^2 = 9 + 16 = 25, so c = sqrt(25) = 5 cm.',
+          explanation:
+            'Using Pythagoras theorem: c^2 = 3^2 + 4^2 = 9 + 16 = 25, so c = sqrt(25) = 5 cm.',
           points: 10,
         },
         {
@@ -686,7 +736,7 @@ async function main() {
       classroomId: 'cls-sci-9b',
       classroomName: 'Grade 9 General Science & Physics',
       subject: 'Science',
-      title: 'Newton\'s Laws & Physical Mechanics Quiz',
+      title: "Newton's Laws & Physical Mechanics Quiz",
       description: 'Assessment on force, inertia, acceleration, and action-reaction principles.',
       durationMinutes: 20,
       dueDate: '2026-08-22',
@@ -700,7 +750,8 @@ async function main() {
           type: 'mcq',
           options: ['First Law', 'Second Law', 'Third Law', 'Law of Gravitation'],
           correctAnswer: 'First Law',
-          explanation: 'Newton\'s First Law states an object remains at rest or in uniform motion unless acted upon by a net external force.',
+          explanation:
+            "Newton's First Law states an object remains at rest or in uniform motion unless acted upon by a net external force.",
           points: 10,
         },
         {
@@ -782,14 +833,63 @@ async function main() {
   console.log('Seeding Attendance Records...');
   const attendanceRecords = [
     // Math 8A attendance
-    { id: 'att-1', studentId: 'user-stu-1', studentName: 'Aarav Sharma', date: '2026-08-01', status: 'present', markedBy: 'Dr. Ramesh Thapa', checkInTime: '09:00 AM' },
-    { id: 'att-2', studentId: 'user-stu-2', studentName: 'Ananya Sharma', date: '2026-08-01', status: 'present', markedBy: 'Dr. Ramesh Thapa', checkInTime: '09:05 AM' },
-    { id: 'att-3', studentId: 'user-stu-1', studentName: 'Aarav Sharma', date: '2026-08-02', status: 'present', markedBy: 'Dr. Ramesh Thapa', checkInTime: '08:58 AM' },
-    { id: 'att-4', studentId: 'user-stu-2', studentName: 'Ananya Sharma', date: '2026-08-02', status: 'absent', markedBy: 'Dr. Ramesh Thapa', remarks: 'Sick leave approved' },
-    
+    {
+      id: 'att-1',
+      studentId: 'user-stu-1',
+      studentName: 'Aarav Sharma',
+      date: '2026-08-01',
+      status: 'present',
+      markedBy: 'Dr. Ramesh Thapa',
+      checkInTime: '09:00 AM',
+    },
+    {
+      id: 'att-2',
+      studentId: 'user-stu-2',
+      studentName: 'Ananya Sharma',
+      date: '2026-08-01',
+      status: 'present',
+      markedBy: 'Dr. Ramesh Thapa',
+      checkInTime: '09:05 AM',
+    },
+    {
+      id: 'att-3',
+      studentId: 'user-stu-1',
+      studentName: 'Aarav Sharma',
+      date: '2026-08-02',
+      status: 'present',
+      markedBy: 'Dr. Ramesh Thapa',
+      checkInTime: '08:58 AM',
+    },
+    {
+      id: 'att-4',
+      studentId: 'user-stu-2',
+      studentName: 'Ananya Sharma',
+      date: '2026-08-02',
+      status: 'absent',
+      markedBy: 'Dr. Ramesh Thapa',
+      remarks: 'Sick leave approved',
+    },
+
     // Science 9B attendance
-    { id: 'att-5', studentId: 'user-stu-3', studentName: 'Biban Adhikari', date: '2026-08-01', status: 'present', markedBy: 'Saraswati Gurung', checkInTime: '10:00 AM' },
-    { id: 'att-6', studentId: 'user-stu-4', studentName: 'Diya Adhikari', date: '2026-08-01', status: 'late', markedBy: 'Saraswati Gurung', checkInTime: '10:18 AM', remarks: 'Bus delay' },
+    {
+      id: 'att-5',
+      studentId: 'user-stu-3',
+      studentName: 'Biban Adhikari',
+      date: '2026-08-01',
+      status: 'present',
+      markedBy: 'Saraswati Gurung',
+      checkInTime: '10:00 AM',
+    },
+    {
+      id: 'att-6',
+      studentId: 'user-stu-4',
+      studentName: 'Diya Adhikari',
+      date: '2026-08-01',
+      status: 'late',
+      markedBy: 'Saraswati Gurung',
+      checkInTime: '10:18 AM',
+      remarks: 'Bus delay',
+    },
   ];
 
   for (const att of attendanceRecords) {
@@ -803,7 +903,8 @@ async function main() {
       senderId: 'user-teach-1',
       senderName: 'Dr. Ramesh Thapa',
       senderRole: 'teacher' as const,
-      senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      senderAvatar:
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       receiverId: 'user-stu-1',
       receiverName: 'Aarav Sharma',
       content: 'Hello Aarav, excellent proof on homework 1! Keep up the great work.',
@@ -815,7 +916,8 @@ async function main() {
       senderId: 'user-stu-1',
       senderName: 'Aarav Sharma',
       senderRole: 'student' as const,
-      senderAvatar: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+      senderAvatar:
+        'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
       receiverId: 'user-teach-1',
       receiverName: 'Dr. Ramesh Thapa',
       content: 'Thank you Dr. Ramesh! I will work on the extra credit questions too.',
@@ -827,10 +929,12 @@ async function main() {
       senderId: 'user-parent-1',
       senderName: 'Bina Sharma',
       senderRole: 'parent' as const,
-      senderAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+      senderAvatar:
+        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
       receiverId: 'user-teach-1',
       receiverName: 'Dr. Ramesh Thapa',
-      content: 'Good morning Dr. Thapa, I wanted to inquire about Aarav\'s progress for the upcoming term exams.',
+      content:
+        "Good morning Dr. Thapa, I wanted to inquire about Aarav's progress for the upcoming term exams.",
       read: false,
       createdAt: new Date(Date.now() - 43200000).toISOString(),
     },
@@ -899,21 +1003,102 @@ async function main() {
   console.log('Seeding Subject Performances...');
   const performances = [
     // Student 1 (Aarav)
-    { studentId: 'user-stu-1', subject: 'Mathematics', scorePercentage: 95.0, grade: 'A+', assignmentsCompleted: 5, totalAssignments: 5, quizzesScoreAvg: 100.0, teacherRemark: 'Top performer in geometry.' },
-    { studentId: 'user-stu-1', subject: 'Science', scorePercentage: 90.0, grade: 'A', assignmentsCompleted: 4, totalAssignments: 4, quizzesScoreAvg: 92.0, teacherRemark: 'Active participant in labs.' },
-    { studentId: 'user-stu-1', subject: 'English', scorePercentage: 88.0, grade: 'A-', assignmentsCompleted: 4, totalAssignments: 4, quizzesScoreAvg: 85.0, teacherRemark: 'Great essay writing skills.' },
-    
+    {
+      studentId: 'user-stu-1',
+      subject: 'Mathematics',
+      scorePercentage: 95.0,
+      grade: 'A+',
+      assignmentsCompleted: 5,
+      totalAssignments: 5,
+      quizzesScoreAvg: 100.0,
+      teacherRemark: 'Top performer in geometry.',
+    },
+    {
+      studentId: 'user-stu-1',
+      subject: 'Science',
+      scorePercentage: 90.0,
+      grade: 'A',
+      assignmentsCompleted: 4,
+      totalAssignments: 4,
+      quizzesScoreAvg: 92.0,
+      teacherRemark: 'Active participant in labs.',
+    },
+    {
+      studentId: 'user-stu-1',
+      subject: 'English',
+      scorePercentage: 88.0,
+      grade: 'A-',
+      assignmentsCompleted: 4,
+      totalAssignments: 4,
+      quizzesScoreAvg: 85.0,
+      teacherRemark: 'Great essay writing skills.',
+    },
+
     // Student 2 (Ananya)
-    { studentId: 'user-stu-2', subject: 'Mathematics', scorePercentage: 84.0, grade: 'B+', assignmentsCompleted: 4, totalAssignments: 5, quizzesScoreAvg: 66.7, teacherRemark: 'Needs minor practice on algebra.' },
-    { studentId: 'user-stu-2', subject: 'Science', scorePercentage: 89.0, grade: 'A-', assignmentsCompleted: 4, totalAssignments: 4, quizzesScoreAvg: 88.0, teacherRemark: 'Very thorough reports.' },
+    {
+      studentId: 'user-stu-2',
+      subject: 'Mathematics',
+      scorePercentage: 84.0,
+      grade: 'B+',
+      assignmentsCompleted: 4,
+      totalAssignments: 5,
+      quizzesScoreAvg: 66.7,
+      teacherRemark: 'Needs minor practice on algebra.',
+    },
+    {
+      studentId: 'user-stu-2',
+      subject: 'Science',
+      scorePercentage: 89.0,
+      grade: 'A-',
+      assignmentsCompleted: 4,
+      totalAssignments: 4,
+      quizzesScoreAvg: 88.0,
+      teacherRemark: 'Very thorough reports.',
+    },
 
     // Student 3 (Biban)
-    { studentId: 'user-stu-3', subject: 'Science', scorePercentage: 96.0, grade: 'A+', assignmentsCompleted: 6, totalAssignments: 6, quizzesScoreAvg: 100.0, teacherRemark: 'Exemplary physics knowledge.' },
-    { studentId: 'user-stu-3', subject: 'Mathematics', scorePercentage: 91.0, grade: 'A', assignmentsCompleted: 6, totalAssignments: 6, quizzesScoreAvg: 90.0, teacherRemark: 'Consistently high scores.' },
+    {
+      studentId: 'user-stu-3',
+      subject: 'Science',
+      scorePercentage: 96.0,
+      grade: 'A+',
+      assignmentsCompleted: 6,
+      totalAssignments: 6,
+      quizzesScoreAvg: 100.0,
+      teacherRemark: 'Exemplary physics knowledge.',
+    },
+    {
+      studentId: 'user-stu-3',
+      subject: 'Mathematics',
+      scorePercentage: 91.0,
+      grade: 'A',
+      assignmentsCompleted: 6,
+      totalAssignments: 6,
+      quizzesScoreAvg: 90.0,
+      teacherRemark: 'Consistently high scores.',
+    },
 
     // Student 4 (Diya)
-    { studentId: 'user-stu-4', subject: 'Science', scorePercentage: 84.0, grade: 'B+', assignmentsCompleted: 5, totalAssignments: 6, quizzesScoreAvg: 66.7, teacherRemark: 'Good progress, label graphs clearly.' },
-    { studentId: 'user-stu-4', subject: 'English', scorePercentage: 92.0, grade: 'A', assignmentsCompleted: 6, totalAssignments: 6, quizzesScoreAvg: 95.0, teacherRemark: 'Excellent vocabulary.' },
+    {
+      studentId: 'user-stu-4',
+      subject: 'Science',
+      scorePercentage: 84.0,
+      grade: 'B+',
+      assignmentsCompleted: 5,
+      totalAssignments: 6,
+      quizzesScoreAvg: 66.7,
+      teacherRemark: 'Good progress, label graphs clearly.',
+    },
+    {
+      studentId: 'user-stu-4',
+      subject: 'English',
+      scorePercentage: 92.0,
+      grade: 'A',
+      assignmentsCompleted: 6,
+      totalAssignments: 6,
+      quizzesScoreAvg: 95.0,
+      teacherRemark: 'Excellent vocabulary.',
+    },
   ];
 
   for (const perf of performances) {
@@ -930,7 +1115,7 @@ async function main() {
     { studentId: 'user-stu-1', term: '1st Term', score: 92 },
     { studentId: 'user-stu-1', term: 'Mid Term', score: 94 },
     { studentId: 'user-stu-1', term: '2nd Term', score: 95 },
-    
+
     { studentId: 'user-stu-2', term: '1st Term', score: 85 },
     { studentId: 'user-stu-2', term: 'Mid Term', score: 88 },
     { studentId: 'user-stu-2', term: '2nd Term', score: 87 },
@@ -1027,7 +1212,9 @@ async function main() {
   });
 
   clearInterval(interval);
-  process.stdout.write('\r\x1b[32m✔\x1b[0m Database seeding complete!                                \n');
+  process.stdout.write(
+    '\r\x1b[32m✔\x1b[0m Database seeding complete!                                \n',
+  );
   console.log = _originalLog;
   console.info = _originalInfo;
 
@@ -1036,7 +1223,9 @@ async function main() {
   console.log('- 1 Admin: Bikram Shrestha (user-admin-1)');
   console.log('- 2 Teachers: Dr. Ramesh Thapa (user-teach-1), Saraswati Gurung (user-teach-2)');
   console.log('- 2 Parents: Bina Sharma (user-parent-1), Hari Adhikari (user-parent-2)');
-  console.log('- 4 Students: Aarav (user-stu-1), Ananya (user-stu-2), Biban (user-stu-3), Diya (user-stu-4)');
+  console.log(
+    '- 4 Students: Aarav (user-stu-1), Ananya (user-stu-2), Biban (user-stu-3), Diya (user-stu-4)',
+  );
   console.log('- 2 Classrooms: Math 8A (cls-math-8a), Science 9B (cls-sci-9b)');
   console.log('- 2 Homeworks: Math HW (asgn-math-1), Science HW (asgn-sci-1)');
   console.log('- 2 Quizzes: Math Quiz (quiz-math-1), Science Quiz (quiz-sci-1)');

@@ -427,6 +427,9 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
   const classAssignments = assignments.filter((a) => a.classroomId === currentClassroom.id);
   const classQuizzes = quizzes.filter((q) => q.classroomId === currentClassroom.id);
   const classModules = modules.filter((m) => m.classroomId === currentClassroom.id);
+  const classStudents = studentProfiles.filter((s) =>
+    currentClassroom.enrolledStudentIds?.includes(s.id),
+  );
 
   return (
     <div className="space-y-6 pb-16 animate-in fade-in duration-200">
@@ -901,10 +904,10 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
 
           <div>
             <h3 className="font-bold text-sm text-[#4A6741] font-serif uppercase tracking-wider border-b border-[#EDEAE2] pb-2 mb-4">
-              Classmates Enrolled ({studentProfiles.length})
+              Classmates Enrolled ({classStudents.length})
             </h3>
             <div className="space-y-3">
-              {studentProfiles.map((s) => (
+              {classStudents.map((s) => (
                 <div
                   key={s.id}
                   className="flex items-center justify-between p-2 rounded-2xl hover:bg-[#F9F7F2] transition-colors"
