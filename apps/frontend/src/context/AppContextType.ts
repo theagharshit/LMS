@@ -64,6 +64,7 @@ export interface AppContextType {
 
   quizzes: Quiz[];
   addQuiz: (quiz: Omit<Quiz, 'id'>) => void;
+  updateQuizMarksMode: (quizId: string, revealMarksMode: 'immediate' | 'later') => void;
   quizSubmissions: QuizSubmission[];
   submitQuizAnswers: (
     quizId: string,

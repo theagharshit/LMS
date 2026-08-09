@@ -53,6 +53,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     setActiveView,
     setSelectedClassroomId,
     classrooms,
+    setIsCompletedQuizzesOpen,
   } = useApp();
 
   // Dynamic system time & day tracking (updates every second)

@@ -153,7 +153,10 @@ export class LMSDatabaseService {
     return quizService.addQuiz(quiz);
   }
 
-  public updateQuizMarksMode(id: string, revealMarksMode: 'immediate' | 'later'): Promise<Quiz | null> {
+  public updateQuizMarksMode(
+    id: string,
+    revealMarksMode: 'immediate' | 'later',
+  ): Promise<Quiz | null> {
     return quizService.updateQuizMarksMode(id, revealMarksMode);
   }
 

@@ -161,6 +161,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     gradeSubmission: academicState.gradeSubmission,
     quizzes: academicState.quizzes,
     addQuiz: academicState.addQuiz,
+    updateQuizMarksMode: academicState.updateQuizMarksMode,
     quizSubmissions: academicState.quizSubmissions,
     submitQuizAnswers: academicState.submitQuizAnswers,
     subjectPerformances: academicState.subjectPerformances,
