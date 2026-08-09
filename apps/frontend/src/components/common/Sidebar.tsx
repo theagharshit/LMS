@@ -45,8 +45,12 @@ export const Sidebar: React.FC = () => {
   const teacherNav: NavItem[] = [
     { id: 'dashboard', label: 'Teacher Hub', icon: LayoutDashboard },
     { id: 'classroom', label: 'Classrooms', icon: BookOpen },
-    { id: 'assignments', label: 'Grading Desk', icon: FileCheck },
-    { id: 'quizzes', label: 'Quiz Creator & AI', icon: Sparkles },
+    ...(import.meta.env.DEV
+      ? [
+          { id: 'assignments', label: 'Grading Desk', icon: FileCheck },
+          { id: 'quizzes', label: 'Quiz Creator & AI', icon: Sparkles },
+        ]
+      : []),
     { id: 'attendance', label: 'Attendance Register', icon: UserCheck },
     { id: 'progress', label: 'Student Analytics', icon: TrendingUp },
     { id: 'calendar', label: 'Academic Calendar', icon: Calendar },
@@ -57,12 +61,16 @@ export const Sidebar: React.FC = () => {
     { id: 'dashboard', label: 'Child Overview', icon: LayoutDashboard },
     { id: 'progress', label: 'AI Progress Digest', icon: TrendingUp },
     { id: 'assignments', label: 'Homework & Exams', icon: FileCheck },
-    {
-      id: 'parental-controls',
-      label: 'Parental Controls',
-      icon: ShieldAlert,
-      badge: activeChild.gradeLevel < 7 ? 'Grade < 7' : undefined,
-    },
+    ...(import.meta.env.DEV
+      ? [
+          {
+            id: 'parental-controls',
+            label: 'Parental Controls',
+            icon: ShieldAlert,
+            badge: activeChild.gradeLevel < 7 ? 'Grade < 7' : undefined,
+          },
+        ]
+      : []),
     { id: 'calendar', label: 'School Calendar', icon: Calendar },
     { id: 'messages', label: 'Teacher Messages', icon: MessageSquare },
   ];

@@ -68,16 +68,18 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
         </div>
 
         {/* Center: Search Bar */}
-        <div className="hidden md:flex flex-1 max-w-md relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7A7A72]" />
-          <input
-            type="text"
-            placeholder="Search for lessons, assignments, or teachers..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-1.5 text-sm bg-[#F9F7F2] border border-[#E5E1D8] rounded-full focus:outline-none focus:ring-2 focus:ring-[#4A6741]/40 text-[#2D2D2A] placeholder-[#7A7A72]"
-          />
-        </div>
+        {import.meta.env.DEV && (
+          <div className="hidden md:flex flex-1 max-w-md relative">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7A7A72]" />
+            <input
+              type="text"
+              placeholder="Search for lessons, assignments, or teachers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-1.5 text-sm bg-[#F9F7F2] border border-[#E5E1D8] rounded-full focus:outline-none focus:ring-2 focus:ring-[#4A6741]/40 text-[#2D2D2A] placeholder-[#7A7A72]"
+            />
+          </div>
+        )}
 
         {/* Right: Role Switcher, AI Tools, Child Selector, Notifications & Theme */}
         <div className="flex items-center gap-2.5">

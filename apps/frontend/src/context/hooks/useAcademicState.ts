@@ -126,17 +126,65 @@ export const useAcademicState = (currentUser: User) => {
     const existingIndex = submissions.findIndex(
       (s) => s.assignmentId === assignmentId && s.studentId === currentUser.id,
     );
+    const existing = existingIndex >= 0 ? submissions[existingIndex] : null;
+
+    // Check if late based on assignment due date
+    const targetAsg = assignments.find((a) => a.id === assignmentId);
+    let isLate = false;
+    const now = new Date();
+    if (targetAsg?.dueDate) {
+      const dueStr = `${targetAsg.dueDate}T${targetAsg.dueTime || '23:59'}:00`;
+      const dueParsed = new Date(dueStr);
+      if (!isNaN(dueParsed.getTime()) && now > dueParsed) {
+        isLate = true;
+      }
+    }
+
+    const previousHistory = existing?.history ? [...existing.history] : [];
+    if (existing && previousHistory.length === 0) {
+      previousHistory.push({
+        id: `${existing.id}-v1`,
+        version: 1,
+        submittedAt: existing.submittedAt || new Date().toISOString(),
+        fileUrl: existing.fileUrl,
+        fileName: existing.fileName,
+        responseText: existing.responseText,
+        status: existing.status,
+        grade: existing.grade,
+        feedback: existing.feedback,
+        isLate: existing.isLate || false,
+      });
+    }
+
+    const nextVersion = previousHistory.length > 0 ? previousHistory.length + 1 : 1;
+    const currentAttemptId = existing ? `${existing.id}-v${nextVersion}` : `sub-${Date.now()}-v1`;
+
+    const newHistoryItem = {
+      id: currentAttemptId,
+      version: nextVersion,
+      submittedAt: now.toISOString(),
+      fileUrl,
+      fileName,
+      responseText,
+      status: isLate ? ('late' as const) : ('submitted' as const),
+      isLate,
+    };
+
+    const updatedHistory = [newHistoryItem, ...previousHistory];
+
     const newSub: Submission = {
-      id: existingIndex >= 0 ? submissions[existingIndex].id : `sub-${Date.now()}`,
+      id: existing ? existing.id : `sub-${Date.now()}`,
       assignmentId,
       studentId: currentUser.id,
       studentName: currentUser.name,
       studentAvatar: currentUser.avatar,
-      submittedAt: new Date().toISOString(),
-      status: 'submitted',
+      submittedAt: now.toISOString(),
+      status: isLate ? 'late' : 'submitted',
       fileUrl,
       fileName,
       responseText,
+      isLate,
+      history: updatedHistory,
     };
 
     if (existingIndex >= 0) {

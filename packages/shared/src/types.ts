@@ -126,6 +126,19 @@ export interface Assignment {
   rubric?: string[];
 }
 
+export interface SubmissionHistoryItem {
+  id: string;
+  version: number;
+  submittedAt: string;
+  fileUrl?: string;
+  fileName?: string;
+  responseText?: string;
+  status: 'submitted' | 'graded' | 'late' | 'pending';
+  grade?: number;
+  feedback?: string;
+  isLate?: boolean;
+}
+
 export interface Submission {
   id: string;
   assignmentId: string;
@@ -140,6 +153,8 @@ export interface Submission {
   grade?: number;
   feedback?: string;
   annotated?: boolean;
+  isLate?: boolean;
+  history?: SubmissionHistoryItem[];
 }
 
 export interface QuizQuestion {

@@ -19,6 +19,7 @@ import { AssignmentDetailModal } from './components/student/AssignmentDetailModa
 import { QuizRunnerModal } from './components/student/QuizRunnerModal';
 import { QuizBuilderModal } from './components/teacher/QuizBuilderModal';
 import { ParentalControlsModal } from './components/parent/ParentalControlsModal';
+import { InDevelopmentView } from './components/common/InDevelopmentView';
 
 const AppContent: React.FC = () => {
   const { currentUser, activeView } = useApp();
@@ -61,12 +62,21 @@ const AppContent: React.FC = () => {
         );
 
       case 'assignments':
+        if (currentUser.role === 'teacher') {
+          return <InDevelopmentView title="Grading Desk" />;
+        }
         return (
           <StudentDashboard
             onOpenAssignmentModal={(id) => setActiveAssignmentId(id)}
             onOpenQuizModal={(id) => setActiveQuizId(id)}
           />
         );
+
+      case 'quizzes':
+        return <InDevelopmentView title="Quiz Creator & AI" />;
+
+      case 'parental-controls':
+        return <InDevelopmentView title="Parental Controls" />;
 
       case 'progress':
         return <ProgressTrackerView />;

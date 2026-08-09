@@ -10,6 +10,12 @@ import {
   Paperclip,
   Download,
   AlertCircle,
+  History,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  AlertTriangle,
+  RotateCcw,
 } from 'lucide-react';
 
 interface AssignmentDetailModalProps {
@@ -29,6 +35,7 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
   const [aiHelperQuery, setAiHelperQuery] = useState('');
   const [aiHelperResult, setAiHelperResult] = useState<string | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   if (!assignmentId) return null;
 
@@ -41,6 +48,27 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
 
   const studentGrade = currentUser.gradeLevel ?? 8;
   const isBelowClass9 = studentGrade < 9;
+
+  // Check deadline
+  const now = new Date();
+  const dueDateTimeStr = `${assignment.dueDate}T${assignment.dueTime || '23:59'}:00`;
+  const dueDateObj = new Date(dueDateTimeStr);
+  const isPastDeadline = !isNaN(dueDateObj.getTime()) && now > dueDateObj;
+
+  const historyItems = existingSubmission?.history || (existingSubmission ? [
+    {
+      id: `${existingSubmission.id}-v1`,
+      version: 1,
+      submittedAt: existingSubmission.submittedAt,
+      fileUrl: existingSubmission.fileUrl,
+      fileName: existingSubmission.fileName,
+      responseText: existingSubmission.responseText,
+      status: existingSubmission.status,
+      grade: existingSubmission.grade,
+      feedback: existingSubmission.feedback,
+      isLate: existingSubmission.isLate,
+    }
+  ] : []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +123,7 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-white/80 hover:text-white rounded-full hover:bg-white/10"
+            className="p-1.5 text-white/80 hover:text-white rounded-full hover:bg-white/10 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -105,7 +133,7 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
         <div className="border-b border-[#EDEAE2] px-5 flex gap-6 text-xs font-bold bg-[#F9F7F2]">
           <button
             onClick={() => setActiveTab('submit')}
-            className={`py-3 border-b-2 transition-all ${
+            className={`py-3 border-b-2 transition-all cursor-pointer ${
               activeTab === 'submit'
                 ? 'border-[#4A6741] text-[#4A6741] font-extrabold'
                 : 'border-transparent text-[#7A7A72]'
@@ -115,7 +143,7 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('ai-helper')}
-            className={`py-3 border-b-2 transition-all flex items-center gap-1.5 ${
+            className={`py-3 border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'ai-helper'
                 ? 'border-[#E88D67] text-[#E88D67] font-extrabold'
                 : 'border-transparent text-[#7A7A72]'
@@ -132,41 +160,82 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
             <>
               {/* Instructions */}
               <div className="p-4 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] space-y-2">
-                <h4 className="font-bold text-[#2D2D2A] text-xs font-serif">
-                  Teacher Instructions:
-                </h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-[#2D2D2A] text-xs font-serif">
+                    Teacher Instructions:
+                  </h4>
+                  <div className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 ${
+                    isPastDeadline
+                      ? 'bg-[#FFF3EB] text-[#D87B55] border border-[#E88D67]/40'
+                      : 'bg-[#EBF1E8] text-[#4A6741]'
+                  }`}>
+                    {isPastDeadline ? <AlertTriangle className="w-3 h-3 text-[#D87B55]" /> : <Clock className="w-3 h-3 text-[#4A6741]" />}
+                    <span>Due: {assignment.dueDate} at {assignment.dueTime}</span>
+                  </div>
+                </div>
                 <p className="text-[#2D2D2A] leading-relaxed font-sans">
                   {assignment.instructions}
                 </p>
-                <div className="pt-2 text-[10px] text-[#E88D67] font-bold">
-                  Due Date: {assignment.dueDate} at {assignment.dueTime}
-                </div>
               </div>
 
-              {/* Status Banner */}
+              {/* Status & Deadline Banner */}
+              {isPastDeadline && (
+                <div className="p-3.5 rounded-2xl bg-[#FFF3EB] border border-[#E88D67]/40 flex items-start gap-2.5 text-[#D87B55]">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-[#D87B55]" />
+                  <div>
+                    <p className="font-bold text-xs">Past Due Date (Late Submission Policy)</p>
+                    <p className="text-[11px] opacity-90 mt-0.5">
+                      The official deadline has passed ({assignment.dueDate} at {assignment.dueTime}). Any submission or resubmission made now will be flagged as a <strong>Late Submission</strong>.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Submission Status & Feedback */}
               {existingSubmission ? (
                 <div
-                  className={`p-4 rounded-2xl border space-y-2 ${
+                  className={`p-4 rounded-2xl border space-y-2.5 ${
                     existingSubmission.status === 'graded'
                       ? 'bg-[#EBF1E8] border-[#88A070]/40'
-                      : 'bg-[#F9F7F2] border-[#EDEAE2]'
+                      : existingSubmission.isLate || existingSubmission.status === 'late'
+                        ? 'bg-[#FFF3EB] border-[#E88D67]/40'
+                        : 'bg-[#F9F7F2] border-[#EDEAE2]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#4A6741] flex items-center gap-1.5 text-xs">
-                      <CheckCircle className="w-4 h-4 text-[#4A6741]" />
+                    <span className="font-bold text-[#2D2D2A] flex items-center gap-1.5 text-xs">
+                      {existingSubmission.status === 'graded' ? (
+                        <CheckCircle className="w-4 h-4 text-[#4A6741]" />
+                      ) : existingSubmission.isLate || existingSubmission.status === 'late' ? (
+                        <AlertTriangle className="w-4 h-4 text-[#D87B55]" />
+                      ) : (
+                        <CheckCircle className="w-4 h-4 text-[#4A6741]" />
+                      )}
                       Status:{' '}
                       {existingSubmission.status === 'graded'
-                        ? `Graded (${existingSubmission.grade}/${assignment.totalPoints})`
-                        : 'Submitted & Awaiting Grading'}
+                        ? `Graded (${existingSubmission.grade}/${assignment.totalPoints} Marks)`
+                        : existingSubmission.isLate || existingSubmission.status === 'late'
+                          ? 'Submitted (Late Submission)'
+                          : 'Submitted & Awaiting Grading'}
                     </span>
-                    <span className="text-[10px] text-[#7A7A72]">
-                      Submitted at {new Date(existingSubmission.submittedAt).toLocaleTimeString()}
+
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                      existingSubmission.isLate || existingSubmission.status === 'late'
+                        ? 'bg-[#E88D67] text-white'
+                        : 'bg-[#4A6741] text-white'
+                    }`}>
+                      {existingSubmission.isLate || existingSubmission.status === 'late' ? 'Late' : 'On Time'}
                     </span>
                   </div>
 
+                  {existingSubmission.submittedAt && (
+                    <p className="text-[10px] text-[#7A7A72]">
+                      Latest turn-in on {new Date(existingSubmission.submittedAt).toLocaleString()}
+                    </p>
+                  )}
+
                   {existingSubmission.feedback && (
-                    <div className="pt-2 border-t border-[#88A070]/30">
+                    <div className="pt-2 border-t border-[#EDEAE2]">
                       <p className="font-bold text-[#2D2D2A] text-[11px]">Teacher Feedback:</p>
                       <p className="text-[#2D2D2A] italic mt-0.5">
                         "{existingSubmission.feedback}"
@@ -176,11 +245,103 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                 </div>
               ) : null}
 
+              {/* Collapsible Submission History Panel */}
+              {historyItems.length > 0 && (
+                <div className="rounded-2xl border border-[#EDEAE2] overflow-hidden bg-[#F9F7F2]">
+                  <button
+                    type="button"
+                    onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+                    className="w-full px-4 py-3 bg-[#F9F7F2] hover:bg-[#F0EDE5] flex items-center justify-between font-bold text-xs text-[#2D2D2A] transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <History className="w-4 h-4 text-[#4A6741]" />
+                      <span>Submission & Resubmission History</span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#EBF1E8] dark:bg-[#233421] text-[#4A6741] dark:text-[#88A070] text-[10px] font-extrabold border border-[#88A070]/30">
+                        {historyItems.length} {historyItems.length === 1 ? 'Attempt' : 'Attempts'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-[#7A7A72] text-[11px]">
+                      <span>{isHistoryOpen ? 'Hide History' : 'View History'}</span>
+                      {isHistoryOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </div>
+                  </button>
+
+                  {isHistoryOpen && (
+                    <div className="p-3.5 border-t border-[#EDEAE2] bg-white space-y-3 animate-in fade-in duration-200">
+                      {historyItems.map((item, idx) => (
+                        <div
+                          key={item.id || idx}
+                          className="p-3 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-2"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#4A6741] text-white">
+                                v{item.version || historyItems.length - idx} {idx === 0 ? '(Latest)' : ''}
+                              </span>
+                              <span
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                                  item.isLate || item.status === 'late'
+                                    ? 'bg-[#FFF3EB] text-[#D87B55] border-[#E88D67]/30'
+                                    : 'bg-[#EBF1E8] text-[#4A6741] border-[#88A070]/30'
+                                }`}
+                              >
+                                {item.isLate || item.status === 'late' ? 'Late Submission' : 'On Time'}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1 text-[10px] text-[#7A7A72]">
+                              <Clock className="w-3 h-3" />
+                              <span>{new Date(item.submittedAt).toLocaleString()}</span>
+                            </div>
+                          </div>
+
+                          {item.fileName && (
+                            <div className="flex items-center gap-2 pt-1 text-xs">
+                              <Paperclip className="w-3.5 h-3.5 text-[#4A6741]" />
+                              <span className="font-bold text-[#2D2D2A] truncate max-w-xs">
+                                {item.fileName}
+                              </span>
+                            </div>
+                          )}
+
+                          {item.responseText && (
+                            <p className="text-[#7A7A72] text-[11px] italic bg-white p-2 rounded-xl border border-[#EDEAE2]">
+                              "{item.responseText}"
+                            </p>
+                          )}
+
+                          {item.status === 'graded' && item.grade !== undefined && (
+                            <div className="pt-2 border-t border-[#EDEAE2] flex items-center justify-between text-[11px]">
+                              <span className="font-bold text-[#4A6741]">
+                                Score: {item.grade}/{assignment.totalPoints} Marks
+                              </span>
+                              {item.feedback && (
+                                <span className="text-[#7A7A72] italic truncate max-w-[220px]">
+                                  "{item.feedback}"
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Submission Form */}
               <form onSubmit={handleSubmit} className="space-y-3 pt-2">
-                <h4 className="font-bold text-[#2D2D2A] text-xs font-serif">
-                  {existingSubmission ? 'Resubmit Homework' : 'Homework Submission'}
-                </h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-[#2D2D2A] text-xs font-serif flex items-center gap-1.5">
+                    {existingSubmission ? <RotateCcw className="w-3.5 h-3.5 text-[#E88D67]" /> : <FileText className="w-3.5 h-3.5 text-[#4A6741]" />}
+                    <span>{existingSubmission ? 'Resubmit Homework (New Version)' : 'Homework Submission'}</span>
+                  </h4>
+                  {existingSubmission && (
+                    <span className="text-[10px] text-[#7A7A72] font-semibold">
+                      Resubmitting creates a new version in your submission history
+                    </span>
+                  )}
+                </div>
 
                 {isBelowClass9 ? (
                   <div className="p-3.5 rounded-2xl bg-[#EBF1E8] border border-[#88A070]/40 flex items-start gap-2.5 text-[#2D2D2A]">
@@ -191,7 +352,7 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                       </p>
                       <p className="text-[11px] text-[#7A7A72] mt-0.5">
                         Students below Class 9 do not need to upload files. Simply click{' '}
-                        <strong>{existingSubmission ? 'Resubmit' : 'Submit Homework'}</strong> below
+                        <strong>{existingSubmission ? 'Submit Resubmission' : 'Submit Homework'}</strong> below
                         to turn in your assignment directly!
                       </p>
                     </div>
@@ -251,12 +412,14 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                     type="submit"
                     className="px-5 py-2 rounded-xl bg-[#4A6741] text-white font-bold hover:bg-[#3D5535] transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
                   >
-                    {isBelowClass9 ? (
+                    {existingSubmission ? (
+                      <RotateCcw className="w-4 h-4" />
+                    ) : isBelowClass9 ? (
                       <CheckCircle className="w-4 h-4" />
                     ) : (
                       <Upload className="w-4 h-4" />
                     )}
-                    <span>{existingSubmission ? 'Resubmit Homework' : 'Submit Homework'}</span>
+                    <span>{existingSubmission ? 'Submit Resubmission' : 'Submit Homework'}</span>
                   </button>
                 </div>
               </form>

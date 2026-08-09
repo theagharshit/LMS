@@ -52,6 +52,13 @@
       color 0.2s ease;
   }
 
+  button,
+  [role='button'],
+  select,
+  a {
+    cursor: pointer;
+  }
+
   h1,
   h2,
   h3,
@@ -123,6 +130,11 @@ html.dark .bg-\[\#F0EDE5\]\/95 {
   background-color: #192218 !important;
 }
 
+html.dark .bg-\[\#E5E1D8\],
+html.dark .bg-\[\#E5E1D8\]\/40 {
+  background-color: #283827 !important;
+}
+
 html.dark .bg-white {
   background-color: #1d281c !important;
 }
@@ -133,6 +145,10 @@ html.dark .bg-\[\#EBF1E8\] {
 
 html.dark .bg-\[\#FDEEDC\] {
   background-color: #38251c !important;
+}
+
+html.dark .bg-\[\#FFF3EB\] {
+  background-color: #352119 !important;
 }
 
 html.dark .bg-\[\#FFF9F2\],
