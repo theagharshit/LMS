@@ -21,6 +21,8 @@ import {
   BadgeDefinition,
   StudentBadge,
   QuizSubmission,
+  AdminAuditLog,
+  SchoolAnnouncement,
 } from './types';
 
 export const MOCK_BADGE_DEFINITIONS: BadgeDefinition[] = [
@@ -1450,5 +1452,53 @@ export const MOCK_SUBJECT_PERFORMANCE: SubjectPerformance[] = [
     totalAssignments: 8,
     quizzesScoreAvg: 90,
     teacherRemark: 'Great understanding of map work and local history.',
+  },
+];
+
+export const MOCK_ADMIN_AUDIT_LOGS: AdminAuditLog[] = [
+  {
+    id: 'log-1',
+    action: 'Student Profile Enrolled',
+    category: 'student',
+    performedBy: 'Principal K.P. Sharma',
+    details: 'Enrolled student Aarav Sharma into Grade 8 Sec A (Roll No. 12).',
+    timestamp: '2026-08-08T09:30:00Z',
+  },
+  {
+    id: 'log-2',
+    action: 'Parent-Child Link Updated',
+    category: 'parent',
+    performedBy: 'Principal K.P. Sharma',
+    details: 'Linked student Sunita Sharma (Grade 5B) to parent Bina Sharma.',
+    timestamp: '2026-08-08T11:15:00Z',
+  },
+  {
+    id: 'log-3',
+    action: 'Manual Badge Awarded',
+    category: 'badge',
+    performedBy: 'Principal K.P. Sharma',
+    details: 'Awarded "Helping Hand" badge to Aarav Sharma with Principal commendation.',
+    timestamp: '2026-08-09T08:00:00Z',
+  },
+];
+
+export const MOCK_ANNOUNCEMENTS: SchoolAnnouncement[] = [
+  {
+    id: 'ann-1',
+    title: 'Upcoming Parent-Teacher Meeting (PTM) & Mid-Term Review',
+    content: 'All parents are cordially invited for the First Term PTM on August 15th from 10:00 AM to 2:00 PM.',
+    priority: 'urgent',
+    author: 'Principal K.P. Sharma',
+    createdAt: '2026-08-07T08:00:00Z',
+    targetAudience: 'all',
+  },
+  {
+    id: 'ann-2',
+    title: 'Grade 8 Science Lab Safety Protocol Reminder',
+    content: 'Students must bring lab safety goggles for all Friday chemistry practical sessions.',
+    priority: 'normal',
+    author: 'Admin Office',
+    createdAt: '2026-08-06T10:00:00Z',
+    targetAudience: 'students',
   },
 ];
