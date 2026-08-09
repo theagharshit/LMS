@@ -15,6 +15,7 @@
     "prod:backend": "npm run prod -w lms-backend",
     "prod:frontend": "npm run prod -w lms-frontend",
     "build": "npm run build -ws",
+    "seed": "npm run seed -w lms-backend",
     "lint": "tsc -b apps/frontend apps/backend packages/shared",
     "format": "prettier --write \"apps/**/*.{ts,tsx,css}\" \"packages/**/*.{ts,tsx}\"",
     "test": "npm run test --workspaces --if-present"
