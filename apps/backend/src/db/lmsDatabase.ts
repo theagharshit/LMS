@@ -126,9 +126,7 @@ export class LMSDatabaseService {
     return assignmentService.getAssignments();
   }
 
-  public addAssignment(
-    assignment: Omit<Assignment, 'id' | 'createdAt'>,
-  ): Promise<Assignment> {
+  public addAssignment(assignment: Omit<Assignment, 'id' | 'createdAt'>): Promise<Assignment> {
     return assignmentService.addAssignment(assignment);
   }
 
@@ -192,9 +190,7 @@ export class LMSDatabaseService {
     return communicationService.getDirectMessages();
   }
 
-  public addDirectMessage(
-    msg: Omit<DirectMessage, 'id' | 'createdAt'>,
-  ): Promise<DirectMessage> {
+  public addDirectMessage(msg: Omit<DirectMessage, 'id' | 'createdAt'>): Promise<DirectMessage> {
     return communicationService.addDirectMessage(msg);
   }
 
@@ -218,9 +214,7 @@ export class LMSDatabaseService {
     return locationService.getStudentLocations();
   }
 
-  public getStudentLocationById(
-    studentId: string,
-  ): Promise<StudentLocationRecord | undefined> {
+  public getStudentLocationById(studentId: string): Promise<StudentLocationRecord | undefined> {
     return locationService.getStudentLocationById(studentId);
   }
 

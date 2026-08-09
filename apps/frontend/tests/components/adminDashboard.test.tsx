@@ -12,9 +12,7 @@ describe('AdminDashboard Component Suite (15 Tests)', () => {
       </AppProvider>,
     );
     expect(screen.getByText(/Administrative Management Hub/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/Complete institutional control over students/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Complete institutional control over students/i)).toBeInTheDocument();
   });
 
   it('2. renders sub-tab navigation items', () => {
@@ -58,9 +56,7 @@ describe('AdminDashboard Component Suite (15 Tests)', () => {
       </AppProvider>,
     );
     fireEvent.click(screen.getByText(/Badges & Awards/i));
-    expect(
-      screen.getByPlaceholderText(/Awarded for exemplary discipline/i),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Awarded for exemplary discipline/i)).toBeInTheDocument();
   });
 
   it('6. Award Badge button is disabled when student or badge is not selected', () => {

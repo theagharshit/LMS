@@ -29,12 +29,10 @@ describe('Admin REST API Integration Test Suite', () => {
 
   it('2. PUT /api/db/students/:id updates student record', async () => {
     if (!createdStudentId) return;
-    const res = await request(app)
-      .put(`/api/db/students/${createdStudentId}`)
-      .send({
-        name: 'API Updated Student Name',
-        section: 'B',
-      });
+    const res = await request(app).put(`/api/db/students/${createdStudentId}`).send({
+      name: 'API Updated Student Name',
+      section: 'B',
+    });
 
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('success');
@@ -91,15 +89,13 @@ describe('Admin REST API Integration Test Suite', () => {
   });
 
   it('8. POST /api/db/badge-definitions creates new badge definition', async () => {
-    const res = await request(app)
-      .post('/api/db/badge-definitions')
-      .send({
-        title: 'API Test Badge',
-        description: 'Testing REST API endpoint',
-        icon: '🏆',
-        category: 'academic',
-        isAutomatic: false,
-      });
+    const res = await request(app).post('/api/db/badge-definitions').send({
+      title: 'API Test Badge',
+      description: 'Testing REST API endpoint',
+      icon: '🏆',
+      category: 'academic',
+      isAutomatic: false,
+    });
 
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('success');

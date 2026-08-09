@@ -52,7 +52,9 @@ describe('Student Interactive Functional Workflows (tests/functional/student_wor
     );
     await user.type(notesTextarea, 'Solved Q1 to Q5 on my notebook.');
 
-    const resubmitButton = screen.getByRole('button', { name: /Submit Resubmission|Submit Homework|Resubmit/i });
+    const resubmitButton = screen.getByRole('button', {
+      name: /Submit Resubmission|Submit Homework|Resubmit/i,
+    });
     await user.click(resubmitButton);
   });
 

@@ -61,7 +61,12 @@ export class QuizService {
 
     // Auto-trigger: Quiz Master badge if score is 100%
     if (submission.score === submission.totalPoints && submission.totalPoints > 0) {
-      await badgeService.assignBadge(submission.studentId, 'bdg-def-2', 'System', 'Scored 100% on a quiz');
+      await badgeService.assignBadge(
+        submission.studentId,
+        'bdg-def-2',
+        'System',
+        'Scored 100% on a quiz',
+      );
     }
 
     return {

@@ -69,7 +69,9 @@ export class UserService {
         name: data.name,
         email: data.email,
         role: 'student',
-        avatar: data.avatar || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+        avatar:
+          data.avatar ||
+          'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
         schoolName: data.schoolName || 'Everest International Academy',
         gradeLevel: data.gradeLevel || 8,
         section: data.section || 'A',
@@ -131,7 +133,9 @@ export class UserService {
         name: data.name,
         email: data.email,
         role: 'teacher',
-        avatar: data.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+        avatar:
+          data.avatar ||
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
         schoolName: data.schoolName || 'Everest International Academy',
       },
     });
@@ -161,7 +165,9 @@ export class UserService {
         name: data.name,
         email: data.email,
         role: 'parent',
-        avatar: data.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+        avatar:
+          data.avatar ||
+          'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
         schoolName: data.schoolName || 'Everest International Academy',
       },
     });
