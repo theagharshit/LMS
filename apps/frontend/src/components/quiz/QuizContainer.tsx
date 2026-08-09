@@ -21,6 +21,7 @@ interface QuizContainerProps {
   questions: Question[];
   initialAnswers?: Record<string, string>;
   isAlreadySubmitted?: boolean;
+  revealMarksMode?: 'immediate' | 'later';
   onClose: () => void;
   onSubmitAnswers: (answers: Record<string, string>, score: number, totalPoints: number) => void;
 }
@@ -35,6 +36,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
   questions,
   initialAnswers = {},
   isAlreadySubmitted = false,
+  revealMarksMode = 'immediate',
   onClose,
   onSubmitAnswers,
 }) => {
@@ -84,6 +86,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
         <QuizResultView
           title={title}
           result={resultSummary}
+          revealMarksMode={revealMarksMode}
           onReview={actions.startReview}
           onClose={onClose}
         />

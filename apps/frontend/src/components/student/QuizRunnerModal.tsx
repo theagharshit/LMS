@@ -51,6 +51,7 @@ export const QuizRunnerModal: React.FC<QuizRunnerModalProps> = ({ quizId, onClos
         questions={questions}
         initialAnswers={existingSubmission?.answers || {}}
         isAlreadySubmitted={Boolean(existingSubmission)}
+        revealMarksMode={quiz.revealMarksMode}
         onClose={onClose}
         onSubmitAnswers={handleSubmit}
       />

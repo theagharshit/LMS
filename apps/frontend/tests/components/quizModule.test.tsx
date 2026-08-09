@@ -237,4 +237,25 @@ describe('LMS Modular Quiz System Suite', () => {
       screen.getByText(/A Queue provides First-In, First-Out \(FIFO\) ordering\./i),
     ).toBeInTheDocument();
   });
+
+  it('12. Hides instant score and answers when revealMarksMode is set to later', () => {
+    render(
+      <QuizContainer
+        quizId="quiz-demo-1"
+        title="Data Structures Assessment"
+        subject="Computer Science"
+        classroomName="Grade 9 CS"
+        durationMinutes={15}
+        questions={mockQuestions}
+        isAlreadySubmitted={true}
+        revealMarksMode="later"
+        onClose={vi.fn()}
+        onSubmitAnswers={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(/Attempt Submitted!/i)).toBeInTheDocument();
+    expect(screen.getByText(/Scores & Answers Pending Teacher Release/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Review Answers & Solutions/i)).not.toBeInTheDocument();
+  });
 });

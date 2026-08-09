@@ -9,17 +9,20 @@ export class QuizService {
     });
     return quizzes.map((q) => ({
       ...q,
+      revealMarksMode: (q.revealMarksMode as any) || 'immediate',
       questions: q.questions.map((qt) => ({ ...qt, type: qt.type as any })),
     }));
   }
 
   public async addQuiz(quiz: Omit<Quiz, 'id' | 'createdAt'>): Promise<Quiz> {
+    const { questions, ...quizData } = quiz;
     const created = await prisma.quiz.create({
       data: {
-        ...quiz,
+        ...quizData,
+        revealMarksMode: quiz.revealMarksMode || 'immediate',
         createdAt: new Date().toISOString(),
         questions: {
-          create: quiz.questions.map((q) => ({
+          create: questions.map((q) => ({
             text: q.text,
             type: q.type,
             options: q.options || [],
@@ -33,6 +36,7 @@ export class QuizService {
     });
     return {
       ...created,
+      revealMarksMode: (created.revealMarksMode as any) || 'immediate',
       questions: created.questions.map((qt) => ({ ...qt, type: qt.type as any })),
     };
   }

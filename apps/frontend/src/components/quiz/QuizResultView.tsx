@@ -1,10 +1,20 @@
 import React from 'react';
-import { Award, CheckCircle2, XCircle, AlertCircle, Eye, X } from 'lucide-react';
+import {
+  Award,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Eye,
+  X,
+  Clock,
+  ShieldCheck,
+} from 'lucide-react';
 import { QuizResultSummary } from './types/quizTypes';
 
 interface QuizResultViewProps {
   title: string;
   result: QuizResultSummary;
+  revealMarksMode?: 'immediate' | 'later';
   onReview: () => void;
   onClose: () => void;
 }
@@ -12,6 +22,7 @@ interface QuizResultViewProps {
 export const QuizResultView: React.FC<QuizResultViewProps> = ({
   title,
   result,
+  revealMarksMode = 'immediate',
   onReview,
   onClose,
 }) => {
@@ -43,6 +54,43 @@ export const QuizResultView: React.FC<QuizResultViewProps> = ({
   };
 
   const grade = getGrade(result.percentage);
+
+  if (revealMarksMode === 'later') {
+    return (
+      <div className="py-8 px-6 max-w-xl mx-auto space-y-6 text-center text-slate-800 dark:text-slate-200">
+        <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center mx-auto text-3xl shadow-lg shadow-purple-500/20">
+          <ShieldCheck className="w-10 h-10" />
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white">Attempt Submitted!</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+            Your responses for <strong>{title}</strong> have been recorded in the database. Your
+            teacher will review and release grades & solutions later.
+          </p>
+        </div>
+
+        <div className="p-5 rounded-3xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 space-y-2 text-left text-xs">
+          <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-extrabold text-xs">
+            <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>Scores & Answers Pending Teacher Release</span>
+          </div>
+          <p className="text-amber-800 dark:text-amber-300 text-[11px] leading-relaxed">
+            This quiz is configured to withhold scores immediately. Check back in your LMS Student
+            Dashboard once your teacher publishes final grades!
+          </p>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="w-full py-3.5 rounded-2xl bg-purple-600 text-white font-extrabold text-xs hover:bg-purple-700 transition-colors shadow-md flex items-center justify-center gap-1.5"
+        >
+          <X className="w-4 h-4" />
+          Close & Back to Dashboard
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="py-8 px-6 max-w-xl mx-auto space-y-6 text-center text-slate-800 dark:text-slate-200">
