@@ -21,6 +21,8 @@ import {
   TermProgress,
   StudentActivity,
   BadgeDefinition,
+  AdminAuditLog,
+  SchoolAnnouncement,
 } from '@lms/shared';
 
 export interface AppContextType {
@@ -134,4 +136,28 @@ export interface AppContextType {
   }[];
   markNotificationRead: (id: string) => void;
   unreadCount: number;
+
+  // Admin Management Portal API & State
+  adminAuditLogs: AdminAuditLog[];
+  schoolAnnouncements: SchoolAnnouncement[];
+  addStudentProfile: (
+    student: Omit<
+      StudentProfile,
+      'id' | 'attendancePercentage' | 'streakDays' | 'xpPoints' | 'badges'
+    >,
+  ) => void;
+  updateStudentProfile: (id: string, updates: Partial<StudentProfile>) => void;
+  deleteStudentProfile: (id: string) => void;
+  addTeacherProfile: (teacher: Omit<User, 'id'>) => void;
+  updateTeacherProfile: (id: string, updates: Partial<User>) => void;
+  deleteTeacherProfile: (id: string) => void;
+  addParentProfile: (parent: Omit<User, 'id'>) => void;
+  updateParentChildren: (parentId: string, childrenIds: string[]) => void;
+  deleteParentProfile: (id: string) => void;
+  addBadgeDefinition: (badge: Omit<BadgeDefinition, 'id'>) => void;
+  deleteBadgeDefinition: (id: string) => void;
+  deleteClassroom: (id: string) => void;
+  addAnnouncement: (announcement: Omit<SchoolAnnouncement, 'id' | 'createdAt'>) => void;
+  deleteAnnouncement: (id: string) => void;
+  addAuditLog: (action: string, category: AdminAuditLog['category'], details: string) => void;
 }

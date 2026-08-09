@@ -14,6 +14,7 @@ export interface User {
   gradeLevel?: number; // e.g. 8 for Grade 8
   section?: string; // e.g. 'A'
   rollNumber?: number;
+  isArchived?: boolean;
   // Parent specific
   childrenIds?: string[];
   // Teacher specific
@@ -321,4 +322,23 @@ export interface StudentActivity {
   position: string;
   date: string;
   description: string;
+}
+
+export interface AdminAuditLog {
+  id: string;
+  action: string;
+  category: 'student' | 'teacher' | 'parent' | 'classroom' | 'badge' | 'broadcast' | 'system';
+  performedBy: string;
+  details: string;
+  timestamp: string;
+}
+
+export interface SchoolAnnouncement {
+  id: string;
+  title: string;
+  content: string;
+  priority: 'urgent' | 'high' | 'normal';
+  author: string;
+  createdAt: string;
+  targetAudience: 'all' | 'students' | 'teachers' | 'parents';
 }

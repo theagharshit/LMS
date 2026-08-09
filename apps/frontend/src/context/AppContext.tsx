@@ -1,9 +1,8 @@
 /**
- * Sikshya LMS Nepal - Main Application Context State
+ * Sikshya LMS Nepal - Main Application Context State (Modularized Orchestrator)
  */
 
-import React, { createContext, useContext, useEffect } from 'react';
-import { User } from '@lms/shared';
+import React, { createContext, useContext } from 'react';
 import { apiFetch } from '../utils/apiFetch';
 import { AppContextType } from './AppContextType';
 
@@ -12,6 +11,8 @@ import { useUIState } from './hooks/useUIState';
 import { useAcademicState } from './hooks/useAcademicState';
 import { useTrackingState } from './hooks/useTrackingState';
 import { useCommunicationState } from './hooks/useCommunicationState';
+import { useAdminState } from './hooks/useAdminState';
+import { useSyncState } from './hooks/useSyncState';
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -22,7 +23,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const trackingState = useTrackingState(authState.currentUser);
   const communicationState = useCommunicationState(authState.currentUser);
 
-  // Define cross-domain functions
+  const adminState = useAdminState(
+    authState.currentUser,
+    authState.setStudentProfiles,
+    authState.setAllUsers,
+    academicState.setBadgeDefinitions,
+    academicState.setClassrooms,
+    authState.studentProfiles,
+    authState.allUsers,
+    academicState.badgeDefinitions,
+    academicState.classrooms,
+  );
+
+  useSyncState(
+    authState.currentUser,
+    authState.setCurrentUser,
+    authState.setAllUsers,
+    authState.setStudentProfiles,
+    academicState.setBadgeDefinitions,
+    academicState.setClassrooms,
+    academicState.setStreamPosts,
+    academicState.setAssignments,
+    academicState.setSubmissions,
+    academicState.setQuizzes,
+    academicState.setQuizSubmissions,
+    trackingState.setAttendanceRecords,
+    trackingState.setParentControls,
+    trackingState.setStudentLocations,
+    communicationState.setMessages,
+    academicState.setTermProgress,
+    academicState.setStudentActivities,
+    academicState.setSubjectPerformances,
+  );
+
   const switchUser = (userId: string) => {
     const target = authState.allUsers.find((u) => u.id === userId);
     if (target) {
@@ -45,42 +78,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     return false;
   };
-
-  // Fetch live state from PostgreSQL database on mount
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    apiFetch('/api/db/state')
-      .then((res) => (res && res.ok ? res.json().catch(() => null) : null))
-      .then((data) => {
-        if (data && data.status === 'success') {
-          if (data.users?.length) {
-            authState.setAllUsers(data.users);
-            const updatedCurrent = data.users.find((u: User) => u.id === authState.currentUser.id);
-            if (updatedCurrent) authState.setCurrentUser(updatedCurrent);
-          }
-          if (data.studentProfiles) authState.setStudentProfiles(data.studentProfiles);
-          if (data.badgeDefinitions) academicState.setBadgeDefinitions(data.badgeDefinitions);
-          if (data.classrooms) academicState.setClassrooms(data.classrooms);
-          if (data.streamPosts) academicState.setStreamPosts(data.streamPosts);
-          if (data.assignments) academicState.setAssignments(data.assignments);
-          if (data.submissions) academicState.setSubmissions(data.submissions);
-          if (data.quizzes) academicState.setQuizzes(data.quizzes);
-          if (data.quizSubmissions) academicState.setQuizSubmissions(data.quizSubmissions);
-          if (data.attendance) trackingState.setAttendanceRecords(data.attendance);
-          if (data.parentControls) trackingState.setParentControls(data.parentControls);
-          if (data.studentLocations) trackingState.setStudentLocations(data.studentLocations);
-          if (data.messages) communicationState.setMessages(data.messages);
-          if (data.termProgress) academicState.setTermProgress(data.termProgress);
-          if (data.studentActivities) academicState.setStudentActivities(data.studentActivities);
-          if (data.subjectPerformances)
-            academicState.setSubjectPerformances(data.subjectPerformances);
-        }
-      })
-      .catch((err) => {
-        console.error('[AppContext] Failed to load DB state:', err);
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const assignBadge = async (
     studentProfileId: string,
@@ -113,6 +110,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return p;
           });
           authState.setStudentProfiles(updatedProfiles);
+          adminState.addAuditLog(
+            'Awarded Badge',
+            'badge',
+            `Awarded badge ID ${badgeDefinitionId} to student ID ${studentProfileId}.`,
+          );
         }
       }
     } catch (err) {
@@ -185,6 +187,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     notifications: communicationState.notifications,
     markNotificationRead: communicationState.markNotificationRead,
     unreadCount: communicationState.unreadCount,
+
+    // Admin State
+    adminAuditLogs: adminState.adminAuditLogs,
+    schoolAnnouncements: adminState.schoolAnnouncements,
+    addStudentProfile: adminState.addStudentProfile,
+    updateStudentProfile: adminState.updateStudentProfile,
+    deleteStudentProfile: adminState.deleteStudentProfile,
+    addTeacherProfile: adminState.addTeacherProfile,
+    updateTeacherProfile: adminState.updateTeacherProfile,
+    deleteTeacherProfile: adminState.deleteTeacherProfile,
+    addParentProfile: adminState.addParentProfile,
+    updateParentChildren: adminState.updateParentChildren,
+    deleteParentProfile: adminState.deleteParentProfile,
+    addBadgeDefinition: adminState.addBadgeDefinition,
+    deleteBadgeDefinition: adminState.deleteBadgeDefinition,
+    deleteClassroom: adminState.deleteClassroom,
+    addAnnouncement: adminState.addAnnouncement,
+    deleteAnnouncement: adminState.deleteAnnouncement,
+    addAuditLog: adminState.addAuditLog,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

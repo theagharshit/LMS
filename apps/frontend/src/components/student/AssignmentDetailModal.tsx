@@ -55,20 +55,24 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
   const dueDateObj = new Date(dueDateTimeStr);
   const isPastDeadline = !isNaN(dueDateObj.getTime()) && now > dueDateObj;
 
-  const historyItems = existingSubmission?.history || (existingSubmission ? [
-    {
-      id: `${existingSubmission.id}-v1`,
-      version: 1,
-      submittedAt: existingSubmission.submittedAt,
-      fileUrl: existingSubmission.fileUrl,
-      fileName: existingSubmission.fileName,
-      responseText: existingSubmission.responseText,
-      status: existingSubmission.status,
-      grade: existingSubmission.grade,
-      feedback: existingSubmission.feedback,
-      isLate: existingSubmission.isLate,
-    }
-  ] : []);
+  const historyItems =
+    existingSubmission?.history ||
+    (existingSubmission
+      ? [
+          {
+            id: `${existingSubmission.id}-v1`,
+            version: 1,
+            submittedAt: existingSubmission.submittedAt,
+            fileUrl: existingSubmission.fileUrl,
+            fileName: existingSubmission.fileName,
+            responseText: existingSubmission.responseText,
+            status: existingSubmission.status,
+            grade: existingSubmission.grade,
+            feedback: existingSubmission.feedback,
+            isLate: existingSubmission.isLate,
+          },
+        ]
+      : []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,13 +168,21 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                   <h4 className="font-bold text-[#2D2D2A] text-xs font-serif">
                     Teacher Instructions:
                   </h4>
-                  <div className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 ${
-                    isPastDeadline
-                      ? 'bg-[#FFF3EB] text-[#D87B55] border border-[#E88D67]/40'
-                      : 'bg-[#EBF1E8] text-[#4A6741]'
-                  }`}>
-                    {isPastDeadline ? <AlertTriangle className="w-3 h-3 text-[#D87B55]" /> : <Clock className="w-3 h-3 text-[#4A6741]" />}
-                    <span>Due: {assignment.dueDate} at {assignment.dueTime}</span>
+                  <div
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 ${
+                      isPastDeadline
+                        ? 'bg-[#FFF3EB] text-[#D87B55] border border-[#E88D67]/40'
+                        : 'bg-[#EBF1E8] text-[#4A6741]'
+                    }`}
+                  >
+                    {isPastDeadline ? (
+                      <AlertTriangle className="w-3 h-3 text-[#D87B55]" />
+                    ) : (
+                      <Clock className="w-3 h-3 text-[#4A6741]" />
+                    )}
+                    <span>
+                      Due: {assignment.dueDate} at {assignment.dueTime}
+                    </span>
                   </div>
                 </div>
                 <p className="text-[#2D2D2A] leading-relaxed font-sans">
@@ -185,7 +197,9 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                   <div>
                     <p className="font-bold text-xs">Past Due Date (Late Submission Policy)</p>
                     <p className="text-[11px] opacity-90 mt-0.5">
-                      The official deadline has passed ({assignment.dueDate} at {assignment.dueTime}). Any submission or resubmission made now will be flagged as a <strong>Late Submission</strong>.
+                      The official deadline has passed ({assignment.dueDate} at {assignment.dueTime}
+                      ). Any submission or resubmission made now will be flagged as a{' '}
+                      <strong>Late Submission</strong>.
                     </p>
                   </div>
                 </div>
@@ -219,12 +233,16 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                           : 'Submitted & Awaiting Grading'}
                     </span>
 
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                      existingSubmission.isLate || existingSubmission.status === 'late'
-                        ? 'bg-[#E88D67] text-white'
-                        : 'bg-[#4A6741] text-white'
-                    }`}>
-                      {existingSubmission.isLate || existingSubmission.status === 'late' ? 'Late' : 'On Time'}
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                        existingSubmission.isLate || existingSubmission.status === 'late'
+                          ? 'bg-[#E88D67] text-white'
+                          : 'bg-[#4A6741] text-white'
+                      }`}
+                    >
+                      {existingSubmission.isLate || existingSubmission.status === 'late'
+                        ? 'Late'
+                        : 'On Time'}
                     </span>
                   </div>
 
@@ -262,7 +280,11 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                     </div>
                     <div className="flex items-center gap-1 text-[#7A7A72] text-[11px]">
                       <span>{isHistoryOpen ? 'Hide History' : 'View History'}</span>
-                      {isHistoryOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      {isHistoryOpen ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
                     </div>
                   </button>
 
@@ -276,7 +298,8 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#4A6741] text-white">
-                                v{item.version || historyItems.length - idx} {idx === 0 ? '(Latest)' : ''}
+                                v{item.version || historyItems.length - idx}{' '}
+                                {idx === 0 ? '(Latest)' : ''}
                               </span>
                               <span
                                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
@@ -285,7 +308,9 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                                     : 'bg-[#EBF1E8] text-[#4A6741] border-[#88A070]/30'
                                 }`}
                               >
-                                {item.isLate || item.status === 'late' ? 'Late Submission' : 'On Time'}
+                                {item.isLate || item.status === 'late'
+                                  ? 'Late Submission'
+                                  : 'On Time'}
                               </span>
                             </div>
 
@@ -333,8 +358,16 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
               <form onSubmit={handleSubmit} className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
                   <h4 className="font-bold text-[#2D2D2A] text-xs font-serif flex items-center gap-1.5">
-                    {existingSubmission ? <RotateCcw className="w-3.5 h-3.5 text-[#E88D67]" /> : <FileText className="w-3.5 h-3.5 text-[#4A6741]" />}
-                    <span>{existingSubmission ? 'Resubmit Homework (New Version)' : 'Homework Submission'}</span>
+                    {existingSubmission ? (
+                      <RotateCcw className="w-3.5 h-3.5 text-[#E88D67]" />
+                    ) : (
+                      <FileText className="w-3.5 h-3.5 text-[#4A6741]" />
+                    )}
+                    <span>
+                      {existingSubmission
+                        ? 'Resubmit Homework (New Version)'
+                        : 'Homework Submission'}
+                    </span>
                   </h4>
                   {existingSubmission && (
                     <span className="text-[10px] text-[#7A7A72] font-semibold">
@@ -352,8 +385,10 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                       </p>
                       <p className="text-[11px] text-[#7A7A72] mt-0.5">
                         Students below Class 9 do not need to upload files. Simply click{' '}
-                        <strong>{existingSubmission ? 'Submit Resubmission' : 'Submit Homework'}</strong> below
-                        to turn in your assignment directly!
+                        <strong>
+                          {existingSubmission ? 'Submit Resubmission' : 'Submit Homework'}
+                        </strong>{' '}
+                        below to turn in your assignment directly!
                       </p>
                     </div>
                   </div>

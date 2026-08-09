@@ -18,7 +18,14 @@ let server: Server;
 const PORT = 3001;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 
+console.log('--- DEBUG: USE_REAL_SERVER is', process.env.USE_REAL_SERVER);
+
 describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () => {
+  let createdLiveStudentId = '';
+  let createdLiveTeacherId = '';
+  let createdLiveParentId = '';
+  let createdLiveBadgeId = '';
+
   beforeAll(async () => {
     // 1. Seed base database records
     await prisma.user.upsert({
@@ -139,24 +146,16 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
       },
     });
 
-    // 2. Connect to running dev server on PORT (e.g. 3001) or boot fallback listener
-    try {
-      const ping = await fetch(`http://127.0.0.1:${PORT}/api/health`).catch(() => null);
-      if (!ping || !ping.ok) {
-        const app = createApp();
-        await new Promise<void>((resolve) => {
-          server = app.listen(PORT, '127.0.0.1', () => {
-            resolve();
-          });
-        });
-      }
-    } catch {
+    // 2. Boot test Express server on dedicated test PORT (unless testing an already running server)
+    if (process.env.USE_REAL_SERVER !== 'true') {
       const app = createApp();
       await new Promise<void>((resolve) => {
         server = app.listen(PORT, '127.0.0.1', () => {
           resolve();
         });
       });
+    } else {
+      console.log(`[Test] Using already running actual server at ${BASE_URL}...`);
     }
   });
 
@@ -323,7 +322,135 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
     expect(data.parentControls.screenTimeLimitMinutes).toBe(120);
   });
 
-  it('9. POST /api/ai/tutor responds cleanly with fallback response over network', async () => {
+  it('9. POST /api/db/students creates a student via live Admin REST endpoint', async () => {
+    const res = await fetch(`${BASE_URL}/api/db/students`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Live Admin Student',
+        email: `live.admin.student.${Date.now()}@lms.com`,
+        gradeLevel: 9,
+        section: 'A',
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.status).toBe('success');
+    expect(data.student.name).toBe('Live Admin Student');
+    createdLiveStudentId = data.student.id;
+  });
+
+  it('10. PUT /api/db/students/:id updates student record via live Admin REST endpoint', async () => {
+    if (!createdLiveStudentId) return;
+    const res = await fetch(`${BASE_URL}/api/db/students/${createdLiveStudentId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Live Admin Student Updated',
+        section: 'B',
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.status).toBe('success');
+  });
+
+  it('11. DELETE /api/db/students/:id archives student via live Admin REST endpoint', async () => {
+    if (!createdLiveStudentId) return;
+    const res = await fetch(`${BASE_URL}/api/db/students/${createdLiveStudentId}`, {
+      method: 'DELETE',
+    });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.status).toBe('success');
+  });
+
+  it('12. POST /api/db/teachers registers a teacher via live Admin REST endpoint', async () => {
+    const res = await fetch(`${BASE_URL}/api/db/teachers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Live Faculty Instructor',
+        email: `live.faculty.${Date.now()}@lms.com`,
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.status).toBe('success');
+    createdLiveTeacherId = data.teacher.id;
+  });
+
+  it('13. DELETE /api/db/teachers/:id deactivates teacher via live Admin REST endpoint', async () => {
+    if (!createdLiveTeacherId) return;
+    const res = await fetch(`${BASE_URL}/api/db/teachers/${createdLiveTeacherId}`, {
+      method: 'DELETE',
+    });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.status).toBe('success');
+  });
+
+  it('14. POST /api/db/parents creates parent profile via live Admin REST endpoint', async () => {
+    const res = await fetch(`${BASE_URL}/api/db/parents`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Live Parent Account',
+        email: `live.parent.${Date.now()}@lms.com`,
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.status).toBe('success');
+    createdLiveParentId = data.parent.id;
+  });
+
+  it('15. DELETE /api/db/parents/:id removes parent account via live Admin REST endpoint', async () => {
+    if (!createdLiveParentId) return;
+    const res = await fetch(`${BASE_URL}/api/db/parents/${createdLiveParentId}`, {
+      method: 'DELETE',
+    });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.status).toBe('success');
+  });
+
+  it('16. POST /api/db/badge-definitions creates badge definition via live Admin endpoint', async () => {
+    const res = await fetch(`${BASE_URL}/api/db/badge-definitions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: 'Live Badge Definition',
+        icon: '🏆',
+        category: 'academic',
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.status).toBe('success');
+    createdLiveBadgeId = data.badge.id;
+  });
+
+  it('17. DELETE /api/db/badge-definitions/:id removes badge definition via live Admin endpoint', async () => {
+    if (!createdLiveBadgeId) return;
+    const res = await fetch(`${BASE_URL}/api/db/badge-definitions/${createdLiveBadgeId}`, {
+      method: 'DELETE',
+    });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.status).toBe('success');
+  });
+
+  it('18. POST /api/ai/tutor responds cleanly with fallback response over network', async () => {
     const res = await fetch(`${BASE_URL}/api/ai/tutor`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -338,7 +465,7 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
     expect(data.text).toBeDefined();
   });
 
-  it('10. Audits 404 handler for invalid routes over live TCP socket', async () => {
+  it('19. Audits 404 handler for invalid routes over live TCP socket', async () => {
     const res = await fetch(`${BASE_URL}/api/non-existent-endpoint`);
     expect(res.status).toBe(404);
   });
