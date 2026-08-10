@@ -125,6 +125,27 @@ export const markAllNotificationsAsRead = async (req: Request, res: Response) =>
   }
 };
 
+export const deleteNotification = async (req: Request, res: Response) => {
+  try {
+    await lmsDB.deleteNotification(req.params.id);
+    res.json({ status: 'success' });
+  } catch (err) {
+    logger.error('Failed to delete notification:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to delete notification' });
+  }
+};
+
+export const clearReadNotifications = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.body;
+    await lmsDB.clearReadNotifications(userId);
+    res.json({ status: 'success' });
+  } catch (err) {
+    logger.error('Failed to clear read notifications:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to clear read notifications' });
+  }
+};
+
 export const getNotificationPreferences = async (req: Request, res: Response) => {
   try {
     const preferences = await lmsDB.getNotificationPreferences(req.params.userId);

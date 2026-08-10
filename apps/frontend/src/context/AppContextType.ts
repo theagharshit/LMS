@@ -137,6 +137,8 @@ export interface AppContextType {
   updateNotificationPreferences: (prefs: Partial<Omit<NotificationPreference, 'userId'>>) => void;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
+  deleteNotification: (id: string) => void;
+  clearReadNotifications: () => void;
   dispatchNotification: (data: {
     recipientId?: string;
     targetAudience?: 'all' | 'students' | 'teachers' | 'parents' | 'classroom';

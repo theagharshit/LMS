@@ -17,6 +17,7 @@ import {
   Filter,
   Check,
   Send,
+  Trash2,
 } from 'lucide-react';
 import { NotificationCategory } from '@lms/shared';
 
@@ -37,6 +38,8 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
     updateNotificationPreferences,
     markNotificationRead,
     markAllNotificationsRead,
+    deleteNotification,
+    clearReadNotifications,
     currentUser,
   } = useApp();
 
@@ -208,13 +211,23 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
             Showing {filteredNotifications.length} items
           </span>
 
-          <button
-            onClick={markAllNotificationsRead}
-            className="text-[11px] font-extrabold text-[#4A6741] dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
-          >
-            <CheckCheck className="w-3.5 h-3.5" />
-            <span>Mark All as Read</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={markAllNotificationsRead}
+              className="text-[11px] font-extrabold text-[#4A6741] dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <CheckCheck className="w-3.5 h-3.5" />
+              <span>Mark All Read</span>
+            </button>
+
+            <button
+              onClick={clearReadNotifications}
+              className="text-[11px] font-extrabold text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Clear Read</span>
+            </button>
+          </div>
         </div>
 
         {/* List */}
@@ -232,7 +245,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
               <div
                 key={item.id}
                 onClick={() => markNotificationRead(item.id)}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-2 ${
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-2 relative group ${
                   item.read
                     ? 'bg-white/60 dark:bg-slate-900/60 border-[#EDEAE2] dark:border-slate-800 opacity-80'
                     : item.category === 'CRITICAL'
@@ -254,9 +267,21 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
                     {getCategoryBadge(item.category)}
                   </div>
 
-                  <span className="text-[10px] font-bold text-[#7A7A72] shrink-0">
-                    {item.time || 'Recently'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-[#7A7A72] shrink-0">
+                      {item.time || 'Recently'}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteNotification(item.id);
+                      }}
+                      title="Delete Notification"
+                      className="p-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 <div>

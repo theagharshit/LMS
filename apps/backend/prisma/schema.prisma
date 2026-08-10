@@ -45,6 +45,7 @@ model User {
   subjectPerformances   SubjectPerformance[]    @relation("StudentPerformances")
   termProgresses        TermProgress[]          @relation("StudentTermProgress")
   studentActivities     StudentActivity[]       @relation("StudentActivities")
+  notificationPreference NotificationPreference?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -414,9 +415,10 @@ model NotificationRecord {
 }
 
 model NotificationPreference {
-  id                 String  @id @default(cuid())
-  userId             String  @unique
-  enableAcademic     Boolean @default(true)
+  id                  String  @id @default(cuid())
+  userId              String  @unique
+  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enableAcademic      Boolean @default(true)
   enableCommunication Boolean @default(true)
-  enableReminders    Boolean @default(true)
+  enableReminders     Boolean @default(true)
 }

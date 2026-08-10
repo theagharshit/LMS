@@ -143,6 +143,22 @@ export const useCommunicationState = (currentUser: User) => {
     }).catch((err) => console.error('[useCommunicationState] Failed to mark all read', err));
   };
 
+  const deleteNotification = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    apiFetch(`/api/db/notifications/${id}`, { method: 'DELETE' }).catch((err) =>
+      console.error('[useCommunicationState] Failed to delete notification', err),
+    );
+  };
+
+  const clearReadNotifications = () => {
+    setNotifications((prev) => prev.filter((n) => !n.read));
+    apiFetch('/api/db/notifications/clear-read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUser.id }),
+    }).catch((err) => console.error('[useCommunicationState] Failed to clear read notifications', err));
+  };
+
   const dispatchNotification = (data: {
     recipientId?: string;
     targetAudience?: 'all' | 'students' | 'teachers' | 'parents' | 'classroom';
@@ -200,6 +216,8 @@ export const useCommunicationState = (currentUser: User) => {
     updateNotificationPreferences,
     markNotificationRead,
     markAllNotificationsRead,
+    deleteNotification,
+    clearReadNotifications,
     dispatchNotification,
     unreadCount,
   };

@@ -750,5 +750,19 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.message).toContain('LMS API Backend is running');
     });
+
+    it('46. DELETE /api/db/notifications/:id deletes notification record', async () => {
+      const res = await request(app).delete('/api/db/notifications/n1-user-stu-1');
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('success');
+    });
+
+    it('47. POST /api/db/notifications/clear-read clears read notifications', async () => {
+      const res = await request(app)
+        .post('/api/db/notifications/clear-read')
+        .send({ userId: 'user-stu-1' });
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('success');
+    });
   });
 });

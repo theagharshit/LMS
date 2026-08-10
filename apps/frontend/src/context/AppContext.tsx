@@ -192,6 +192,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     updateNotificationPreferences: communicationState.updateNotificationPreferences,
     markNotificationRead: communicationState.markNotificationRead,
     markAllNotificationsRead: communicationState.markAllNotificationsRead,
+    deleteNotification: communicationState.deleteNotification,
+    clearReadNotifications: communicationState.clearReadNotifications,
     dispatchNotification: communicationState.dispatchNotification,
     unreadCount: communicationState.unreadCount,
 

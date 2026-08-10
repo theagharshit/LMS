@@ -10,6 +10,8 @@ import {
   getUserNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
+  deleteNotification,
+  clearReadNotifications,
   getNotificationPreferences,
   updateNotificationPreferences,
   dispatchCustomNotification,
@@ -28,6 +30,8 @@ systemRoutes.delete('/files/:id', deleteFile);
 systemRoutes.get('/db/notifications/:userId', getUserNotifications);
 systemRoutes.post('/db/notifications/:id/read', markNotificationAsRead);
 systemRoutes.post('/db/notifications/read-all', markAllNotificationsAsRead);
+systemRoutes.delete('/db/notifications/:id', deleteNotification);
+systemRoutes.post('/db/notifications/clear-read', clearReadNotifications);
 systemRoutes.get('/db/notification-preferences/:userId', getNotificationPreferences);
 systemRoutes.put('/db/notification-preferences/:userId', updateNotificationPreferences);
 systemRoutes.post('/db/notifications/dispatch', dispatchCustomNotification);

@@ -291,6 +291,14 @@ export class LMSDatabaseService {
   public dispatchBroadcastNotification(data: any): Promise<number> {
     return notificationService.dispatchBroadcastNotification(data);
   }
+
+  public deleteNotification(id: string): Promise<boolean> {
+    return notificationService.deleteNotification(id);
+  }
+
+  public clearReadNotifications(userId: string): Promise<boolean> {
+    return notificationService.clearReadNotifications(userId);
+  }
 }
 
 export const lmsDB = new LMSDatabaseService();

@@ -265,6 +265,25 @@ export class NotificationService {
     });
     return true;
   }
+
+  public async deleteNotification(id: string): Promise<boolean> {
+    await prisma.notificationRecord.deleteMany({
+      where: {
+        OR: [{ id }, { id: { startsWith: `${id}-` } }],
+      },
+    });
+    return true;
+  }
+
+  public async clearReadNotifications(userId: string): Promise<boolean> {
+    await prisma.notificationRecord.deleteMany({
+      where: {
+        recipientId: userId,
+        read: true,
+      },
+    });
+    return true;
+  }
 }
 
 export const notificationService = new NotificationService();
