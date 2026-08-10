@@ -14,8 +14,8 @@ export const useCommunicationState = (currentUser: User) => {
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([
     {
-      id: 'n1',
-      recipientId: currentUser?.id || 'user-1',
+      id: `n1-${currentUser?.id || 'user-stu-1'}`,
+      recipientId: currentUser?.id || 'user-stu-1',
       title: '🚨 Attendance Alert: Absence Reported',
       body: 'Student Aarav Sharma was marked absent for Period 1 Science.',
       category: 'CRITICAL',
@@ -26,8 +26,8 @@ export const useCommunicationState = (currentUser: User) => {
       time: '10m ago',
     },
     {
-      id: 'n2',
-      recipientId: currentUser?.id || 'user-1',
+      id: `n2-${currentUser?.id || 'user-stu-1'}`,
+      recipientId: currentUser?.id || 'user-stu-1',
       title: '⚡ Quiz Marks Published',
       body: 'Grade 8 Algebra & Factorization Quiz scores are now live!',
       category: 'CRITICAL',
@@ -38,8 +38,8 @@ export const useCommunicationState = (currentUser: User) => {
       time: '1h ago',
     },
     {
-      id: 'n3',
-      recipientId: currentUser?.id || 'user-1',
+      id: `n3-${currentUser?.id || 'user-stu-1'}`,
+      recipientId: currentUser?.id || 'user-stu-1',
       title: 'New Homework Assigned',
       body: 'Mr. Ramesh Thapa posted Exercise 4.1 in Math Grade 8',
       category: 'ACADEMIC',
@@ -50,8 +50,8 @@ export const useCommunicationState = (currentUser: User) => {
       time: '2h ago',
     },
     {
-      id: 'n4',
-      recipientId: currentUser?.id || 'user-1',
+      id: `n4-${currentUser?.id || 'user-stu-1'}`,
+      recipientId: currentUser?.id || 'user-stu-1',
       title: 'Badge Earned: Quiz Master 🎉',
       body: 'Awarded for scoring 100% on Mathematics assessment.',
       category: 'COMMUNICATION',
@@ -67,7 +67,8 @@ export const useCommunicationState = (currentUser: User) => {
   useEffect(() => {
     if (!currentUser?.id) return;
     apiFetch(`/api/db/notification-preferences/${currentUser.id}`)
-      .then((data) => {
+      .then((res) => res.json())
+      .then((data: any) => {
         if (data.preferences) setNotificationPreferences(data.preferences);
       })
       .catch((err) =>
@@ -75,7 +76,8 @@ export const useCommunicationState = (currentUser: User) => {
       );
 
     apiFetch(`/api/db/notifications/${currentUser.id}`)
-      .then((data) => {
+      .then((res) => res.json())
+      .then((data: any) => {
         if (
           data.notifications &&
           Array.isArray(data.notifications) &&
