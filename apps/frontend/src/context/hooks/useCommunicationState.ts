@@ -156,7 +156,9 @@ export const useCommunicationState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: currentUser.id }),
-    }).catch((err) => console.error('[useCommunicationState] Failed to clear read notifications', err));
+    }).catch((err) =>
+      console.error('[useCommunicationState] Failed to clear read notifications', err),
+    );
   };
 
   const dispatchNotification = (data: {
