@@ -599,73 +599,133 @@ export const AdminDashboard: React.FC = () => {
 
           {/* Student Grid / List */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
-            {filteredStudents.map((s) => (
-              <div
-                key={s.id}
-                className="p-4 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-3 flex flex-col justify-between"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#EBF1E8] text-[#4A6741]">
-                      Grade {s.gradeLevel}-{s.section}
-                    </span>
-                    <span className="text-[10px] text-[#7A7A72] font-semibold">
-                      Roll #{s.rollNumber || 'N/A'}
-                    </span>
-                  </div>
+            {filteredStudents.map((s) => {
+              const isUnenrolled = s.isArchived;
+              const isPending = s.verificationStatus === 'pending_verification';
 
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={s.avatar}
-                      alt={s.name}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-xs"
-                    />
-                    <div>
-                      <h4 className="font-bold text-[#2D2D2A] text-sm font-serif">{s.name}</h4>
-                      <p className="text-[11px] text-[#7A7A72]">{s.email}</p>
+              return (
+                <div
+                  key={s.id}
+                  className={`p-4 rounded-2xl border space-y-3 flex flex-col justify-between transition-all ${
+                    isUnenrolled
+                      ? 'border-rose-300 bg-rose-50/60 shadow-xs'
+                      : isPending
+                        ? 'border-amber-300 bg-amber-50/50 shadow-xs'
+                        : 'border-[#EDEAE2] bg-[#F9F7F2]'
+                  }`}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-1 flex-wrap">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                          isUnenrolled
+                            ? 'bg-rose-600 text-white'
+                            : isPending
+                              ? 'bg-amber-500 text-white'
+                              : 'bg-[#EBF1E8] text-[#4A6741]'
+                        }`}
+                      >
+                        {isUnenrolled
+                          ? '❌ Unenrolled / Archived'
+                          : isPending
+                            ? '⏳ Pending Verification'
+                            : `Grade ${s.gradeLevel}-${s.section}`}
+                      </span>
+                      <span className="text-[10px] text-[#7A7A72] font-semibold">
+                        Roll #{s.rollNumber || 'N/A'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={s.avatar}
+                        alt={s.name}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-xs"
+                      />
+                      <div>
+                        <h4 className="font-bold text-[#2D2D2A] text-sm font-serif">{s.name}</h4>
+                        <p className="text-[11px] text-[#7A7A72]">{s.email}</p>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-white border border-[#EDEAE2] space-y-1 text-[11px]">
+                      <div className="flex justify-between">
+                        <span className="text-[#7A7A72]">Attendance Rate:</span>
+                        <span className="font-bold text-[#4A6741]">{s.attendancePercentage}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#7A7A72]">Parent/Guardian:</span>
+                        <span className="font-bold text-[#2D2D2A]">{s.parentName || 'Linked'}</span>
+                      </div>
+                      {s.parentPhone && (
+                        <div className="flex justify-between">
+                          <span className="text-[#7A7A72]">Parent Contact:</span>
+                          <span className="font-medium text-[#2D2D2A]">{s.parentPhone}</span>
+                        </div>
+                      )}
+                      {s.medicalNotes && (
+                        <div className="pt-1 text-[10px] text-rose-700 font-semibold border-t border-[#EDEAE2]">
+                          Medical: {s.medicalNotes}
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-white border border-[#EDEAE2] space-y-1 text-[11px]">
-                    <div className="flex justify-between">
-                      <span className="text-[#7A7A72]">Attendance Rate:</span>
-                      <span className="font-bold text-[#4A6741]">{s.attendancePercentage}%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#7A7A72]">Parent/Guardian:</span>
-                      <span className="font-bold text-[#2D2D2A]">{s.parentName || 'Linked'}</span>
+                  <div className="pt-2 border-t border-[#EDEAE2] flex items-center justify-between gap-2 flex-wrap">
+                    {isPending && (
+                      <button
+                        onClick={() => {
+                          updateStudentProfile(s.id, { verificationStatus: 'verified_enrolled' });
+                        }}
+                        className="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] cursor-pointer shadow-xs"
+                      >
+                        Verify & Activate ✅
+                      </button>
+                    )}
+
+                    {isUnenrolled && (
+                      <button
+                        onClick={() => {
+                          updateStudentProfile(s.id, { isArchived: false });
+                        }}
+                        className="px-2.5 py-1 rounded-xl bg-[#4A6741] hover:bg-[#3D5535] text-white font-bold text-[10px] cursor-pointer shadow-xs"
+                      >
+                        Re-Enroll Student 🔄
+                      </button>
+                    )}
+
+                    <div className="flex gap-1.5 ml-auto">
+                      <button
+                        onClick={() => {
+                          setEditingStudent(s);
+                          setIsStudentModalOpen(true);
+                        }}
+                        className="px-2.5 py-1.5 rounded-xl bg-white border border-[#EDEAE2] hover:bg-[#F0EDE5] font-bold text-[11px] text-[#2D2D2A] flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit className="w-3.5 h-3.5 text-[#4A6741]" />
+                        <span>Edit</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          if (
+                            confirm(
+                              `Are you sure you want to unenroll/archive record for ${s.name}?`,
+                            )
+                          ) {
+                            deleteStudentProfile(s.id);
+                          }
+                        }}
+                        className="px-2.5 py-1.5 rounded-xl bg-white border border-rose-200 hover:bg-rose-50 font-bold text-[11px] text-rose-700 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>{isUnenrolled ? 'Unenrolled' : 'Unenroll'}</span>
+                      </button>
                     </div>
                   </div>
                 </div>
-
-                <div className="pt-2 border-t border-[#EDEAE2] flex justify-end gap-2">
-                  <button
-                    onClick={() => {
-                      setEditingStudent(s);
-                      setIsStudentModalOpen(true);
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-white border border-[#EDEAE2] hover:bg-[#F0EDE5] font-bold text-[11px] text-[#2D2D2A] flex items-center gap-1 cursor-pointer"
-                  >
-                    <Edit className="w-3.5 h-3.5 text-[#4A6741]" />
-                    <span>Edit</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      if (
-                        confirm(`Are you sure you want to archive student record for ${s.name}?`)
-                      ) {
-                        deleteStudentProfile(s.id);
-                      }
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-white border border-[#EDEAE2] hover:bg-[#FFF3EB] font-bold text-[11px] text-[#E88D67] flex items-center gap-1 cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Archive</span>
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -708,14 +768,22 @@ export const AdminDashboard: React.FC = () => {
           {/* Parent Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             {filteredParents.map((p) => {
-              const children = studentProfiles.filter((s) => p.childrenIds?.includes(s.id));
+              const children = studentProfiles.filter(
+                (s) => !s.isArchived && p.childrenIds?.includes(s.id),
+              );
+              const isDisconnected = children.length === 0 || p.isArchived;
+
               return (
                 <div
                   key={p.id}
-                  className="p-5 rounded-3xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-4 flex flex-col justify-between"
+                  className={`p-5 rounded-3xl border space-y-4 flex flex-col justify-between transition-all ${
+                    isDisconnected
+                      ? 'border-rose-300 bg-rose-50/60 shadow-xs'
+                      : 'border-[#EDEAE2] bg-[#F9F7F2]'
+                  }`}
                 >
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
                       <div className="flex items-center gap-3">
                         <img
                           src={p.avatar}
@@ -728,8 +796,14 @@ export const AdminDashboard: React.FC = () => {
                         </div>
                       </div>
 
-                      <span className="px-3 py-1 rounded-full bg-[#FDEEDC] text-[#E88D67] font-extrabold text-xs">
-                        {p.childrenIds?.length || 0} Children Studying
+                      <span
+                        className={`px-3 py-1 rounded-full font-extrabold text-xs ${
+                          isDisconnected ? 'bg-rose-600 text-white' : 'bg-[#FDEEDC] text-[#E88D67]'
+                        }`}
+                      >
+                        {isDisconnected
+                          ? '❌ Disconnected Parent / Archived'
+                          : `${children.length} Active Children`}
                       </span>
                     </div>
 
@@ -753,23 +827,24 @@ export const AdminDashboard: React.FC = () => {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-[11px] text-[#7A7A72] italic bg-white p-2 rounded-xl border border-[#EDEAE2]">
-                          No children linked to this parent account yet.
+                        <p className="text-[11px] text-rose-700 font-semibold bg-white p-2.5 rounded-xl border border-rose-200">
+                          ⚠️ No active enrolled children currently linked to this parent profile.
+                          Account is retained in archives.
                         </p>
                       )}
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-[#EDEAE2] flex justify-end gap-2">
+                  <div className="pt-2 border-t border-[#EDEAE2] flex justify-end gap-2">
                     <button
                       onClick={() => {
                         setSelectedParent(p);
                         setIsParentLinkModalOpen(true);
                       }}
-                      className="px-3.5 py-1.5 rounded-xl bg-[#4A6741] text-white font-bold text-xs hover:bg-[#3D5535] transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      className="px-3.5 py-1.5 rounded-xl bg-white border border-[#EDEAE2] hover:bg-[#EBF1E8] font-bold text-[11px] text-[#4A6741] flex items-center gap-1.5 cursor-pointer shadow-2xs"
                     >
                       <LinkIcon className="w-3.5 h-3.5" />
-                      <span>Allocate & Link Children</span>
+                      <span>Manage Linked Children</span>
                     </button>
 
                     <button
@@ -817,65 +892,107 @@ export const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
-            {filteredTeachers.map((t) => (
-              <div
-                key={t.id}
-                className="p-4 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-3 flex flex-col justify-between"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={t.avatar}
-                      alt={t.name}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-xs"
-                    />
-                    <div>
-                      <h4 className="font-bold text-[#2D2D2A] text-sm font-serif">{t.name}</h4>
-                      <p className="text-[11px] text-[#7A7A72]">{t.email}</p>
+            {filteredTeachers.map((t) => {
+              const isPending = t.verificationStatus === 'pending_verification';
+              const isArchived = t.isArchived;
+
+              return (
+                <div
+                  key={t.id}
+                  className={`p-4 rounded-2xl border space-y-3 flex flex-col justify-between transition-all ${
+                    isArchived
+                      ? 'border-rose-300 bg-rose-50/60 shadow-xs'
+                      : isPending
+                        ? 'border-amber-300 bg-amber-50/50 shadow-xs'
+                        : 'border-[#EDEAE2] bg-[#F9F7F2]'
+                  }`}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                          isArchived
+                            ? 'bg-rose-600 text-white'
+                            : isPending
+                              ? 'bg-amber-500 text-white'
+                              : 'bg-[#EBF1E8] text-[#4A6741]'
+                        }`}
+                      >
+                        {isArchived
+                          ? '❌ Deactivated'
+                          : isPending
+                            ? '⏳ Pending Verification'
+                            : 'Verified Faculty ✅'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={t.avatar}
+                        alt={t.name}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-xs"
+                      />
+                      <div>
+                        <h4 className="font-bold text-[#2D2D2A] text-sm font-serif">{t.name}</h4>
+                        <p className="text-[11px] text-[#7A7A72]">{t.email}</p>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-white border border-[#EDEAE2] space-y-1">
+                      <p className="font-bold text-[11px] text-[#2D2D2A]">Subjects Taught:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {(t.subjectsTaught || ['General Science']).map((sub) => (
+                          <span
+                            key={sub}
+                            className="px-2 py-0.5 rounded-full bg-[#EBF1E8] text-[#4A6741] text-[10px] font-bold"
+                          >
+                            {sub}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-white border border-[#EDEAE2] space-y-1">
-                    <p className="font-bold text-[11px] text-[#2D2D2A]">Subjects Taught:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {(t.subjectsTaught || ['General Science']).map((sub) => (
-                        <span
-                          key={sub}
-                          className="px-2 py-0.5 rounded-full bg-[#EBF1E8] text-[#4A6741] text-[10px] font-bold"
-                        >
-                          {sub}
-                        </span>
-                      ))}
+                  <div className="pt-2 border-t border-[#EDEAE2] flex items-center justify-between gap-2 flex-wrap">
+                    {isPending && (
+                      <button
+                        onClick={() => {
+                          updateTeacherProfile(t.id, { verificationStatus: 'verified_enrolled' });
+                        }}
+                        className="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] cursor-pointer shadow-xs"
+                      >
+                        Verify & Activate ✅
+                      </button>
+                    )}
+
+                    <div className="flex gap-1.5 ml-auto">
+                      <button
+                        onClick={() => {
+                          setEditingTeacher(t);
+                          setIsTeacherModalOpen(true);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-white border border-[#EDEAE2] hover:bg-[#F0EDE5] font-bold text-[11px] text-[#2D2D2A] flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit className="w-3.5 h-3.5 text-[#4A6741]" />
+                        <span>Edit</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          if (confirm(`Deactivate teacher account for ${t.name}?`)) {
+                            deleteTeacherProfile(t.id);
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-white border border-rose-200 hover:bg-rose-50 font-bold text-[11px] text-rose-700 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Deactivate</span>
+                      </button>
                     </div>
                   </div>
                 </div>
-
-                <div className="pt-2 border-t border-[#EDEAE2] flex justify-end gap-2">
-                  <button
-                    onClick={() => {
-                      setEditingTeacher(t);
-                      setIsTeacherModalOpen(true);
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-white border border-[#EDEAE2] hover:bg-[#F0EDE5] font-bold text-[11px] text-[#2D2D2A] flex items-center gap-1 cursor-pointer"
-                  >
-                    <Edit className="w-3.5 h-3.5 text-[#4A6741]" />
-                    <span>Edit</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      if (confirm(`Deactivate teacher account for ${t.name}?`)) {
-                        deleteTeacherProfile(t.id);
-                      }
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-white border border-[#EDEAE2] hover:bg-[#FFF3EB] font-bold text-[11px] text-[#E88D67] flex items-center gap-1 cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Deactivate</span>
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

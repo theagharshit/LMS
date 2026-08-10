@@ -3,6 +3,11 @@ export const apiFetch = (url: string, options?: RequestInit) => {
     const fetchOptions: RequestInit = options ? { ...options } : {};
     const headers = new Headers(fetchOptions.headers || {});
 
+    // Automatically set Content-Type to application/json if body is present
+    if (fetchOptions.body && !headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
+
     // Automatically attach Bearer token if present in localStorage
     if (typeof localStorage !== 'undefined') {
       const token = localStorage.getItem('lms_jwt_token');

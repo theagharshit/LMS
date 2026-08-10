@@ -15,6 +15,7 @@ export interface User {
   section?: string; // e.g. 'A'
   rollNumber?: number;
   isArchived?: boolean;
+  verificationStatus?: 'pending_verification' | 'verified_enrolled';
   // Parent specific
   childrenIds?: string[];
   // Teacher specific
@@ -30,6 +31,15 @@ export interface StudentProfile extends User {
   section: string;
   parentName: string;
   parentPhone: string;
+  parentEmail?: string;
+  parentAddress?: string;
+  parentOccupation?: string;
+  relationship?: string;
+  secondaryContact?: string;
+  dob?: string;
+  gender?: string;
+  bloodGroup?: string;
+  medicalNotes?: string;
 }
 
 export interface BadgeDefinition {
