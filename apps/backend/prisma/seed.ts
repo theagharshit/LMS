@@ -57,6 +57,8 @@ async function main() {
   await prisma.classroomEnrollment.deleteMany();
   await prisma.termProgress.deleteMany();
   await prisma.studentActivity.deleteMany();
+  await prisma.notificationRecord.deleteMany();
+  await prisma.notificationPreference.deleteMany();
   await prisma.subjectPerformance.deleteMany();
   await prisma.storedFileRecord.deleteMany();
   await prisma.studentLocationRecord.deleteMany();
@@ -1210,6 +1212,59 @@ async function main() {
       },
     ],
   });
+
+  // Seed Notifications for default demo users
+  const demoUserIds = ['user-stu-1', 'user-stu-2', 'user-teach-1', 'user-parent-1', 'user-admin-1'];
+  for (const uId of demoUserIds) {
+    await prisma.notificationRecord.createMany({
+      data: [
+        {
+          id: `n1-${uId}`,
+          recipientId: uId,
+          title: '🚨 Attendance Alert: Absence Reported',
+          body: 'Attendance record updated as ABSENT for Period 1 Science.',
+          category: 'CRITICAL',
+          severity: 'urgent',
+          type: 'attendance',
+          read: false,
+          createdAt: new Date(Date.now() - 10 * 60000).toISOString(),
+        },
+        {
+          id: `n2-${uId}`,
+          recipientId: uId,
+          title: '⚡ Quiz Marks Published',
+          body: 'Grade 8 Algebra & Factorization Quiz scores are now live!',
+          category: 'CRITICAL',
+          severity: 'high',
+          type: 'quiz',
+          read: false,
+          createdAt: new Date(Date.now() - 60 * 60000).toISOString(),
+        },
+        {
+          id: `n3-${uId}`,
+          recipientId: uId,
+          title: 'New Homework Assigned',
+          body: 'Mr. Ramesh Thapa posted Exercise 4.1 in Math Grade 8',
+          category: 'ACADEMIC',
+          severity: 'normal',
+          type: 'assignment',
+          read: false,
+          createdAt: new Date(Date.now() - 2 * 3600000).toISOString(),
+        },
+        {
+          id: `n4-${uId}`,
+          recipientId: uId,
+          title: 'Badge Earned: Quiz Master 🎉',
+          body: 'Awarded for scoring 100% on Mathematics assessment.',
+          category: 'COMMUNICATION',
+          severity: 'info',
+          type: 'badge',
+          read: true,
+          createdAt: new Date(Date.now() - 24 * 3600000).toISOString(),
+        },
+      ],
+    });
+  }
 
   clearInterval(interval);
   process.stdout.write(

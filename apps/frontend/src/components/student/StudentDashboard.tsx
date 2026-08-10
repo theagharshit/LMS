@@ -190,14 +190,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 <p className="text-sm font-black text-white">{studentData.attendancePercentage}%</p>
               </div>
             </div>
-
-            <button
-              onClick={() => setIsAiTutorOpen(true)}
-              className="px-4 py-3 rounded-2xl bg-[#E88D67] text-white font-extrabold text-xs flex items-center gap-2 shadow-sm hover:bg-[#D87B55] transition-all cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4 fill-white" />
-              <span>Ask AI Tutor</span>
-            </button>
           </div>
         </div>
       </div>

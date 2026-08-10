@@ -108,8 +108,14 @@ export const AITutorModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-[#2D2D2A]/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-[#EDEAE2] flex flex-col h-[85vh] max-h-[700px] overflow-hidden animate-in zoom-in-95 duration-200">
+    <div
+      onClick={() => setIsAiTutorOpen(false)}
+      className="fixed inset-0 z-50 overflow-hidden bg-[#2D2D2A]/60 backdrop-blur-xs flex items-center justify-center p-4"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-[#EDEAE2] flex flex-col h-[85vh] max-h-[700px] overflow-hidden animate-in zoom-in-95 duration-200"
+      >
         {/* Modal Header */}
         <div className="p-4 natural-banner text-white flex items-center justify-between">
           <div className="flex items-center gap-3">

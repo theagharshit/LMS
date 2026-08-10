@@ -101,7 +101,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
         <QuizReviewView
           questions={questions}
           answers={state.answers}
-          onBackToResults={() => actions.startReview()}
+          onBackToResults={actions.backToResults}
           onClose={onClose}
         />
       </div>

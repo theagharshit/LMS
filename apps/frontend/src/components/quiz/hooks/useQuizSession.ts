@@ -174,6 +174,10 @@ export function useQuizSession({
     setStatus('reviewing');
   }, []);
 
+  const backToResults = useCallback(() => {
+    setStatus('completed');
+  }, []);
+
   return {
     state: {
       quizId,
@@ -199,6 +203,7 @@ export function useQuizSession({
       closeConfirmModal,
       confirmSubmit,
       startReview,
+      backToResults,
     },
   };
 }

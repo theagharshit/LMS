@@ -1,6 +1,7 @@
 import { prisma } from './prismaClient';
 import { Quiz, QuizSubmission } from '@lms/shared';
 import { badgeService } from './badgeService';
+import { notificationService } from './notificationService';
 
 export class QuizService {
   public async getQuizzes(): Promise<Quiz[]> {
@@ -34,6 +35,20 @@ export class QuizService {
       },
       include: { questions: true },
     });
+
+    // Auto-trigger CRITICAL notification to enrolled students
+    notificationService
+      .dispatchBroadcastNotification({
+        targetAudience: 'classroom',
+        classroomId: created.classroomId,
+        title: `⚡ Quiz Released: ${created.title}`,
+        body: `${created.durationMinutes} min assessment ready in ${created.subject}`,
+        category: 'CRITICAL',
+        severity: 'high',
+        type: 'quiz',
+      })
+      .catch((err) => console.error('[QuizService] Notification dispatch failed', err));
+
     return {
       ...created,
       revealMarksMode: (created.revealMarksMode as any) || 'immediate',
@@ -53,6 +68,20 @@ export class QuizService {
       data: { revealMarksMode },
       include: { questions: true },
     });
+
+    if (revealMarksMode === 'immediate') {
+      notificationService
+        .dispatchBroadcastNotification({
+          targetAudience: 'classroom',
+          classroomId: updated.classroomId,
+          title: `📊 Quiz Marks Published: ${updated.title}`,
+          body: `Scores and detailed solution keys are now visible!`,
+          category: 'CRITICAL',
+          severity: 'high',
+          type: 'quiz',
+        })
+        .catch((err) => console.error('[QuizService] Notification dispatch failed', err));
+    }
 
     return {
       ...updated,

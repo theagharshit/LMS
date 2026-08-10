@@ -45,6 +45,7 @@ model User {
   subjectPerformances   SubjectPerformance[]    @relation("StudentPerformances")
   termProgresses        TermProgress[]          @relation("StudentTermProgress")
   studentActivities     StudentActivity[]       @relation("StudentActivities")
+  notificationPreference NotificationPreference?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -396,4 +397,28 @@ model StudentActivity {
   position    String
   date        String
   description String
+}
+
+model NotificationRecord {
+  id          String   @id @default(cuid())
+  recipientId String
+  senderId    String?
+  senderName  String?
+  senderRole  String?
+  title       String
+  body        String
+  category    String   @default("COMMUNICATION") // CRITICAL, ACADEMIC, COMMUNICATION
+  severity    String   @default("normal") // urgent, high, normal, info
+  type        String   @default("general") // assignment, quiz, attendance, location, announcement, badge, message
+  read        Boolean  @default(false)
+  createdAt   String
+}
+
+model NotificationPreference {
+  id                  String  @id @default(cuid())
+  userId              String  @unique
+  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enableAcademic      Boolean @default(true)
+  enableCommunication Boolean @default(true)
+  enableReminders     Boolean @default(true)
 }

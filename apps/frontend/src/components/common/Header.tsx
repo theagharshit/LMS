@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { getAvatarUrl } from '../../utils/avatarUtils';
 import {
@@ -40,6 +40,18 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
 
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const roleDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target as Node)) {
+        setIsRoleDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 bg-[#F0EDE5]/95 backdrop-blur-md border-b border-[#E5E1D8] px-4 py-2.5 transition-colors">
@@ -153,7 +165,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
           </button>
 
           {/* Live Role Switcher Pill */}
-          <div className="relative">
+          <div className="relative" ref={roleDropdownRef}>
             <button
               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
               className="flex items-center gap-2 pl-2 pr-2.5 py-1 rounded-full border border-[#E5E1D8] bg-white hover:bg-[#F9F7F2] transition-all text-xs text-[#2D2D2A]"

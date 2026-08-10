@@ -23,6 +23,8 @@ import {
   BadgeDefinition,
   AdminAuditLog,
   SchoolAnnouncement,
+  NotificationItem,
+  NotificationPreference,
 } from '@lms/shared';
 
 export interface AppContextType {
@@ -130,15 +132,23 @@ export interface AppContextType {
   isCompletedQuizzesOpen: boolean;
   setIsCompletedQuizzesOpen: (open: boolean) => void;
 
-  notifications: {
-    id: string;
+  notifications: NotificationItem[];
+  notificationPreferences: NotificationPreference;
+  updateNotificationPreferences: (prefs: Partial<Omit<NotificationPreference, 'userId'>>) => void;
+  markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
+  deleteNotification: (id: string) => void;
+  clearReadNotifications: () => void;
+  dispatchNotification: (data: {
+    recipientId?: string;
+    targetAudience?: 'all' | 'students' | 'teachers' | 'parents' | 'classroom';
+    classroomId?: string;
     title: string;
     body: string;
-    time: string;
-    read: boolean;
-    type: string;
-  }[];
-  markNotificationRead: (id: string) => void;
+    category: 'CRITICAL' | 'ACADEMIC' | 'COMMUNICATION';
+    severity?: 'urgent' | 'high' | 'normal' | 'info';
+    type?: string;
+  }) => void;
   unreadCount: number;
 
   // Admin Management Portal API & State

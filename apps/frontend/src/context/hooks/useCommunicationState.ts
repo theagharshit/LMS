@@ -1,44 +1,109 @@
-import { useState } from 'react';
-import { User, DirectMessage } from '@lms/shared';
+import { useState, useEffect } from 'react';
+import { User, DirectMessage, NotificationItem, NotificationPreference } from '@lms/shared';
 import { apiFetch } from '../../utils/apiFetch';
 
 export const useCommunicationState = (currentUser: User) => {
   const [messages, setMessages] = useState<DirectMessage[]>([]);
 
-  const [notifications, setNotifications] = useState([
+  const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreference>({
+    userId: currentUser?.id || 'user-1',
+    enableAcademic: true,
+    enableCommunication: true,
+    enableReminders: true,
+  });
+
+  const [notifications, setNotifications] = useState<NotificationItem[]>([
     {
-      id: 'n1',
+      id: `n1-${currentUser?.id || 'user-stu-1'}`,
+      recipientId: currentUser?.id || 'user-stu-1',
+      title: '🚨 Attendance Alert: Absence Reported',
+      body: 'Student Aarav Sharma was marked absent for Period 1 Science.',
+      category: 'CRITICAL',
+      severity: 'urgent',
+      type: 'attendance',
+      read: false,
+      createdAt: new Date(Date.now() - 10 * 60000).toISOString(),
+      time: '10m ago',
+    },
+    {
+      id: `n2-${currentUser?.id || 'user-stu-1'}`,
+      recipientId: currentUser?.id || 'user-stu-1',
+      title: '⚡ Quiz Marks Published',
+      body: 'Grade 8 Algebra & Factorization Quiz scores are now live!',
+      category: 'CRITICAL',
+      severity: 'high',
+      type: 'quiz',
+      read: false,
+      createdAt: new Date(Date.now() - 60 * 60000).toISOString(),
+      time: '1h ago',
+    },
+    {
+      id: `n3-${currentUser?.id || 'user-stu-1'}`,
+      recipientId: currentUser?.id || 'user-stu-1',
       title: 'New Homework Assigned',
       body: 'Mr. Ramesh Thapa posted Exercise 4.1 in Math Grade 8',
-      time: '10m ago',
-      read: false,
+      category: 'ACADEMIC',
+      severity: 'normal',
       type: 'assignment',
-    },
-    {
-      id: 'n2',
-      title: 'Quiz Result Published',
-      body: 'You scored 20/20 in Algebra Mid-Term Quiz! 🎉',
-      time: '1h ago',
       read: false,
-      type: 'quiz',
-    },
-    {
-      id: 'n3',
-      title: 'Attendance Marked',
-      body: 'Marked Present today at 09:42 AM',
+      createdAt: new Date(Date.now() - 2 * 3600000).toISOString(),
       time: '2h ago',
-      read: true,
-      type: 'attendance',
     },
     {
-      id: 'n4',
-      title: 'Janai Purnima Holiday Notice',
-      body: 'School will remain closed on 12th August for Raksha Bandhan',
-      time: 'Yesterday',
+      id: `n4-${currentUser?.id || 'user-stu-1'}`,
+      recipientId: currentUser?.id || 'user-stu-1',
+      title: 'Badge Earned: Quiz Master 🎉',
+      body: 'Awarded for scoring 100% on Mathematics assessment.',
+      category: 'COMMUNICATION',
+      severity: 'info',
+      type: 'badge',
       read: true,
-      type: 'announcement',
+      createdAt: new Date(Date.now() - 24 * 3600000).toISOString(),
+      time: 'Yesterday',
     },
   ]);
+
+  // Load preferences from API
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    apiFetch(`/api/db/notification-preferences/${currentUser.id}`)
+      .then((res) => res.json())
+      .then((data: any) => {
+        if (data.preferences) setNotificationPreferences(data.preferences);
+      })
+      .catch((err) =>
+        console.error('[useCommunicationState] Failed to fetch notification preferences', err),
+      );
+
+    apiFetch(`/api/db/notifications/${currentUser.id}`)
+      .then((res) => res.json())
+      .then((data: any) => {
+        if (
+          data.notifications &&
+          Array.isArray(data.notifications) &&
+          data.notifications.length > 0
+        ) {
+          setNotifications(data.notifications);
+        }
+      })
+      .catch((err) =>
+        console.error('[useCommunicationState] Failed to fetch user notifications', err),
+      );
+  }, [currentUser?.id]);
+
+  const updateNotificationPreferences = (
+    prefs: Partial<Omit<NotificationPreference, 'userId'>>,
+  ) => {
+    setNotificationPreferences((prev) => {
+      const updated = { ...prev, ...prefs };
+      apiFetch(`/api/db/notification-preferences/${currentUser.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(prefs),
+      }).catch((err) => console.error('[useCommunicationState] Failed to update preferences', err));
+      return updated;
+    });
+  };
 
   const sendMessage = (receiverId: string, receiverName: string, content: string) => {
     const newMsg: DirectMessage = {
@@ -64,6 +129,79 @@ export const useCommunicationState = (currentUser: User) => {
 
   const markNotificationRead = (id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    apiFetch(`/api/db/notifications/${id}/read`, { method: 'POST' }).catch((err) =>
+      console.error('[useCommunicationState] Failed to mark read', err),
+    );
+  };
+
+  const markAllNotificationsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    apiFetch(`/api/db/notifications/read-all`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUser.id }),
+    }).catch((err) => console.error('[useCommunicationState] Failed to mark all read', err));
+  };
+
+  const deleteNotification = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    apiFetch(`/api/db/notifications/${id}`, { method: 'DELETE' }).catch((err) =>
+      console.error('[useCommunicationState] Failed to delete notification', err),
+    );
+  };
+
+  const clearReadNotifications = () => {
+    setNotifications((prev) => prev.filter((n) => !n.read));
+    apiFetch('/api/db/notifications/clear-read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUser.id }),
+    }).catch((err) => console.error('[useCommunicationState] Failed to clear read notifications', err));
+  };
+
+  const dispatchNotification = (data: {
+    recipientId?: string;
+    targetAudience?: 'all' | 'students' | 'teachers' | 'parents' | 'classroom';
+    classroomId?: string;
+    title: string;
+    body: string;
+    category: 'CRITICAL' | 'ACADEMIC' | 'COMMUNICATION';
+    severity?: 'urgent' | 'high' | 'normal' | 'info';
+    type?: string;
+  }) => {
+    const newNotif: NotificationItem = {
+      id: `notif-${Date.now()}`,
+      recipientId: data.recipientId || currentUser.id,
+      senderId: currentUser.id,
+      senderName: currentUser.name,
+      senderRole: currentUser.role,
+      title: data.title,
+      body: data.body,
+      category: data.category,
+      severity: data.severity || 'normal',
+      type: (data.type as any) || 'general',
+      read: false,
+      createdAt: new Date().toISOString(),
+      time: 'Just now',
+    };
+
+    // Optimistically add to UI if target matches current user
+    if (!data.recipientId || data.recipientId === currentUser.id || data.targetAudience) {
+      setNotifications((prev) => [newNotif, ...prev]);
+    }
+
+    apiFetch('/api/db/notifications/dispatch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...data,
+        senderId: currentUser.id,
+        senderName: currentUser.name,
+        senderRole: currentUser.role,
+      }),
+    }).catch((err) =>
+      console.error('[useCommunicationState] Failed to dispatch custom notification', err),
+    );
   };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -74,7 +212,13 @@ export const useCommunicationState = (currentUser: User) => {
     sendMessage,
     notifications,
     setNotifications,
+    notificationPreferences,
+    updateNotificationPreferences,
     markNotificationRead,
+    markAllNotificationsRead,
+    deleteNotification,
+    clearReadNotifications,
+    dispatchNotification,
     unreadCount,
   };
 };

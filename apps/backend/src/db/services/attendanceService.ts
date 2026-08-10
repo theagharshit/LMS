@@ -1,5 +1,6 @@
 import { prisma } from './prismaClient';
 import { AttendanceRecord } from '@lms/shared';
+import { notificationService } from './notificationService';
 
 export class AttendanceService {
   public async getAttendance(): Promise<AttendanceRecord[]> {
@@ -39,6 +40,20 @@ export class AttendanceService {
     const created = await prisma.attendanceRecord.create({
       data: { studentId, studentName, date, status, remarks, markedBy: 'System' },
     });
+
+    if (status === 'absent' || status === 'late') {
+      notificationService
+        .dispatchNotification({
+          recipientId: studentId,
+          title: `🚨 Attendance Alert: Marked ${status.toUpperCase()}`,
+          body: `Attendance status recorded as ${status} on ${date}.`,
+          category: 'CRITICAL',
+          severity: 'urgent',
+          type: 'attendance',
+        })
+        .catch((err) => console.error('[AttendanceService] Notification dispatch failed', err));
+    }
+
     return {
       ...created,
       status: created.status as any,
