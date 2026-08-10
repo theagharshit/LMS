@@ -59,7 +59,14 @@ export const useTrackingState = (currentUser: User) => {
     apiFetch('/api/db/attendance', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ studentId, studentName, date, status, remarks }),
+      body: JSON.stringify({
+        studentId,
+        studentName,
+        date,
+        status,
+        remarks,
+        markedBy: currentUser.name,
+      }),
     }).catch((err) => console.error('[AppContext] Failed to persist attendance', err));
   };
 
