@@ -41,6 +41,8 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
     addPostComment,
     assignments,
     quizzes,
+    quizSubmissions,
+    setIsCompletedQuizzesOpen,
     modules,
     currentUser,
     studentProfiles,
@@ -851,26 +853,59 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                   No online quizzes active right now.
                 </div>
               ) : (
-                classQuizzes.map((quiz) => (
-                  <div
-                    key={quiz.id}
-                    className="p-4 rounded-3xl bg-white border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-2"
-                  >
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-bold text-xs text-[#2D2D2A] font-serif">{quiz.title}</h4>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#FDEEDC] text-[#E88D67]">
-                        {quiz.durationMinutes} mins
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#7A7A72]">{quiz.description}</p>
-                    <button
-                      onClick={() => onOpenQuizModal(quiz.id)}
-                      className="w-full mt-2 py-2 rounded-xl bg-[#E88D67] text-white font-bold text-xs hover:bg-[#D87B55] transition-colors cursor-pointer"
+                classQuizzes.map((quiz) => {
+                  const sub = quizSubmissions.find(
+                    (s) => s.quizId === quiz.id && s.studentId === currentUser.id,
+                  );
+                  const isCompleted = Boolean(sub);
+                  const totalPoints = quiz.questions.reduce((acc, q) => acc + q.points, 0);
+
+                  return (
+                    <div
+                      key={quiz.id}
+                      className={`p-4 rounded-3xl bg-white border shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-2 ${
+                        isCompleted ? 'border-emerald-300' : 'border-[#EDEAE2]'
+                      }`}
                     >
-                      Start Online Quiz
-                    </button>
-                  </div>
-                ))
+                      <div className="flex justify-between items-start">
+                        <h4 className="font-bold text-xs text-[#2D2D2A] font-serif">
+                          {quiz.title}
+                        </h4>
+                        {isCompleted ? (
+                          <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-600 text-white shrink-0 shadow-xs">
+                            Attempted
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#FDEEDC] text-[#E88D67]">
+                            {quiz.durationMinutes} mins
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-[#7A7A72]">{quiz.description}</p>
+
+                      {isCompleted ? (
+                        <button
+                          onClick={() => setIsCompletedQuizzesOpen(true)}
+                          className="w-full mt-2 py-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 font-extrabold text-xs hover:bg-emerald-100 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>
+                            {quiz.revealMarksMode === 'later'
+                              ? 'Completed • Grade Pending'
+                              : `Completed • ${sub?.score}/${totalPoints} Marks`}
+                          </span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => onOpenQuizModal(quiz.id)}
+                          className="w-full mt-2 py-2 rounded-xl bg-[#E88D67] text-white font-bold text-xs hover:bg-[#D87B55] transition-colors cursor-pointer"
+                        >
+                          Start Online Quiz
+                        </button>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>

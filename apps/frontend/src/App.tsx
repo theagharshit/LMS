@@ -17,12 +17,14 @@ import { AITutorModal } from './components/student/AITutorModal';
 import { AIParentSummaryModal } from './components/parent/AIParentSummaryModal';
 import { AssignmentDetailModal } from './components/student/AssignmentDetailModal';
 import { QuizRunnerModal } from './components/student/QuizRunnerModal';
+import { CompletedQuizzesModal } from './components/student/CompletedQuizzesModal';
 import { QuizBuilderModal } from './components/teacher/QuizBuilderModal';
+import { TeacherQuizHubView } from './components/teacher/TeacherQuizHubView';
 import { ParentalControlsModal } from './components/parent/ParentalControlsModal';
 import { InDevelopmentView } from './components/common/InDevelopmentView';
 
 const AppContent: React.FC = () => {
-  const { currentUser, activeView } = useApp();
+  const { currentUser, activeView, isCompletedQuizzesOpen, setIsCompletedQuizzesOpen } = useApp();
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [activeAssignmentId, setActiveAssignmentId] = useState<string | null>(null);
@@ -73,7 +75,15 @@ const AppContent: React.FC = () => {
         );
 
       case 'quizzes':
-        return <InDevelopmentView title="Quiz Creator & AI" />;
+        if (currentUser.role === 'teacher') {
+          return <TeacherQuizHubView />;
+        }
+        return (
+          <StudentDashboard
+            onOpenAssignmentModal={(id) => setActiveAssignmentId(id)}
+            onOpenQuizModal={(id) => setActiveQuizId(id)}
+          />
+        );
 
       case 'parental-controls':
         return <InDevelopmentView title="Parental Controls" />;
@@ -134,6 +144,15 @@ const AppContent: React.FC = () => {
       />
 
       <QuizRunnerModal quizId={activeQuizId} onClose={() => setActiveQuizId(null)} />
+
+      <CompletedQuizzesModal
+        isOpen={isCompletedQuizzesOpen}
+        onClose={() => setIsCompletedQuizzesOpen(false)}
+        onReviewQuiz={(quizId) => {
+          setIsCompletedQuizzesOpen(false);
+          setActiveQuizId(quizId);
+        }}
+      />
 
       <QuizBuilderModal isOpen={isQuizBuilderOpen} onClose={() => setIsQuizBuilderOpen(false)} />
 

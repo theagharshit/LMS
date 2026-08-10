@@ -225,6 +225,16 @@ export const useAcademicState = (currentUser: User) => {
     );
   };
 
+  const updateQuizMarksMode = (quizId: string, revealMarksMode: 'immediate' | 'later') => {
+    setQuizzes((prev) => prev.map((q) => (q.id === quizId ? { ...q, revealMarksMode } : q)));
+
+    apiFetch(`/api/db/quizzes/${quizId}/marks-mode`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ revealMarksMode }),
+    }).catch((err) => console.error('[AppContext] Failed to update quiz marks mode', err));
+  };
+
   const addQuiz = (quizData: Omit<Quiz, 'id'>) => {
     const newQuiz: Quiz = {
       ...quizData,
@@ -289,6 +299,7 @@ export const useAcademicState = (currentUser: User) => {
     quizzes,
     setQuizzes,
     addQuiz,
+    updateQuizMarksMode,
     quizSubmissions,
     setQuizSubmissions,
     submitQuizAnswers,

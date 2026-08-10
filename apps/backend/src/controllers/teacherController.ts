@@ -54,6 +54,17 @@ export const addQuiz = async (req: Request, res: Response) => {
   }
 };
 
+export const updateQuizMarksMode = async (req: Request, res: Response) => {
+  try {
+    const { revealMarksMode } = req.body;
+    const quiz = await lmsDB.updateQuizMarksMode(req.params.id, revealMarksMode);
+    res.json({ status: 'success', quiz });
+  } catch (err) {
+    logger.error('Failed to update quiz marks mode:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to update quiz marks mode' });
+  }
+};
+
 export const markAttendance = async (req: Request, res: Response) => {
   try {
     const { studentId, studentName, date, status, remarks } = req.body;

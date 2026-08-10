@@ -245,6 +245,7 @@ model Quiz {
   dueDate         String
   totalQuestions  Int
   published       Boolean        @default(false)
+  revealMarksMode String         @default("immediate")
   
   createdAt       String
   

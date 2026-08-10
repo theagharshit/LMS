@@ -180,6 +180,7 @@ export interface Quiz {
   totalQuestions: number;
   questions: QuizQuestion[];
   published: boolean;
+  revealMarksMode?: 'immediate' | 'later';
   createdAt?: string;
 }
 

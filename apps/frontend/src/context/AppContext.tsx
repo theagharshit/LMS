@@ -144,6 +144,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAiTutorInitialPrompt: uiState.setAiTutorInitialPrompt,
     isAiParentSummaryOpen: uiState.isAiParentSummaryOpen,
     setIsAiParentSummaryOpen: uiState.setIsAiParentSummaryOpen,
+    isCompletedQuizzesOpen: uiState.isCompletedQuizzesOpen,
+    setIsCompletedQuizzesOpen: uiState.setIsCompletedQuizzesOpen,
 
     // Academic State
     classrooms: academicState.classrooms,
@@ -159,6 +161,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     gradeSubmission: academicState.gradeSubmission,
     quizzes: academicState.quizzes,
     addQuiz: academicState.addQuiz,
+    updateQuizMarksMode: academicState.updateQuizMarksMode,
     quizSubmissions: academicState.quizSubmissions,
     submitQuizAnswers: academicState.submitQuizAnswers,
     subjectPerformances: academicState.subjectPerformances,

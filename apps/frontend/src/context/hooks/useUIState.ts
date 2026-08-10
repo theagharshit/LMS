@@ -26,6 +26,7 @@ export const useUIState = () => {
   const [isAiTutorOpen, setIsAiTutorOpen] = useState<boolean>(false);
   const [aiTutorInitialPrompt, setAiTutorInitialPrompt] = useState<string>('');
   const [isAiParentSummaryOpen, setIsAiParentSummaryOpen] = useState<boolean>(false);
+  const [isCompletedQuizzesOpen, setIsCompletedQuizzesOpen] = useState<boolean>(false);
 
   return {
     activeView,
@@ -40,5 +41,7 @@ export const useUIState = () => {
     setAiTutorInitialPrompt,
     isAiParentSummaryOpen,
     setIsAiParentSummaryOpen,
+    isCompletedQuizzesOpen,
+    setIsCompletedQuizzesOpen,
   };
 };
