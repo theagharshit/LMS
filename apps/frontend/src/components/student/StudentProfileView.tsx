@@ -54,18 +54,10 @@ export const StudentProfileView: React.FC = () => {
     schoolName: 'Everest Academy',
   };
 
-  const [streakCount, setStreakCount] = useState<number>(studentData.streakDays || 14);
-  const [isCheckedInToday, setIsCheckedInToday] = useState<boolean>(false);
   const [isIdCardOpen, setIsIdCardOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'progress' | 'attendance' | 'activities' | 'badges'>(
     'progress',
   );
-
-  const handleCheckIn = () => {
-    if (isCheckedInToday) return;
-    setStreakCount((prev) => prev + 1);
-    setIsCheckedInToday(true);
-  };
 
   const termProgressData = termProgress
     .filter((t) => t.studentId === studentData.id)
@@ -125,7 +117,7 @@ export const StudentProfileView: React.FC = () => {
     { day: 'W', checked: true },
     { day: 'T', checked: true },
     { day: 'F', checked: true },
-    { day: 'S', checked: isCheckedInToday, isToday: true },
+    { day: 'S', checked: true, isToday: true },
     { day: 'S', checked: false },
   ];
 
@@ -183,7 +175,9 @@ export const StudentProfileView: React.FC = () => {
               </div>
               <div>
                 <p className="text-[10px] font-bold uppercase text-[#7A7A72]">Current Streak</p>
-                <p className="text-base font-bold text-[#2D2D2A]">{streakCount} Days Active 🔥</p>
+                <p className="text-base font-bold text-[#2D2D2A]">
+                  {studentData.streakDays} Days Active 🔥
+                </p>
               </div>
             </div>
 
@@ -207,27 +201,10 @@ export const StudentProfileView: React.FC = () => {
             </div>
           </div>
 
-          <button
-            onClick={handleCheckIn}
-            disabled={isCheckedInToday}
-            className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all shrink-0 cursor-pointer ${
-              isCheckedInToday
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                : 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs'
-            }`}
-          >
-            {isCheckedInToday ? (
-              <>
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Checked In</span>
-              </>
-            ) : (
-              <>
-                <Zap className="w-4 h-4" />
-                <span>Maintain Streak</span>
-              </>
-            )}
-          </button>
+          <div className="px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-300 font-extrabold text-[11px] flex items-center gap-1.5 shrink-0">
+            <CheckCircle2 className="w-4 h-4 text-amber-600" />
+            <span>Teacher Verified</span>
+          </div>
         </div>
 
         {/* Attendance */}
