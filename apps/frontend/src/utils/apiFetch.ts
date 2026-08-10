@@ -1,10 +1,23 @@
 export const apiFetch = (url: string, options?: RequestInit) => {
   try {
+    const fetchOptions: RequestInit = options ? { ...options } : {};
+    const headers = new Headers(fetchOptions.headers || {});
+
+    // Automatically attach Bearer token if present in localStorage
+    if (typeof localStorage !== 'undefined') {
+      const token = localStorage.getItem('lms_jwt_token');
+      if (token && !headers.has('Authorization')) {
+        headers.set('Authorization', `Bearer ${token}`);
+      }
+    }
+
+    fetchOptions.headers = headers;
+
     if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
-      return window.fetch(url, options);
+      return window.fetch(url, fetchOptions);
     }
     if (typeof globalThis !== 'undefined' && typeof globalThis.fetch === 'function') {
-      return globalThis.fetch(url, options);
+      return globalThis.fetch(url, fetchOptions);
     }
     return Promise.resolve(
       new Response(JSON.stringify({ status: 'success' }), {

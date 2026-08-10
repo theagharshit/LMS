@@ -93,9 +93,7 @@ export const AttendanceRegister: React.FC = () => {
   const [alertSentStatus, setAlertSentStatus] = useState<Record<string, boolean>>({});
 
   const getStudentStatus = (studentId: string): StatusKey => {
-    const rec = attendanceRecords.find(
-      (a) => a.studentId === studentId && a.date === selectedDate,
-    );
+    const rec = attendanceRecords.find((a) => a.studentId === studentId && a.date === selectedDate);
     if (!rec) return 'unmarked';
     return rec.status as StatusKey;
   };
@@ -417,12 +415,9 @@ export const AttendanceRegister: React.FC = () => {
                 {/* Status Toggles */}
                 <div className="flex flex-wrap items-center gap-2">
                   {(
-                    [
-                      { id: 'present' },
-                      { id: 'absent' },
-                      { id: 'late' },
-                      { id: 'excused' },
-                    ] as { id: StatusKey }[]
+                    [{ id: 'present' }, { id: 'absent' }, { id: 'late' }, { id: 'excused' }] as {
+                      id: StatusKey;
+                    }[]
                   ).map(({ id }) => {
                     const cfg = STATUS_CONFIG[id];
                     const isSel = status === id;
