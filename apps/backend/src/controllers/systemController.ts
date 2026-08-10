@@ -92,3 +92,106 @@ export const deleteFile = async (req: Request, res: Response) => {
   }
   res.json({ status: 'success', message: `File ${req.params.id} deleted from storage DB` });
 };
+
+// --- NOTIFICATION CONTROLLERS ---
+export const getUserNotifications = async (req: Request, res: Response) => {
+  try {
+    const notifications = await lmsDB.getUserNotifications(req.params.userId);
+    res.json({ status: 'success', notifications });
+  } catch (err) {
+    logger.error('Failed to get notifications:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to get notifications' });
+  }
+};
+
+export const markNotificationAsRead = async (req: Request, res: Response) => {
+  try {
+    await lmsDB.markNotificationAsRead(req.params.id);
+    res.json({ status: 'success' });
+  } catch (err) {
+    logger.error('Failed to mark notification read:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to mark notification read' });
+  }
+};
+
+export const markAllNotificationsAsRead = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.body;
+    await lmsDB.markAllNotificationsAsRead(userId);
+    res.json({ status: 'success' });
+  } catch (err) {
+    logger.error('Failed to mark all notifications read:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to mark all notifications read' });
+  }
+};
+
+export const getNotificationPreferences = async (req: Request, res: Response) => {
+  try {
+    const preferences = await lmsDB.getNotificationPreferences(req.params.userId);
+    res.json({ status: 'success', preferences });
+  } catch (err) {
+    logger.error('Failed to get notification preferences:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to get notification preferences' });
+  }
+};
+
+export const updateNotificationPreferences = async (req: Request, res: Response) => {
+  try {
+    const preferences = await lmsDB.updateNotificationPreferences(req.params.userId, req.body);
+    res.json({ status: 'success', preferences });
+  } catch (err) {
+    logger.error('Failed to update notification preferences:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to update notification preferences' });
+  }
+};
+
+export const dispatchCustomNotification = async (req: Request, res: Response) => {
+  try {
+    const {
+      recipientId,
+      targetAudience,
+      classroomId,
+      title,
+      body,
+      category,
+      severity,
+      type,
+      senderId,
+      senderName,
+      senderRole,
+    } = req.body;
+
+    if (targetAudience) {
+      const count = await lmsDB.dispatchBroadcastNotification({
+        targetAudience,
+        classroomId,
+        senderId,
+        senderName,
+        senderRole,
+        title,
+        body,
+        category: category || 'COMMUNICATION',
+        severity: severity || 'normal',
+        type: type || 'announcement',
+      });
+      return res.json({ status: 'success', dispatchedCount: count });
+    }
+
+    const notification = await lmsDB.dispatchNotification({
+      recipientId,
+      senderId,
+      senderName,
+      senderRole,
+      title,
+      body,
+      category: category || 'COMMUNICATION',
+      severity: severity || 'normal',
+      type: type || 'general',
+    });
+
+    res.json({ status: 'success', notification });
+  } catch (err) {
+    logger.error('Failed to dispatch custom notification:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to dispatch notification' });
+  }
+};

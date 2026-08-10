@@ -28,6 +28,7 @@ import {
   attendanceService,
   locationService,
   parentService,
+  notificationService,
 } from './services';
 
 /**
@@ -257,6 +258,38 @@ export class LMSDatabaseService {
     settings: ParentControlSettings,
   ): Promise<ParentControlSettings> {
     return parentService.updateParentControls(studentId, settings);
+  }
+
+  // --- NOTIFICATION SERVICE DELEGATES ---
+  public getNotificationPreferences(userId: string): Promise<NotificationPreference> {
+    return notificationService.getNotificationPreferences(userId);
+  }
+
+  public updateNotificationPreferences(
+    userId: string,
+    prefs: Partial<NotificationPreference>,
+  ): Promise<NotificationPreference> {
+    return notificationService.updateNotificationPreferences(userId, prefs);
+  }
+
+  public getUserNotifications(userId: string): Promise<NotificationItem[]> {
+    return notificationService.getUserNotifications(userId);
+  }
+
+  public markNotificationAsRead(id: string): Promise<boolean> {
+    return notificationService.markAsRead(id);
+  }
+
+  public markAllNotificationsAsRead(userId: string): Promise<boolean> {
+    return notificationService.markAllAsRead(userId);
+  }
+
+  public dispatchNotification(data: any): Promise<NotificationItem | null> {
+    return notificationService.dispatchNotification(data);
+  }
+
+  public dispatchBroadcastNotification(data: any): Promise<number> {
+    return notificationService.dispatchBroadcastNotification(data);
   }
 }
 

@@ -8,3 +8,4 @@ export * from './communicationService';
 export * from './attendanceService';
 export * from './locationService';
 export * from './parentService';
+export * from './notificationService';

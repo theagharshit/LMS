@@ -343,3 +343,38 @@ export interface SchoolAnnouncement {
   createdAt: string;
   targetAudience: 'all' | 'students' | 'teachers' | 'parents';
 }
+
+export type NotificationCategory = 'CRITICAL' | 'ACADEMIC' | 'COMMUNICATION';
+export type NotificationSeverity = 'urgent' | 'high' | 'normal' | 'info';
+export type NotificationType =
+  | 'assignment'
+  | 'quiz'
+  | 'attendance'
+  | 'location'
+  | 'announcement'
+  | 'badge'
+  | 'message'
+  | 'general';
+
+export interface NotificationItem {
+  id: string;
+  recipientId: string;
+  senderId?: string;
+  senderName?: string;
+  senderRole?: string;
+  title: string;
+  body: string;
+  category: NotificationCategory;
+  severity: NotificationSeverity;
+  type: NotificationType;
+  read: boolean;
+  createdAt: string;
+  time?: string;
+}
+
+export interface NotificationPreference {
+  userId: string;
+  enableAcademic: boolean;
+  enableCommunication: boolean;
+  enableReminders: boolean;
+}

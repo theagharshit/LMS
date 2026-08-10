@@ -188,7 +188,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     messages: communicationState.messages,
     sendMessage: communicationState.sendMessage,
     notifications: communicationState.notifications,
+    notificationPreferences: communicationState.notificationPreferences,
+    updateNotificationPreferences: communicationState.updateNotificationPreferences,
     markNotificationRead: communicationState.markNotificationRead,
+    markAllNotificationsRead: communicationState.markAllNotificationsRead,
+    dispatchNotification: communicationState.dispatchNotification,
     unreadCount: communicationState.unreadCount,
 
     // Admin State

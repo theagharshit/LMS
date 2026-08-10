@@ -12,6 +12,6 @@ describe('NotificationDrawer Component (src/components/common/NotificationDrawer
       </AppProvider>,
     );
 
-    expect(screen.getByText(/Notifications/i)).toBeInTheDocument();
+    expect(screen.getByText(/Notifications Hub/i)).toBeInTheDocument();
   });
 });

@@ -13,6 +13,7 @@ import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AcademicCalendarView } from './components/common/AcademicCalendarView';
 import { MessagesView } from './components/common/MessagesView';
 import { NotificationDrawer } from './components/common/NotificationDrawer';
+import { CustomNotificationDispatchModal } from './components/common/CustomNotificationDispatchModal';
 import { AITutorModal } from './components/student/AITutorModal';
 import { AIParentSummaryModal } from './components/parent/AIParentSummaryModal';
 import { AssignmentDetailModal } from './components/student/AssignmentDetailModal';
@@ -27,6 +28,7 @@ const AppContent: React.FC = () => {
   const { currentUser, activeView, isCompletedQuizzesOpen, setIsCompletedQuizzesOpen } = useApp();
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isDispatchNotificationOpen, setIsDispatchNotificationOpen] = useState(false);
   const [activeAssignmentId, setActiveAssignmentId] = useState<string | null>(null);
   const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
   const [isQuizBuilderOpen, setIsQuizBuilderOpen] = useState(false);
@@ -133,6 +135,12 @@ const AppContent: React.FC = () => {
       <NotificationDrawer
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}
+        onOpenDispatchModal={() => setIsDispatchNotificationOpen(true)}
+      />
+
+      <CustomNotificationDispatchModal
+        isOpen={isDispatchNotificationOpen}
+        onClose={() => setIsDispatchNotificationOpen(false)}
       />
 
       <AITutorModal />

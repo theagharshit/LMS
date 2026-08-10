@@ -1,5 +1,6 @@
 import { prisma } from './prismaClient';
 import { Assignment, Submission } from '@lms/shared';
+import { notificationService } from './notificationService';
 
 export class AssignmentService {
   public async getAssignments(): Promise<Assignment[]> {
@@ -39,6 +40,20 @@ export class AssignmentService {
       },
       include: { attachments: true },
     });
+
+    // Auto-trigger ACADEMIC notification to enrolled classroom students
+    notificationService
+      .dispatchBroadcastNotification({
+        targetAudience: 'classroom',
+        classroomId: created.classroomId,
+        title: `New ${created.subject} Assignment`,
+        body: `${created.title} has been assigned (Due ${created.dueDate})`,
+        category: 'ACADEMIC',
+        severity: 'normal',
+        type: 'assignment',
+      })
+      .catch((err) => console.error('[AssignmentService] Notification dispatch failed', err));
+
     return {
       ...created,
       attachments: created.attachments.map((at) => ({ ...at, type: at.type as any })),
