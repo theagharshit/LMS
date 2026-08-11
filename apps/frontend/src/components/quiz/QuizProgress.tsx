@@ -17,11 +17,11 @@ export const QuizProgress: React.FC<QuizProgressProps> = ({
     totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 0;
 
   return (
-    <div className="space-y-1.5 px-6 py-3 bg-slate-50/80 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800">
-      <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400">
+    <div className="space-y-1.5 px-6 py-3 bg-[#F9F7F2]/80 dark:bg-[#1d281c] border border-[#EDEAE2] dark:border-[#2b3d2a]">
+      <div className="flex items-center justify-between text-[11px] font-bold text-[#7A7A72] dark:text-slate-300">
         <span>
           Question{' '}
-          <strong className="text-purple-600 dark:text-purple-400">{currentIndex + 1}</strong> of{' '}
+          <strong className="text-[#4A6741] dark:text-emerald-400">{currentIndex + 1}</strong> of{' '}
           {totalQuestions}
         </span>
         <span>
@@ -29,15 +29,15 @@ export const QuizProgress: React.FC<QuizProgressProps> = ({
         </span>
       </div>
 
-      <div className="relative w-full h-2 rounded-full bg-slate-200 dark:bg-slate-700/60 overflow-hidden">
+      <div className="relative w-full h-2 rounded-full bg-[#EDEAE2] dark:bg-[#2b3d2a] overflow-hidden">
         {/* Background track for answered count */}
         <div
-          className="absolute top-0 bottom-0 left-0 bg-purple-200 dark:bg-purple-900/40 transition-all duration-300"
+          className="absolute top-0 bottom-0 left-0 bg-[#EBF1E8] dark:bg-[#214126] transition-all duration-300"
           style={{ width: `${answeredPercentage}%` }}
         />
         {/* Foreground track for current position */}
         <div
-          className="absolute top-0 bottom-0 left-0 bg-gradient-to-r from-purple-600 to-indigo-600 transition-all duration-300 shadow-sm"
+          className="absolute top-0 bottom-0 left-0 bg-[#4A6741] transition-all duration-300 shadow-sm"
           style={{ width: `${currentPercentage}%` }}
         />
       </div>

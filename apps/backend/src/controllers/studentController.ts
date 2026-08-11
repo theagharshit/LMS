@@ -18,9 +18,11 @@ export const submitQuiz = async (req: Request, res: Response) => {
   try {
     const sub = await lmsDB.submitQuiz(req.body);
     res.json({ status: 'success', quizSubmission: sub });
-  } catch (err) {
+  } catch (err: any) {
     logger.error('Failed to submit quiz:', err);
-    res.status(500).json({ status: 'error', message: 'Failed to submit quiz' });
+    const message = err?.message || 'Failed to submit quiz';
+    const status = message.includes('already submitted') ? 409 : 500;
+    res.status(status).json({ status: 'error', message });
   }
 };
 

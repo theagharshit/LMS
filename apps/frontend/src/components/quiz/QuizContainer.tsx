@@ -22,8 +22,15 @@ interface QuizContainerProps {
   initialAnswers?: Record<string, string>;
   isAlreadySubmitted?: boolean;
   revealMarksMode?: 'immediate' | 'later';
+  dueDate?: string;
   onClose: () => void;
-  onSubmitAnswers: (answers: Record<string, string>, score: number, totalPoints: number) => void;
+  onSubmitAnswers: (
+    answers: Record<string, string>,
+    score: number,
+    totalPoints: number,
+    startedAt?: string,
+    timeSpentSeconds?: number,
+  ) => void;
 }
 
 export const QuizContainer: React.FC<QuizContainerProps> = ({
@@ -37,9 +44,12 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
   initialAnswers = {},
   isAlreadySubmitted = false,
   revealMarksMode = 'immediate',
+  dueDate,
   onClose,
   onSubmitAnswers,
 }) => {
+  const isPastDue = dueDate ? new Date(`${dueDate}T23:59:59`) < new Date() : false;
+
   const { state, currentQuestion, resultSummary, actions } = useQuizSession({
     quizId,
     questions,
@@ -49,12 +59,22 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
     onFinishSubmission: onSubmitAnswers,
   });
 
+  const handleClose = () => {
+    if (state.status === 'taking') {
+      const confirmed = window.confirm(
+        'Leaving will not pause the timer. Your quiz will keep running. Are you sure you want to exit?',
+      );
+      if (!confirmed) return;
+    }
+    onClose();
+  };
+
   const totalPoints = questions.reduce((acc, q) => acc + q.points, 0);
 
   // LANDING / INSTRUCTIONS STATE
   if (state.status === 'landing') {
     return (
-      <div className="w-full max-w-4xl max-h-[95vh] bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-y-auto">
+      <div className="w-full max-w-4xl max-h-[95vh] bg-white dark:bg-[#1d281c] rounded-2xl md:rounded-3xl shadow-2xl border border-[#EDEAE2] dark:border-[#2b3d2a] overflow-y-auto">
         <QuizHeader
           title={title}
           subject={subject}
@@ -63,18 +83,31 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
           totalQuestions={questions.length}
           timeRemainingSeconds={durationMinutes * 60}
           showTimer={false}
-          onClose={onClose}
+          onClose={handleClose}
         />
-        <QuizInstructions
-          title={title}
-          description={description}
-          subject={subject}
-          classroomName={classroomName}
-          durationMinutes={durationMinutes}
-          totalQuestions={questions.length}
-          totalPoints={totalPoints}
-          onStart={actions.startQuiz}
-        />
+        {isPastDue ? (
+          <div className="p-8 text-center space-y-3">
+            <p className="font-bold text-red-600">This quiz is past its due date.</p>
+            <p className="text-sm text-slate-500">You can no longer start this assessment.</p>
+            <button
+              onClick={handleClose}
+              className="px-6 py-2 rounded-xl bg-slate-200 font-bold text-sm cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          <QuizInstructions
+            title={title}
+            description={description}
+            subject={subject}
+            classroomName={classroomName}
+            durationMinutes={durationMinutes}
+            totalQuestions={questions.length}
+            totalPoints={totalPoints}
+            onStart={actions.startQuiz}
+          />
+        )}
       </div>
     );
   }
@@ -82,13 +115,19 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
   // COMPLETED SCORE SUMMARY STATE
   if (state.status === 'completed') {
     return (
-      <div className="w-full max-w-3xl max-h-[95vh] bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-y-auto">
+      <div className="w-full max-w-3xl max-h-[95vh] bg-white dark:bg-[#1d281c] rounded-2xl md:rounded-3xl shadow-2xl border border-[#EDEAE2] dark:border-[#2b3d2a] overflow-y-auto">
+        {state.isTimeUp && (
+          <div className="p-4 bg-amber-50 border-b border-amber-200 text-center">
+            <p className="font-black text-amber-800 text-sm">Time&apos;s Up!</p>
+            <p className="text-xs text-amber-700">Your quiz was automatically submitted.</p>
+          </div>
+        )}
         <QuizResultView
           title={title}
           result={resultSummary}
           revealMarksMode={revealMarksMode}
           onReview={actions.startReview}
-          onClose={onClose}
+          onClose={handleClose}
         />
       </div>
     );
@@ -97,12 +136,12 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
   // REVIEW ANSWERS MODE STATE
   if (state.status === 'reviewing') {
     return (
-      <div className="w-full max-w-4xl max-h-[95vh] bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-y-auto">
+      <div className="w-full max-w-4xl max-h-[95vh] bg-white dark:bg-[#1d281c] rounded-2xl md:rounded-3xl shadow-2xl border border-[#EDEAE2] dark:border-[#2b3d2a] overflow-y-auto">
         <QuizReviewView
           questions={questions}
           answers={state.answers}
           onBackToResults={actions.backToResults}
-          onClose={onClose}
+          onClose={handleClose}
         />
       </div>
     );
@@ -115,7 +154,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
   const unansweredCount = questions.length - answeredCount;
 
   return (
-    <div className="w-full h-full md:h-[95vh] md:max-w-6xl bg-white dark:bg-slate-900 rounded-none md:rounded-3xl shadow-2xl border-0 md:border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col">
+    <div className="w-full h-full md:h-[95vh] md:max-w-6xl bg-white dark:bg-[#1d281c] rounded-none md:rounded-3xl shadow-2xl border-0 md:border border-[#EDEAE2] dark:border-[#2b3d2a] overflow-hidden flex flex-col">
       {/* Top Header */}
       <QuizHeader
         title={title}
@@ -125,7 +164,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
         totalQuestions={questions.length}
         timeRemainingSeconds={state.timeRemainingSeconds}
         showTimer={true}
-        onClose={onClose}
+        onClose={handleClose}
       />
 
       {/* Progress Bar */}
@@ -176,7 +215,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
             <button
               disabled={state.currentQuestionIndex === 0}
               onClick={actions.prevQuestion}
-              className="px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] text-[#4A6741] font-bold text-xs hover:bg-[#EBF1E8] transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
             >
               <ArrowLeft className="w-4 h-4" />
               Previous
@@ -186,7 +225,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
               {!isLastQuestion ? (
                 <button
                   onClick={actions.nextQuestion}
-                  className="px-6 py-2.5 rounded-2xl bg-purple-600 text-white font-extrabold text-xs hover:bg-purple-700 transition-colors shadow-md shadow-purple-500/20 flex items-center gap-1.5"
+                  className="px-6 py-2.5 rounded-2xl bg-[#4A6741] text-white font-extrabold text-xs hover:bg-[#3D5535] transition-colors shadow-md shadow-[#4A6741]/20 flex items-center gap-1.5"
                 >
                   <span>Next Question</span>
                   <ArrowRight className="w-4 h-4" />
@@ -194,7 +233,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
               ) : (
                 <button
                   onClick={actions.openConfirmModal}
-                  className="px-6 py-2.5 rounded-2xl bg-emerald-600 text-white font-extrabold text-xs hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-500/20 flex items-center gap-1.5"
+                  className="px-6 py-2.5 rounded-2xl bg-[#4A6741] text-white font-extrabold text-xs hover:bg-[#3D5535] transition-colors shadow-md shadow-[#4A6741]/20 flex items-center gap-1.5"
                 >
                   <CheckSquare className="w-4 h-4" />
                   Review & Submit

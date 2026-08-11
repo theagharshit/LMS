@@ -5,14 +5,12 @@ import {
   ParentControlSettings,
   StudentLocationRecord,
   SchedulePeriod,
-  ModuleItem,
   CalendarEvent,
   WeeklySchedule,
   DayOfWeek,
   LocationStatusCategory,
   MOCK_ATTENDANCE,
   MOCK_SCHEDULE,
-  MOCK_MODULES,
   MOCK_CALENDAR_EVENTS,
   MOCK_WEEKLY_SCHEDULE,
 } from '@lms/shared';
@@ -26,7 +24,6 @@ export const useTrackingState = (currentUser: User) => {
 
   // Readonly collections
   const [schedule] = useState<SchedulePeriod[]>(MOCK_SCHEDULE);
-  const [modules] = useState<ModuleItem[]>(MOCK_MODULES);
   const [calendarEvents] = useState<CalendarEvent[]>(MOCK_CALENDAR_EVENTS);
 
   const markAttendance = (
@@ -152,7 +149,6 @@ export const useTrackingState = (currentUser: User) => {
     setWeeklySchedule,
     updateDaySchedule,
     schedule,
-    modules,
     calendarEvents,
   };
 };

@@ -34,6 +34,7 @@ model User {
   
   taughtClassrooms      Classroom[]             @relation("TeacherClassrooms")
   enrollments           ClassroomEnrollment[]   @relation("StudentEnrollments")
+  studyResources        StudyResource[]         @relation("TeacherResources")
   streamPosts           StreamPost[]            @relation("AuthorPosts")
   postComments          PostComment[]           @relation("AuthorComments")
   submissions           Submission[]            @relation("StudentSubmissions")
@@ -63,6 +64,7 @@ model StudentProfile {
   section              String
   parentName           String
   parentPhone          String
+  idCardPhotoUrl       String?
 
   badges               StudentBadge[]
 }
@@ -116,6 +118,7 @@ model Classroom {
   quizzes       Quiz[]
   moduleItems   ModuleItem[]
   storedFiles   StoredFileRecord[]
+  studyResources StudyResource[]
 }
 
 model ClassroomEnrollment {
@@ -247,11 +250,14 @@ model Quiz {
   totalQuestions  Int
   published       Boolean        @default(false)
   revealMarksMode String         @default("immediate")
+  status          String         @default("draft")
+  liveStartedAt   String?
   
   createdAt       String
   
   questions       QuizQuestion[]
   submissions     QuizSubmission[]
+  resourceLinks   QuizResourceLink[]
 }
 
 model QuizQuestion {
@@ -277,8 +283,39 @@ model QuizSubmission {
   score       Float
   totalPoints Int
   completedAt String
+  startedAt   String?
+  timeSpentSeconds Int?
   
   answers     Json
+
+  @@unique([quizId, studentId])
+}
+
+model StudyResource {
+  id            String   @id @default(cuid())
+  classroomId   String
+  classroom     Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  teacherId     String
+  teacher       User     @relation("TeacherResources", fields: [teacherId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  type          String
+  url           String
+  mimeType      String?
+  sizeFormatted String?
+  tags          String[]
+  createdAt     String
+
+  quizLinks     QuizResourceLink[]
+}
+
+model QuizResourceLink {
+  quizId     String
+  quiz       Quiz          @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  resourceId String
+  resource   StudyResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@id([quizId, resourceId])
 }
 
 model AttendanceRecord {

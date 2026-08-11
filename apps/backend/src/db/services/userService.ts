@@ -38,6 +38,7 @@ export class UserService {
       xpPoints: p.xpPoints,
       parentName: p.parentName,
       parentPhone: p.parentPhone,
+      idCardPhotoUrl: p.idCardPhotoUrl || undefined,
       badges: p.badges.map((b) => ({
         id: b.id,
         earnedDate: b.earnedDate,
@@ -113,9 +114,10 @@ export class UserService {
     if (data.section) profileUpdate.section = data.section;
     if (data.parentName) profileUpdate.parentName = data.parentName;
     if (data.parentPhone) profileUpdate.parentPhone = data.parentPhone;
+    if (data.idCardPhotoUrl !== undefined) profileUpdate.idCardPhotoUrl = data.idCardPhotoUrl;
 
     if (Object.keys(profileUpdate).length > 0) {
-      await prisma.studentProfile.updateMany({ where: { id }, data: profileUpdate });
+      await prisma.studentProfile.updateMany({ where: { userId: id }, data: profileUpdate });
     }
 
     return { id, ...data };

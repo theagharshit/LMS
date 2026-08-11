@@ -57,7 +57,7 @@ export const QuizReviewView: React.FC<QuizReviewViewProps> = ({
         <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold">
           <button
             onClick={() => setFilter('all')}
-            className={`px-3 py-1 rounded-lg transition-colors ${filter === 'all' ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-300 shadow-xs' : 'text-slate-500'}`}
+            className={`px-3 py-1 rounded-lg transition-colors ${filter === 'all' ? 'bg-white dark:bg-[#214126] text-[#4A6741] dark:text-emerald-400 shadow-xs' : 'text-slate-500'}`}
           >
             All ({questions.length})
           </button>
@@ -159,8 +159,8 @@ export const QuizReviewView: React.FC<QuizReviewViewProps> = ({
                 </div>
 
                 {q.explanation && (
-                  <div className="p-3.5 rounded-2xl bg-purple-50/60 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/50 text-xs space-y-1">
-                    <p className="font-extrabold text-purple-700 dark:text-purple-300 text-[11px] uppercase tracking-wider flex items-center gap-1">
+                  <div className="p-3.5 rounded-2xl bg-[#EBF1E8]/60 dark:bg-[#214126] border border-[#88A070]/40 text-xs space-y-1">
+                    <p className="font-extrabold text-[#4A6741] dark:text-emerald-400 text-[11px] uppercase tracking-wider flex items-center gap-1">
                       <HelpCircle className="w-3.5 h-3.5" /> Explanation & Concept
                     </p>
                     <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px]">
@@ -185,7 +185,7 @@ export const QuizReviewView: React.FC<QuizReviewViewProps> = ({
 
         <button
           onClick={onClose}
-          className="px-6 py-2.5 rounded-2xl bg-purple-600 text-white font-extrabold text-xs hover:bg-purple-700 transition-colors shadow-md"
+          className="px-6 py-2.5 rounded-2xl bg-[#4A6741] text-white font-extrabold text-xs hover:bg-[#3D5535] transition-colors shadow-md shadow-[#4A6741]/20"
         >
           Close Review
         </button>

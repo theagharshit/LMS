@@ -294,13 +294,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   <p className="text-[11px] text-[#2D2D2A]">
                     Parent: {st.parentName} ({st.parentPhone})
                   </p>
-
-                  <button
-                    onClick={() => setActiveView('messages')}
-                    className="w-full py-1.5 rounded-xl bg-[#E88D67] text-white font-bold text-[11px] hover:bg-[#D87B55] transition-colors"
-                  >
-                    Send Parent Alert Message
-                  </button>
                 </div>
               ))}
             </div>

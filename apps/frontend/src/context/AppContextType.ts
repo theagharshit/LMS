@@ -25,6 +25,7 @@ import {
   SchoolAnnouncement,
   NotificationItem,
   NotificationPreference,
+  StudyResource,
 } from '@lms/shared';
 
 export interface AppContextType {
@@ -65,7 +66,10 @@ export interface AppContextType {
   gradeSubmission: (submissionId: string, grade: number, feedback: string) => void;
 
   quizzes: Quiz[];
-  addQuiz: (quiz: Omit<Quiz, 'id'>) => void;
+  addQuiz: (quiz: Omit<Quiz, 'id'>) => Quiz;
+  updateQuiz: (quizId: string, updates: Partial<Omit<Quiz, 'id'>>) => void;
+  startQuizLive: (quizId: string) => void;
+  deleteQuiz: (quizId: string) => void;
   updateQuizMarksMode: (quizId: string, revealMarksMode: 'immediate' | 'later') => void;
   quizSubmissions: QuizSubmission[];
   submitQuizAnswers: (
@@ -73,7 +77,19 @@ export interface AppContextType {
     answers: Record<string, string>,
     score: number,
     totalPoints: number,
+    startedAt?: string,
+    timeSpentSeconds?: number,
   ) => void;
+
+  resources: StudyResource[];
+  addResource: (data: Omit<StudyResource, 'id' | 'createdAt'>) => StudyResource;
+  updateResource: (id: string, updates: Partial<Omit<StudyResource, 'id' | 'createdAt'>>) => void;
+  deleteResource: (id: string) => void;
+  addModule: (
+    data: Omit<ModuleItem, 'id' | 'completedByStudentIds'> & { completedByStudentIds?: string[] },
+  ) => ModuleItem;
+  updateModule: (id: string, updates: Partial<Omit<ModuleItem, 'id'>>) => void;
+  deleteModule: (id: string) => void;
 
   attendanceRecords: AttendanceRecord[];
   markAttendance: (
@@ -100,6 +116,7 @@ export interface AppContextType {
   termProgress: TermProgress[];
   studentActivities: StudentActivity[];
   studentProfiles: StudentProfile[];
+  updateStudentIdCardPhoto: (studentId: string, idCardPhotoUrl: string) => void;
   badgeDefinitions: BadgeDefinition[];
   assignBadge: (
     studentProfileId: string,

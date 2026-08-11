@@ -10,6 +10,12 @@ export const useAuthState = () => {
   const activeChildList = studentProfiles.filter((s) => currentUser.childrenIds?.includes(s.id));
   const activeChild = studentProfiles.find((s) => s.id === activeChildId) || studentProfiles[0];
 
+  const updateStudentIdCardPhoto = (studentId: string, idCardPhotoUrl: string) => {
+    setStudentProfiles((prev) =>
+      prev.map((s) => (s.id === studentId ? { ...s, idCardPhotoUrl } : s)),
+    );
+  };
+
   return {
     allUsers,
     setAllUsers,
@@ -21,5 +27,6 @@ export const useAuthState = () => {
     setActiveChildId,
     activeChildList,
     activeChild,
+    updateStudentIdCardPhoto,
   };
 };

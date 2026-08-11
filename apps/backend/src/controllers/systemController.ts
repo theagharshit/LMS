@@ -31,6 +31,8 @@ export const getDbState = async (_req: Request, res: Response) => {
       termProgress: await lmsDB.getTermProgress(),
       studentActivities: await lmsDB.getStudentActivities(),
       subjectPerformances: await lmsDB.getSubjectPerformances(),
+      resources: await lmsDB.getResources(),
+      modules: await lmsDB.getModules(),
     });
   } catch (err) {
     logger.error('Failed to fetch DB state:', err);

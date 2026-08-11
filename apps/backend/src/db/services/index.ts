@@ -9,3 +9,5 @@ export * from './attendanceService';
 export * from './locationService';
 export * from './parentService';
 export * from './notificationService';
+export * from './resourceService';
+export * from './moduleService';

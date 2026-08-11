@@ -70,8 +70,10 @@ async function main() {
   await prisma.attachment.deleteMany();
   await prisma.submission.deleteMany();
   await prisma.quizSubmission.deleteMany();
+  await prisma.quizResourceLink.deleteMany();
   await prisma.quizQuestion.deleteMany();
   await prisma.quiz.deleteMany();
+  await prisma.studyResource.deleteMany();
   await prisma.assignment.deleteMany();
   await prisma.streamPost.deleteMany();
   await prisma.moduleItem.deleteMany();
@@ -685,6 +687,53 @@ async function main() {
     await prisma.submission.create({ data: sub });
   }
 
+  console.log('Seeding Study Resources...');
+  const studyResourcesData = [
+    {
+      id: 'res-math-ch4',
+      classroomId: 'cls-math-8a',
+      teacherId: 'user-teach-1',
+      title: 'Grade 8 Math - Chapter 4 Algebraic Expressions',
+      description: 'CDC Nepal curriculum notes on factorization and identities',
+      type: 'pdf',
+      url: '/uploads/Grade_8_Math_Pythagoras_Theorem.pdf',
+      mimeType: 'application/pdf',
+      sizeFormatted: '1.2 MB',
+      tags: ['Mathematics', 'Algebra'],
+      createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
+    },
+    {
+      id: 'res-math-pythagoras',
+      classroomId: 'cls-math-8a',
+      teacherId: 'user-teach-1',
+      title: 'Pythagoras Theorem Worksheet',
+      description: 'Practice problems for right-angled triangles',
+      type: 'pdf',
+      url: '/uploads/Grade_8_Math_Pythagoras_Theorem.pdf',
+      mimeType: 'application/pdf',
+      sizeFormatted: '850 KB',
+      tags: ['Mathematics', 'Geometry'],
+      createdAt: new Date(Date.now() - 86400000 * 8).toISOString(),
+    },
+    {
+      id: 'res-sci-newton',
+      classroomId: 'cls-sci-9b',
+      teacherId: 'user-teach-2',
+      title: "Newton's Laws Study Guide",
+      description: 'Physics notes on force, mass, and acceleration',
+      type: 'pdf',
+      url: '/uploads/Science_Lab_Experiment_Guide.pdf',
+      mimeType: 'application/pdf',
+      sizeFormatted: '2.1 MB',
+      tags: ['Science', 'Physics'],
+      createdAt: new Date(Date.now() - 86400000 * 7).toISOString(),
+    },
+  ];
+
+  for (const res of studyResourcesData) {
+    await prisma.studyResource.create({ data: res });
+  }
+
   console.log('Seeding 2 Quizzes...');
   const quizzesData = [
     // Quiz 1 (Math 8A)
@@ -700,6 +749,8 @@ async function main() {
       dueDate: '2026-08-18',
       totalQuestions: 3,
       published: true,
+      status: 'live',
+      liveStartedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
       createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
       questions: [
         {
@@ -744,6 +795,8 @@ async function main() {
       dueDate: '2026-08-22',
       totalQuestions: 3,
       published: true,
+      status: 'live',
+      liveStartedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
       createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
       questions: [
         {
@@ -787,6 +840,14 @@ async function main() {
       },
     });
   }
+
+  await prisma.quizResourceLink.createMany({
+    data: [
+      { quizId: 'quiz-math-1', resourceId: 'res-math-ch4' },
+      { quizId: 'quiz-math-1', resourceId: 'res-math-pythagoras' },
+      { quizId: 'quiz-sci-1', resourceId: 'res-sci-newton' },
+    ],
+  });
 
   console.log('Seeding Quiz Submissions...');
   const quizSubmissionsData = [

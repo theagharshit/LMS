@@ -37,10 +37,10 @@ export const QuestionNavigator: React.FC<QuestionNavigatorProps> = ({
   const unansweredCount = Math.max(0, questions.length - answeredCount);
 
   return (
-    <div className="w-full h-full bg-slate-50 dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 p-4 flex flex-col space-y-4">
+    <div className="w-full h-full bg-[#F9F7F2] dark:bg-[#1d281c] border-l border-[#EDEAE2] dark:border-[#2b3d2a] p-4 flex flex-col space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-          <Bookmark className="w-4 h-4 text-purple-600" />
+          <Bookmark className="w-4 h-4 text-[#4A6741]" />
           Question Palette
         </h3>
         <span className="text-[11px] font-semibold text-slate-500">
@@ -49,12 +49,12 @@ export const QuestionNavigator: React.FC<QuestionNavigatorProps> = ({
       </div>
 
       {/* Filter tabs */}
-      <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-slate-200/70 dark:bg-slate-800 text-[10px] font-bold">
+      <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-[#EBF1E8] dark:bg-[#214126] text-[10px] font-bold border border-[#EDEAE2] dark:border-[#2b3d2a]">
         <button
           onClick={() => setFilter('all')}
           className={`py-1.5 rounded-lg transition-colors ${
             filter === 'all'
-              ? 'bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-300 shadow-xs'
+              ? 'bg-white dark:bg-[#214126] text-[#4A6741] dark:text-emerald-400 shadow-xs'
               : 'text-slate-600 dark:text-slate-400'
           }`}
         >
@@ -64,7 +64,7 @@ export const QuestionNavigator: React.FC<QuestionNavigatorProps> = ({
           onClick={() => setFilter('answered')}
           className={`py-1.5 rounded-lg transition-colors ${
             filter === 'answered'
-              ? 'bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-300 shadow-xs'
+              ? 'bg-white dark:bg-[#214126] text-[#4A6741] dark:text-emerald-400 shadow-xs'
               : 'text-slate-600 dark:text-slate-400'
           }`}
         >
@@ -74,7 +74,7 @@ export const QuestionNavigator: React.FC<QuestionNavigatorProps> = ({
           onClick={() => setFilter('unanswered')}
           className={`py-1.5 rounded-lg transition-colors ${
             filter === 'unanswered'
-              ? 'bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-300 shadow-xs'
+              ? 'bg-white dark:bg-[#214126] text-[#4A6741] dark:text-emerald-400 shadow-xs'
               : 'text-slate-600 dark:text-slate-400'
           }`}
         >
@@ -84,7 +84,7 @@ export const QuestionNavigator: React.FC<QuestionNavigatorProps> = ({
           onClick={() => setFilter('flagged')}
           className={`py-1.5 rounded-lg transition-colors ${
             filter === 'flagged'
-              ? 'bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-300 shadow-xs'
+              ? 'bg-white dark:bg-[#214126] text-[#4A6741] dark:text-emerald-400 shadow-xs'
               : 'text-slate-600 dark:text-slate-400'
           }`}
         >
@@ -103,12 +103,12 @@ export const QuestionNavigator: React.FC<QuestionNavigatorProps> = ({
             <button
               key={q.id}
               onClick={() => onSelectQuestion(i)}
-              className={`relative h-10 rounded-xl font-extrabold text-xs flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+              className={`relative h-10 rounded-xl font-extrabold text-xs flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-[#4A6741] ${
                 isCurrent
-                  ? 'bg-purple-600 text-white ring-2 ring-purple-600 ring-offset-2 dark:ring-offset-slate-900 shadow-md'
+                  ? 'bg-[#4A6741] text-white ring-2 ring-[#4A6741] ring-offset-2 dark:ring-offset-[#1d281c] shadow-md'
                   : isAnswered
                     ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
-                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-purple-300'
+                    : 'bg-white dark:bg-[#1d281c] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#2b3d2a] hover:border-[#88A070]'
               }`}
             >
               <span>{i + 1}</span>
@@ -125,7 +125,7 @@ export const QuestionNavigator: React.FC<QuestionNavigatorProps> = ({
       {/* Status Legend */}
       <div className="pt-3 border-t border-slate-200 dark:border-slate-800 text-[10px] font-semibold text-slate-500 dark:text-slate-400 space-y-1.5">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-md bg-purple-600" />
+          <div className="w-3 h-3 rounded-md bg-[#4A6741]" />
           <span>Current Position</span>
         </div>
         <div className="flex items-center gap-2">

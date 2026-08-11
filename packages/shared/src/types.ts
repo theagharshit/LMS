@@ -30,6 +30,8 @@ export interface StudentProfile extends User {
   section: string;
   parentName: string;
   parentPhone: string;
+  /** Student-uploaded photo of their physical ID card */
+  idCardPhotoUrl?: string;
 }
 
 export interface BadgeDefinition {
@@ -181,6 +183,9 @@ export interface Quiz {
   questions: QuizQuestion[];
   published: boolean;
   revealMarksMode?: 'immediate' | 'later';
+  status?: 'draft' | 'published' | 'live';
+  liveStartedAt?: string;
+  sourceResourceIds?: string[];
   createdAt?: string;
 }
 
@@ -191,7 +196,23 @@ export interface QuizSubmission {
   score: number;
   totalPoints: number;
   completedAt: string;
+  startedAt?: string;
+  timeSpentSeconds?: number;
   answers: Record<string, string>; // questionId -> answer
+}
+
+export interface StudyResource {
+  id: string;
+  classroomId: string;
+  teacherId: string;
+  title: string;
+  description?: string;
+  type: 'pdf' | 'video' | 'link' | 'image' | 'doc' | 'notes';
+  url: string;
+  mimeType?: string;
+  sizeFormatted?: string;
+  tags?: string[];
+  createdAt: string;
 }
 
 export type DayOfWeek =

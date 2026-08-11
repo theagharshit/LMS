@@ -213,6 +213,8 @@ describe('LMS Modular Quiz System Suite', () => {
       expect.any(Object),
       10, // 10 out of 10 points
       10,
+      expect.any(String),
+      expect.any(Number),
     );
     expect(screen.getByText(/Quiz Complete!/i)).toBeInTheDocument();
     expect(screen.getByText(/Grade: A\+ \(Outstanding\)/i)).toBeInTheDocument();

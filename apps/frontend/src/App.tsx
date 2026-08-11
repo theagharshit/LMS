@@ -19,7 +19,7 @@ import { AIParentSummaryModal } from './components/parent/AIParentSummaryModal';
 import { AssignmentDetailModal } from './components/student/AssignmentDetailModal';
 import { QuizRunnerModal } from './components/student/QuizRunnerModal';
 import { CompletedQuizzesModal } from './components/student/CompletedQuizzesModal';
-import { QuizBuilderModal } from './components/teacher/QuizBuilderModal';
+import { QuizBuilderWizard } from './components/teacher/QuizBuilderWizard';
 import { TeacherQuizHubView } from './components/teacher/TeacherQuizHubView';
 import { ParentalControlsModal } from './components/parent/ParentalControlsModal';
 import { InDevelopmentView } from './components/common/InDevelopmentView';
@@ -67,7 +67,12 @@ const AppContent: React.FC = () => {
 
       case 'assignments':
         if (currentUser.role === 'teacher') {
-          return <InDevelopmentView title="Grading Desk" />;
+          return (
+            <TeacherDashboard
+              onOpenGradeModal={(id) => setActiveAssignmentId(id)}
+              onOpenQuizBuilderModal={() => setIsQuizBuilderOpen(true)}
+            />
+          );
         }
         return (
           <StudentDashboard
@@ -103,6 +108,14 @@ const AppContent: React.FC = () => {
         return <AcademicCalendarView />;
 
       case 'messages':
+        if (currentUser.role === 'teacher') {
+          return (
+            <TeacherDashboard
+              onOpenGradeModal={(id) => setActiveAssignmentId(id)}
+              onOpenQuizBuilderModal={() => setIsQuizBuilderOpen(true)}
+            />
+          );
+        }
         return <MessagesView />;
 
       case 'parent-portal':
@@ -162,7 +175,7 @@ const AppContent: React.FC = () => {
         }}
       />
 
-      <QuizBuilderModal isOpen={isQuizBuilderOpen} onClose={() => setIsQuizBuilderOpen(false)} />
+      <QuizBuilderWizard isOpen={isQuizBuilderOpen} onClose={() => setIsQuizBuilderOpen(false)} />
 
       <ParentalControlsModal
         isOpen={isParentalControlsOpen}

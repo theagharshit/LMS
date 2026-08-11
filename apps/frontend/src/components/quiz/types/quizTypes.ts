@@ -54,6 +54,7 @@ export interface QuizSessionState {
   submittedAt: string | null;
   timeRemainingSeconds: number;
   status: 'landing' | 'taking' | 'confirming' | 'completed' | 'reviewing';
+  isTimeUp?: boolean;
 }
 
 export interface QuizResultSummary {
