@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { getAvatarUrl } from '../../utils/avatarUtils';
 import { Attachment } from '@lms/shared';
+import { useDebouncedValue } from '../../utils/hooks';
 import {
   MessageSquare,
   FileText,
@@ -56,6 +57,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
 
   // Landing Page Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
   const [subjectFilter, setSubjectFilter] = useState<string>('all');
   const [joinCodeInput, setJoinCodeInput] = useState('');
   const [joinError, setJoinError] = useState('');
@@ -169,10 +171,10 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
   // Filter classrooms for landing page
   const filteredClassrooms = classrooms.filter((cls) => {
     const matchesSearch =
-      cls.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cls.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cls.teacherName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cls.code.toLowerCase().includes(searchQuery.toLowerCase());
+      cls.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      cls.subject.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      cls.teacherName.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      cls.code.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
     const matchesSubject =
       subjectFilter === 'all' || cls.subject.toLowerCase().includes(subjectFilter.toLowerCase());
     return matchesSearch && matchesSubject;

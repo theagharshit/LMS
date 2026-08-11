@@ -658,9 +658,14 @@ export const AdminDashboard: React.FC = () => {
                         <span className="font-bold text-[#2D2D2A]">{s.parentName || 'Linked'}</span>
                       </div>
                       {s.parentPhone && (
-                        <div className="flex justify-between">
-                          <span className="text-[#7A7A72]">Parent Contact:</span>
-                          <span className="font-medium text-[#2D2D2A]">{s.parentPhone}</span>
+                        <div className="flex justify-between items-center gap-2">
+                          <span className="text-[#7A7A72]">Emergency Contact:</span>
+                          <span
+                            className="rounded-full bg-rose-100 px-2 py-0.5 font-bold text-rose-700"
+                            aria-label={`Emergency contact ${s.parentPhone}`}
+                          >
+                            {s.parentPhone}
+                          </span>
                         </div>
                       )}
                       {s.medicalNotes && (

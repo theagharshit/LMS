@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken, JwtUserPayload } from '@utils/jwtUtils';
 import { UserRole } from '@lms/shared';
 import { logger } from '@utils/logger';
+import { authService } from '@db/services/authService';
+import { prisma } from '@db/services/prismaClient';
 
 declare global {
   namespace Express {
@@ -24,13 +26,44 @@ export const isStrictAuthMode = (): boolean => {
  * In Production (or strict mode), missing/invalid tokens trigger HTTP 401 Unauthorized.
  * In Development mode, fallback demo session is provided if token is missing.
  */
-export const authenticateJwt = (req: Request, res: Response, next: NextFunction): void => {
+export const authenticateJwt = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   const authHeader = req.headers.authorization;
 
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
     try {
-      req.user = verifyToken(token);
+      const payload = verifyToken(token);
+      if (payload.tokenType !== 'access' || (await authService.isRevoked(payload.jti))) {
+        throw new Error('Token has been revoked or has an invalid type.');
+      }
+      req.user = payload;
+      const currentIp = req.ip;
+      const user = await prisma.user.findUnique({
+        where: { id: payload.id },
+        select: { lastSessionIp: true, isArchived: true },
+      });
+      if (user?.isArchived) throw new Error('Account is archived.');
+      if (user?.lastSessionIp && currentIp && user.lastSessionIp !== currentIp) {
+        await prisma.securityAudit.create({
+          data: {
+            userId: payload.id,
+            event: 'session-ip-changed',
+            severity: 'high',
+            ipAddress: currentIp,
+            requestId: req.requestId,
+            metadata: { previousIp: user.lastSessionIp },
+          },
+        });
+        logger.warn(`[Security] Session IP changed for user '${payload.id}'`);
+      }
+      await prisma.user.updateMany({
+        where: { id: payload.id },
+        data: { lastSessionIp: currentIp, lastActiveAt: new Date() },
+      });
       return next();
     } catch (err) {
       logger.warn(`[Auth] Invalid JWT token attempt: ${(err as Error).message}`);
@@ -67,12 +100,18 @@ export const authenticateJwt = (req: Request, res: Response, next: NextFunction)
 /**
  * Optional authentication middleware: attaches req.user if a valid token is provided.
  */
-export const optionalAuthenticateJwt = (req: Request, res: Response, next: NextFunction): void => {
+export const optionalAuthenticateJwt = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
     try {
-      req.user = verifyToken(token);
+      const payload = verifyToken(token);
+      if (payload.tokenType === 'access' && !(await authService.isRevoked(payload.jti)))
+        req.user = payload;
     } catch {
       // Ignore invalid optional tokens
     }
@@ -105,5 +144,16 @@ export const requireRoles = (...allowedRoles: UserRole[]) => {
     }
 
     next();
+  };
+};
+
+/** Enforces authentication/RBAC in strict or production mode while preserving local demo mode. */
+export const requireRolesWhenStrict = (...allowedRoles: UserRole[]) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!isStrictAuthMode()) return next();
+    authenticateJwt(req, res, (error?: unknown) => {
+      if (error) return next(error);
+      requireRoles(...allowedRoles)(req, res, next);
+    });
   };
 };

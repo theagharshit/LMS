@@ -54,6 +54,17 @@ async function main() {
   }
 
   console.log('Clearing database...');
+  await prisma.refreshToken.deleteMany();
+  await prisma.tokenRevocation.deleteMany();
+  await prisma.securityAudit.deleteMany();
+  await prisma.auditTrail.deleteMany();
+  await prisma.homeworkVersion.deleteMany();
+  await prisma.quizAttemptSession.deleteMany();
+  await prisma.paymentRecord.deleteMany();
+  await prisma.absenceRequest.deleteMany();
+  await prisma.parentVerificationToken.deleteMany();
+  await prisma.apiKey.deleteMany();
+  await prisma.systemConfig.deleteMany();
   await prisma.classroomEnrollment.deleteMany();
   await prisma.termProgress.deleteMany();
   await prisma.studentActivity.deleteMany();
@@ -199,6 +210,15 @@ async function main() {
   for (const u of usersData) {
     await prisma.user.create({ data: u });
   }
+
+  await prisma.notificationPreference.createMany({
+    data: usersData.map((user) => ({
+      userId: user.id,
+      enableAcademic: true,
+      enableCommunication: true,
+      enableReminders: true,
+    })),
+  });
 
   console.log('Seeding Badge Definitions...');
   const badgeDefs = [
@@ -1264,6 +1284,39 @@ async function main() {
         },
       ],
     });
+  }
+
+  await prisma.systemConfig.createMany({
+    data: [
+      {
+        key: 'school_name',
+        value: 'Everest International Academy',
+        description: 'Public school name',
+      },
+      { key: 'academic_year', value: '2083/84', description: 'Current Nepali academic year' },
+      {
+        key: 'maintenance_mode',
+        value: false,
+        description: 'Blocks non-admin logins while enabled',
+      },
+    ],
+  });
+
+  const [userCount, studentCount, classroomCount, preferenceCount] = await Promise.all([
+    prisma.user.count(),
+    prisma.studentProfile.count(),
+    prisma.classroom.count(),
+    prisma.notificationPreference.count(),
+  ]);
+  if (
+    userCount !== usersData.length ||
+    studentCount !== 4 ||
+    classroomCount !== 2 ||
+    preferenceCount !== userCount
+  ) {
+    throw new Error(
+      `Seed parity check failed (users=${userCount}, students=${studentCount}, classrooms=${classroomCount}, preferences=${preferenceCount}).`,
+    );
   }
 
   clearInterval(interval);

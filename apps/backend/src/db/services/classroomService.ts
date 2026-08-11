@@ -1,9 +1,11 @@
 import { prisma } from './prismaClient';
 import { Classroom, StreamPost } from '@lms/shared';
+import { withDeadlockRetry } from '@utils/transaction';
 
 export class ClassroomService {
   public async getClassrooms(): Promise<Classroom[]> {
     const classrooms = await prisma.classroom.findMany({
+      where: { isArchived: false },
       include: { enrollments: true },
     });
     return classrooms.map((c) => ({
@@ -33,6 +35,15 @@ export class ClassroomService {
     if (validTeacherId) {
       const teacher = await prisma.user.findUnique({ where: { id: validTeacherId } });
       if (!teacher) validTeacherId = 'user-teach-1';
+      else if (
+        teacher.role !== 'teacher' ||
+        (teacher.subjectsTaught.length > 0 &&
+          !teacher.subjectsTaught.some(
+            (subject) => subject.toLowerCase() === classroom.subject.toLowerCase(),
+          ))
+      ) {
+        throw new Error(`Teacher is not allocated to the subject ${classroom.subject}.`);
+      }
     } else {
       validTeacherId = 'user-teach-1';
     }
@@ -51,6 +62,7 @@ export class ClassroomService {
         bannerImage: classroom.bannerImage,
         meetLink: classroom.meetLink,
         code,
+        maxCapacity: (classroom as any).maxCapacity || 40,
       },
       include: { enrollments: true },
     });
@@ -62,9 +74,26 @@ export class ClassroomService {
   }
 
   public async deleteClassroom(id: string) {
-    await prisma.classroomEnrollment.deleteMany({ where: { classroomId: id } });
-    await prisma.assignment.deleteMany({ where: { classroomId: id } });
-    return prisma.classroom.deleteMany({ where: { id } });
+    return prisma.classroom.updateMany({ where: { id }, data: { isArchived: true } });
+  }
+
+  public async enrollStudent(classroomId: string, studentId: string) {
+    return withDeadlockRetry(async () =>
+      prisma.$transaction(async (tx) => {
+        const classroom = await tx.classroom.findUnique({
+          where: { id: classroomId },
+          include: { _count: { select: { enrollments: true } } },
+        });
+        if (!classroom || classroom.isArchived) throw new Error('Classroom not found.');
+        if (classroom._count.enrollments >= classroom.maxCapacity)
+          throw new Error('Classroom capacity reached.');
+        return tx.classroomEnrollment.upsert({
+          where: { classroomId_studentId: { classroomId, studentId } },
+          create: { classroomId, studentId },
+          update: {},
+        });
+      }),
+    );
   }
 
   public async getStreamPosts(): Promise<StreamPost[]> {

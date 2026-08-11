@@ -1,6 +1,7 @@
 import { prisma } from './prismaClient';
 import { Assignment, Submission } from '@lms/shared';
 import { notificationService } from './notificationService';
+import { withDeadlockRetry } from '@utils/transaction';
 
 export class AssignmentService {
   public async getAssignments(): Promise<Assignment[]> {
@@ -98,16 +99,30 @@ export class AssignmentService {
     });
 
     if (existing) {
-      const updated = await prisma.submission.update({
-        where: { id: existing.id },
-        data: {
-          fileName,
-          fileUrl,
-          responseText: notes,
-          submittedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          status: 'submitted',
-        },
-      });
+      const updated = await withDeadlockRetry(() =>
+        prisma.$transaction(async (tx) => {
+          const version = await tx.homeworkVersion.count({ where: { submissionId: existing.id } });
+          await tx.homeworkVersion.create({
+            data: {
+              submissionId: existing.id,
+              version: version + 1,
+              fileName: existing.fileName,
+              fileUrl: existing.fileUrl,
+              responseText: existing.responseText,
+            },
+          });
+          return tx.submission.update({
+            where: { id: existing.id },
+            data: {
+              fileName,
+              fileUrl,
+              responseText: notes,
+              submittedAt: new Date().toISOString(),
+              status: 'submitted',
+            },
+          });
+        }),
+      );
       return {
         ...updated,
         status: updated.status as any,
@@ -130,9 +145,12 @@ export class AssignmentService {
         fileName,
         fileUrl,
         responseText: notes,
-        submittedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        submittedAt: new Date().toISOString(),
         status: 'submitted',
       },
+    });
+    await prisma.homeworkVersion.create({
+      data: { submissionId: created.id, version: 1, fileName, fileUrl, responseText: notes },
     });
     return {
       ...created,

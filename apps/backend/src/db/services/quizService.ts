@@ -117,6 +117,7 @@ export class QuizService {
           totalQuestions: 1,
           published: true,
           revealMarksMode: 'immediate',
+          createdAt: new Date().toISOString(),
         },
       });
     }

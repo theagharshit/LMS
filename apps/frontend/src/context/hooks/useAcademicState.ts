@@ -52,7 +52,14 @@ export const useAcademicState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(classroomData),
-    }).catch((err) => console.error('[AppContext] Failed to persist classroom', err));
+    })
+      .then((response) => {
+        if (!response.ok) setClassrooms((items) => items.filter((item) => item.id !== newId));
+      })
+      .catch((err) => {
+        setClassrooms((items) => items.filter((item) => item.id !== newId));
+        console.error('[AppContext] Failed to persist classroom', err);
+      });
   };
 
   const addStreamPost = (postData: Omit<StreamPost, 'id' | 'createdAt' | 'commentsCount'>) => {
@@ -69,7 +76,14 @@ export const useAcademicState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(postData),
-    }).catch((err) => console.error('[AppContext] Failed to persist stream post', err));
+    })
+      .then((response) => {
+        if (!response.ok) setStreamPosts((items) => items.filter((item) => item.id !== newPost.id));
+      })
+      .catch((err) => {
+        setStreamPosts((items) => items.filter((item) => item.id !== newPost.id));
+        console.error('[AppContext] Failed to persist stream post', err);
+      });
   };
 
   const addPostComment = (postId: string, commentText: string) => {
@@ -114,7 +128,14 @@ export const useAcademicState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(asgData),
-    }).catch((err) => console.error('[AppContext] Failed to persist assignment', err));
+    })
+      .then((response) => {
+        if (!response.ok) setAssignments((items) => items.filter((item) => item.id !== newAsg.id));
+      })
+      .catch((err) => {
+        setAssignments((items) => items.filter((item) => item.id !== newAsg.id));
+        console.error('[AppContext] Failed to persist assignment', err);
+      });
   };
 
   const submitHomework = (
@@ -205,7 +226,24 @@ export const useAcademicState = (currentUser: User) => {
         studentId: currentUser.id,
         notes: responseText,
       }),
-    }).catch((err) => console.error('[AppContext] Failed to persist submission', err));
+    })
+      .then((response) => {
+        if (!response.ok && response.status !== 202) {
+          setSubmissions((items) =>
+            existing
+              ? items.map((item) => (item.id === existing.id ? existing : item))
+              : items.filter((item) => item.id !== newSub.id),
+          );
+        }
+      })
+      .catch((err) => {
+        setSubmissions((items) =>
+          existing
+            ? items.map((item) => (item.id === existing.id ? existing : item))
+            : items.filter((item) => item.id !== newSub.id),
+        );
+        console.error('[AppContext] Failed to persist submission', err);
+      });
   };
 
   const gradeSubmission = (submissionId: string, grade: number, feedback: string) => {
@@ -276,7 +314,15 @@ export const useAcademicState = (currentUser: User) => {
         totalPoints,
         answers,
       }),
-    }).catch((err) => console.error('[AppContext] Failed to persist quiz submission', err));
+    })
+      .then((response) => {
+        if (!response.ok && response.status !== 202)
+          setQuizSubmissions((items) => items.filter((item) => item.id !== newSub.id));
+      })
+      .catch((err) => {
+        setQuizSubmissions((items) => items.filter((item) => item.id !== newSub.id));
+        console.error('[AppContext] Failed to persist quiz submission', err);
+      });
   };
 
   return {

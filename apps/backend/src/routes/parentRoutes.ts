@@ -4,9 +4,18 @@ import {
   sendDirectMessage,
   generateParentSummaryAi,
 } from '@controllers/parentController';
+import { requireRolesWhenStrict } from '@middlewares/authMiddleware';
 
 export const parentRoutes = Router();
 
-parentRoutes.post('/db/parent-controls', updateParentControls);
-parentRoutes.post('/db/messages', sendDirectMessage);
-parentRoutes.post('/ai/parent-summary', generateParentSummaryAi);
+parentRoutes.post(
+  '/db/parent-controls',
+  requireRolesWhenStrict('parent', 'admin'),
+  updateParentControls,
+);
+parentRoutes.post('/db/messages', requireRolesWhenStrict('parent', 'admin'), sendDirectMessage);
+parentRoutes.post(
+  '/ai/parent-summary',
+  requireRolesWhenStrict('parent', 'admin'),
+  generateParentSummaryAi,
+);

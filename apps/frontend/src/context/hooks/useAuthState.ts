@@ -11,6 +11,7 @@ export const useAuthState = () => {
 
   const fetchJwtTokenForUser = useCallback(async (user: User) => {
     try {
+      await apiFetch('/api/auth/csrf');
       const res = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -38,6 +39,22 @@ export const useAuthState = () => {
 
   const activeChildList = studentProfiles.filter((s) => currentUser.childrenIds?.includes(s.id));
   const activeChild = studentProfiles.find((s) => s.id === activeChildId) || studentProfiles[0];
+
+  useEffect(() => {
+    if (typeof sessionStorage === 'undefined' || currentUser.role !== 'parent') return;
+    sessionStorage.setItem(
+      `sikshya_children_${currentUser.id}`,
+      JSON.stringify(
+        activeChildList.map(({ id, name, avatar, gradeLevel, section }) => ({
+          id,
+          name,
+          avatar,
+          gradeLevel,
+          section,
+        })),
+      ),
+    );
+  }, [currentUser.id, currentUser.role, activeChildList]);
 
   return {
     allUsers,

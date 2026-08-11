@@ -30,10 +30,37 @@ export class BadgeService {
   }
 
   public async createBadgeDefinition(data: any) {
+    const title = String(data.title || '').trim();
+    if (title.length < 3 || title.length > 80)
+      throw new Error('Badge title must contain 3 to 80 characters.');
+    if (data.criteria) {
+      try {
+        const criteria =
+          typeof data.criteria === 'string' ? JSON.parse(data.criteria) : data.criteria;
+        if (
+          !criteria ||
+          typeof criteria !== 'object' ||
+          !('metric' in criteria) ||
+          !('threshold' in criteria)
+        )
+          throw new Error();
+      } catch {
+        throw new Error(
+          'Automatic badge criteria must be valid JSON with metric and threshold fields.',
+        );
+      }
+    }
+    if (
+      !/^([\p{Emoji_Presentation}\p{Emoji}\u200d\ufe0f]+|[a-z][a-z0-9-]{1,39})$/iu.test(
+        String(data.icon || '🌟'),
+      )
+    ) {
+      throw new Error('Badge icon must be an emoji or a valid icon identifier.');
+    }
     return prisma.badgeDefinition.create({
       data: {
         id: data.id || `bdg-def-${Date.now()}`,
-        title: data.title,
+        title,
         description: data.description || '',
         icon: data.icon || '🌟',
         category: data.category || 'academic',

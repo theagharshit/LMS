@@ -16,6 +16,8 @@ import {
   ParentControlSettings,
   StudentLocationRecord,
   DirectMessage,
+  NotificationPreference,
+  NotificationItem,
 } from '@lms/shared';
 
 import {

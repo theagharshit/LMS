@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/common/Header';
 import { Sidebar } from './components/common/Sidebar';
@@ -24,13 +24,12 @@ import { TeacherQuizHubView } from './components/teacher/TeacherQuizHubView';
 import { ParentalControlsModal } from './components/parent/ParentalControlsModal';
 import { InDevelopmentView } from './components/common/InDevelopmentView';
 import { LoginView } from './components/common/LoginView';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { SessionExpiryWarning } from './components/common/SessionExpiryWarning';
+import { DialogAccessibilityManager } from './components/common/DialogAccessibilityManager';
 
 const AppContent: React.FC = () => {
   const { currentUser, activeView, isCompletedQuizzesOpen, setIsCompletedQuizzesOpen } = useApp();
-
-  if (activeView === 'login') {
-    return <LoginView />;
-  }
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isDispatchNotificationOpen, setIsDispatchNotificationOpen] = useState(false);
@@ -38,6 +37,25 @@ const AppContent: React.FC = () => {
   const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
   const [isQuizBuilderOpen, setIsQuizBuilderOpen] = useState(false);
   const [isParentalControlsOpen, setIsParentalControlsOpen] = useState(false);
+
+  useEffect(() => {
+    const closeOverlays = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setIsNotificationOpen(false);
+      setIsDispatchNotificationOpen(false);
+      setActiveAssignmentId(null);
+      setActiveQuizId(null);
+      setIsQuizBuilderOpen(false);
+      setIsParentalControlsOpen(false);
+      setIsCompletedQuizzesOpen(false);
+    };
+    document.addEventListener('keydown', closeOverlays);
+    return () => document.removeEventListener('keydown', closeOverlays);
+  }, [setIsCompletedQuizzesOpen]);
+
+  if (activeView === 'login') {
+    return <LoginView />;
+  }
 
   const renderMainView = () => {
     switch (activeView) {
@@ -133,7 +151,9 @@ const AppContent: React.FC = () => {
         <Sidebar />
 
         {/* Main View Area */}
-        <main className="flex-1 min-w-0">{renderMainView()}</main>
+        <main className="flex-1 min-w-0" id="main-content" tabIndex={-1}>
+          <ErrorBoundary>{renderMainView()}</ErrorBoundary>
+        </main>
       </div>
 
       {/* Global Modals & Drawers */}
@@ -173,6 +193,8 @@ const AppContent: React.FC = () => {
         isOpen={isParentalControlsOpen}
         onClose={() => setIsParentalControlsOpen(false)}
       />
+      <SessionExpiryWarning />
+      <DialogAccessibilityManager />
     </div>
   );
 };
