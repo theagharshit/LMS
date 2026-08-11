@@ -19,6 +19,7 @@
     "lint": "tsc -b apps/frontend apps/backend packages/shared",
     "format": "prettier --write \"apps/**/*.{ts,tsx,css}\" \"packages/**/*.{ts,tsx}\"",
     "format:check": "prettier --check \"apps/**/*.{ts,tsx,css}\" \"packages/**/*.{ts,tsx}\"",
+    "prisma:generate": "npm exec -w lms-backend -- prisma generate",
     "prisma:status": "npm exec -w lms-backend -- prisma migrate status",
     "prisma:deploy": "npm exec -w lms-backend -- prisma migrate deploy",
     "test": "USE_REAL_SERVER=true npm run test --workspaces --if-present"
