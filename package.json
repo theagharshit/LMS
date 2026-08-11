@@ -22,7 +22,8 @@
     "prisma:generate": "npm exec -w lms-backend -- prisma generate",
     "prisma:status": "npm exec -w lms-backend -- prisma migrate status",
     "prisma:deploy": "npm exec -w lms-backend -- prisma migrate deploy",
-    "test": "USE_REAL_SERVER=true npm run test --workspaces --if-present"
+    "test": "npm run test --workspaces --if-present",
+    "test:live": "USE_REAL_SERVER=true npm run test -w lms-backend -- tests/integration/liveServerIntegration.test.ts"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.0",
