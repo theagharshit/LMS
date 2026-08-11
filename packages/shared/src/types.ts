@@ -11,6 +11,8 @@ export interface User {
   role: UserRole;
   avatar: string;
   schoolName: string;
+  phone?: string;
+  secondaryPhone?: string;
   gradeLevel?: number; // e.g. 8 for Grade 8
   section?: string; // e.g. 'A'
   rollNumber?: number;
@@ -35,7 +37,7 @@ export interface StudentProfile extends User {
   parentAddress?: string;
   parentOccupation?: string;
   relationship?: string;
-  secondaryContact?: string;
+  parentSecondaryPhone?: string;
   dob?: string;
   gender?: string;
   bloodGroup?: string;

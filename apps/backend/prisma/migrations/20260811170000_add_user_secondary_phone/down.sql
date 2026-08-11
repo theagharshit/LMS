@@ -1,0 +1,6 @@
+BEGIN;
+
+ALTER TABLE "User" DROP CONSTRAINT IF EXISTS "User_secondaryPhone_check";
+ALTER TABLE "User" DROP COLUMN IF EXISTS "secondaryPhone";
+
+COMMIT;

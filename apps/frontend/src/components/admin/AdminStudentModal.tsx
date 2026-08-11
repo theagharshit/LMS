@@ -61,7 +61,7 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
   const [parentAddress, setParentAddress] = useState('');
   const [parentOccupation, setParentOccupation] = useState('');
   const [relationship, setRelationship] = useState('Father');
-  const [secondaryContact, setSecondaryContact] = useState('');
+  const [parentSecondaryPhone, setParentSecondaryPhone] = useState('');
 
   // Tab 3: Verification Status
   const [verificationStatus, setVerificationStatus] = useState<
@@ -93,7 +93,7 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
       setParentAddress(initialData.parentAddress || 'Kathmandu, Nepal');
       setParentOccupation(initialData.parentOccupation || '');
       setRelationship(initialData.relationship || 'Father');
-      setSecondaryContact(initialData.secondaryContact || '');
+      setParentSecondaryPhone(initialData.parentSecondaryPhone || '');
 
       setVerificationStatus(initialData.verificationStatus || 'verified_enrolled');
     } else {
@@ -114,7 +114,7 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
       setParentAddress('');
       setParentOccupation('');
       setRelationship('Father');
-      setSecondaryContact('');
+      setParentSecondaryPhone('');
 
       setVerificationStatus('verified_enrolled');
     }
@@ -214,6 +214,13 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
       setValidationError('Primary Parent Contact Phone Number is required (min 7 digits).');
       return false;
     }
+    if (
+      parentSecondaryPhone.trim() &&
+      !/^\+?[0-9][0-9 -]{6,19}$/.test(parentSecondaryPhone.trim())
+    ) {
+      setValidationError('Secondary Phone must contain 7-20 digits, spaces, or hyphens.');
+      return false;
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!parentEmail.trim() || !emailRegex.test(parentEmail.trim())) {
       setValidationError('A valid Parent Email Address is required.');
@@ -274,7 +281,7 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
       parentAddress: parentAddress.trim(),
       parentOccupation: parentOccupation.trim(),
       relationship: relationship.trim(),
-      secondaryContact: secondaryContact.trim(),
+      parentSecondaryPhone: parentSecondaryPhone.trim(),
 
       verificationStatus,
       avatar:
@@ -641,12 +648,12 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
 
                 <div>
                   <label className="block font-bold text-[#2D2D2A] mb-1">
-                    Secondary Contact (Optional)
+                    Secondary Phone (Optional)
                   </label>
                   <input
                     type="text"
-                    value={secondaryContact}
-                    onChange={(e) => setSecondaryContact(sanitizePhoneInput(e.target.value))}
+                    value={parentSecondaryPhone}
+                    onChange={(e) => setParentSecondaryPhone(sanitizePhoneInput(e.target.value))}
                     placeholder="e.g. +977-9851098765"
                     className="w-full px-3.5 py-2.5 bg-[#F9F7F2] rounded-xl border border-[#E5E1D8] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
                   />
