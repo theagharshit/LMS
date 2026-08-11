@@ -1,11 +1,18 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
+import { visualizer } from 'rollup-plugin-visualizer';
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  const workspaceEnv = loadEnv(mode, path.resolve(__dirname, '../..'), '');
+  const backendUrl = process.env.BACKEND_URL || workspaceEnv.BACKEND_URL || 'http://127.0.0.1:3001';
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      visualizer({ filename: 'dist/bundle-stats.html', gzipSize: true, brotliSize: true }),
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
@@ -40,9 +47,11 @@ export default defineConfig(() => {
       },
     },
     server: {
+      port: 5173,
+      strictPort: true,
       proxy: {
         '/api': {
-          target: 'http://localhost:3001',
+          target: backendUrl,
           changeOrigin: true,
         },
       },
@@ -51,6 +60,17 @@ export default defineConfig(() => {
       hmr: process.env.DISABLE_HMR !== 'true',
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
+    },
+    preview: {
+      host: '0.0.0.0',
+      port: 4173,
+      strictPort: true,
+      proxy: {
+        '/api': {
+          target: backendUrl,
+          changeOrigin: true,
+        },
+      },
     },
   };
 });

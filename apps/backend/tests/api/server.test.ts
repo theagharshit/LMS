@@ -1,9 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
-
 describe('Server API Endpoints (server.ts)', () => {
   const baseURL = 'http://localhost:3001';
-
   it('GET /api/health should return status ok', async () => {
     try {
       const res = await request(baseURL).get('/api/health');
@@ -14,7 +12,6 @@ describe('Server API Endpoints (server.ts)', () => {
       expect(true).toBe(true);
     }
   });
-
   it('GET /api/files should return list of stored files', async () => {
     try {
       const res = await request(baseURL).get('/api/files');

@@ -1,8 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { AdminDashboard } from '../../src/components/admin/AdminDashboard';
 import { AppProvider } from '../../src/context/AppContext';
+import { ToastProvider } from '../../src/components/common/ToastProvider';
 
 describe('AdminDashboard Component Suite (15 Tests)', () => {
   it('1. renders Administrative Management Hub title and header banner', () => {
@@ -142,12 +143,13 @@ describe('AdminDashboard Component Suite (15 Tests)', () => {
     expect(btn).not.toBeDisabled();
   });
 
-  it('13. triggers alert and clears inputs after clicking Award Badge', async () => {
-    window.alert = vi.fn();
+  it('13. shows a success toast and clears inputs after clicking Award Badge', async () => {
     render(
-      <AppProvider>
-        <AdminDashboard />
-      </AppProvider>,
+      <ToastProvider>
+        <AppProvider>
+          <AdminDashboard />
+        </AppProvider>
+      </ToastProvider>,
     );
     fireEvent.click(screen.getByText(/Badges & Awards/i));
     const selects = screen.getAllByRole('combobox');
@@ -158,8 +160,10 @@ describe('AdminDashboard Component Suite (15 Tests)', () => {
     fireEvent.click(btn);
 
     await waitFor(() => {
-      expect(window.alert).toHaveBeenCalled();
+      expect(screen.getByRole('status')).toHaveTextContent('The badge was awarded to the student.');
     });
+    expect(selects[0]).toHaveValue('');
+    expect(selects[1]).toHaveValue('');
   });
 
   it('14. maintains responsive container classes for mobile grid layout', () => {

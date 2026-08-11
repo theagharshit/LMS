@@ -9,11 +9,20 @@ import { logger } from '../utils/logger';
 export const verifyFileIntegrity = (req: Request, res: Response, next: NextFunction) => {
   logger.debug('Executing verifyFileIntegrity middleware for incoming file...');
 
-  const isMalicious = req.body?.name?.endsWith('.exe') || req.body?.isMalicious === true;
+  const fileName = String(req.body?.name || 'Uploaded_Attachment.pdf');
+  const extension = fileName.toLowerCase().match(/\.[a-z0-9]+$/)?.[0];
+  const allowedExtensions = new Set(['.pdf', '.docx', '.png', '.jpg', '.jpeg', '.csv']);
+  const sizeBytes = Number(req.body?.sizeBytes || 0);
+  const isMalicious =
+    !extension ||
+    !allowedExtensions.has(extension) ||
+    sizeBytes > 25 * 1024 * 1024 ||
+    sizeBytes < 0 ||
+    req.body?.isMalicious === true;
 
   if (isMalicious) {
     logger.warn('File rejected by integrity check!');
-    res.status(403).json({ error: 'File failed integrity and safety checks.' });
+    res.status(415).json({ error: 'Only PDF, DOCX, PNG, and JPG files up to 25MB are accepted.' });
     return;
   }
 

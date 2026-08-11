@@ -2,10 +2,35 @@ import { Request, Response } from 'express';
 import { lmsDB } from '@db/lmsDatabase';
 import { signToken } from '@utils/jwtUtils';
 import { logger } from '@utils/logger';
+import { createHash } from 'node:crypto';
+import { authService } from '@db/services/authService';
+import { passwordHashService } from '@utils/passwordHashService';
+import { prisma } from '@db/services/prismaClient';
+
+const getFingerprint = (req: Request) =>
+  String(
+    req.headers['x-device-fingerprint'] ||
+      createHash('sha256')
+        .update(String(req.headers['user-agent'] || 'unknown'))
+        .digest('hex'),
+  );
+
+const refreshCookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict' as const,
+  path: '/api/auth',
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
+const clearRefreshCookie = (res: Response) => {
+  const { maxAge: _maxAge, ...clearOptions } = refreshCookieOptions;
+  res.clearCookie('refresh_token', clearOptions);
+};
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId, email } = req.body;
+    const { userId, email, password } = req.body;
 
     const allUsers = await lmsDB.getUsers();
     const user = allUsers.find((u) => (userId && u.id === userId) || (email && u.email === email));
@@ -18,6 +43,55 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    const credential = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { passwordHash: true, isArchived: true },
+    });
+    if (credential?.isArchived) {
+      res.status(403).json({ status: 'error', message: 'This account is archived.' });
+      return;
+    }
+    const maintenance = await prisma.systemConfig.findUnique({
+      where: { key: 'maintenance_mode' },
+    });
+    if (maintenance?.value === true && user.role !== 'admin') {
+      res
+        .status(503)
+        .json({ status: 'error', message: 'The LMS is temporarily in maintenance mode.' });
+      return;
+    }
+    if (user.role === 'student') {
+      const settings = await prisma.parentControlSettings.findUnique({
+        where: { studentId: user.id },
+      });
+      if (settings?.blackoutStart && settings.blackoutEnd) {
+        const now = new Intl.DateTimeFormat('en-GB', {
+          timeZone: settings.timezone,
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        }).format(new Date());
+        const wraps = settings.blackoutStart > settings.blackoutEnd;
+        const blocked = wraps
+          ? now >= settings.blackoutStart || now < settings.blackoutEnd
+          : now >= settings.blackoutStart && now < settings.blackoutEnd;
+        if (blocked) {
+          res.status(403).json({
+            status: 'error',
+            message: `Student access is disabled from ${settings.blackoutStart} to ${settings.blackoutEnd}.`,
+          });
+          return;
+        }
+      }
+    }
+    if (
+      credential?.passwordHash &&
+      (!password || !(await passwordHashService.verify(password, credential.passwordHash)))
+    ) {
+      res.status(401).json({ status: 'error', message: 'Invalid credentials.' });
+      return;
+    }
+
     const payload = {
       id: user.id,
       name: user.name,
@@ -25,19 +99,61 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       role: user.role,
     };
 
-    const token = signToken(payload);
+    const session = await authService.issueSession(payload, getFingerprint(req), req.ip);
+    res.cookie('refresh_token', session.refreshToken, refreshCookieOptions);
 
     logger.info(`[Auth] Issued JWT token for user '${user.name}' (${user.role})`);
 
     res.json({
       status: 'success',
-      token,
+      token: session.accessToken,
+      accessToken: session.accessToken,
+      expiresIn: session.expiresIn,
       user,
     });
   } catch (err) {
     logger.error('Failed to authenticate user:', err);
     res.status(500).json({ status: 'error', message: 'Authentication failed' });
   }
+};
+
+export const refreshSession = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const refreshToken = req.cookies?.refresh_token || req.body?.refreshToken;
+    if (!refreshToken) {
+      res.status(401).json({ status: 'error', message: 'Refresh token required.' });
+      return;
+    }
+    const session = await authService.rotate(refreshToken, getFingerprint(req), req.ip);
+    res.cookie('refresh_token', session.refreshToken, refreshCookieOptions);
+    res.json({
+      status: 'success',
+      token: session.accessToken,
+      accessToken: session.accessToken,
+      expiresIn: session.expiresIn,
+    });
+  } catch (error) {
+    logger.warn(`[Auth] Refresh rejected: ${(error as Error).message}`);
+    clearRefreshCookie(res);
+    res.status(401).json({ status: 'error', message: 'Refresh token is invalid or expired.' });
+  }
+};
+
+export const logout = async (req: Request, res: Response): Promise<void> => {
+  const accessToken = req.headers.authorization?.replace(/^Bearer\s+/i, '');
+  await Promise.all([
+    authService.revokeRefreshToken(req.cookies?.refresh_token),
+    accessToken ? authService.revokeAccessToken(accessToken) : Promise.resolve(),
+  ]);
+  clearRefreshCookie(res);
+  res.json({ status: 'success', message: 'Session revoked.' });
+};
+
+export const getCsrfToken = (req: Request, res: Response) => {
+  res.json({
+    status: 'success',
+    csrfToken: req.cookies?.csrf_token || res.getHeader('X-CSRF-Token'),
+  });
 };
 
 export const getMe = async (req: Request, res: Response): Promise<void> => {

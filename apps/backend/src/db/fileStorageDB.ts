@@ -13,6 +13,18 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
+const formatBytes = (bytes: number) => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+};
+
+const toStoredFile = (record: any): StoredFileRecord => ({
+  ...record,
+  uploadedBy: record.uploader.name,
+  sizeFormatted: formatBytes(record.sizeBytes),
+});
+
 /**
  * FileStorageDB Service (Async / Prisma-backed)
  *
@@ -24,7 +36,7 @@ class FileStorageDatabase {
    * Add a new file record to PostgreSQL database
    */
   public async addFile(
-    record: Omit<StoredFileRecord, 'id' | 'uploadedAt'>,
+    record: Omit<StoredFileRecord, 'id' | 'uploadedAt'> & { uploadedById?: string },
   ): Promise<StoredFileRecord> {
     const id = `file-db-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     let validClassroomId = record.classroomId;
@@ -33,19 +45,26 @@ class FileStorageDatabase {
       if (!cls) validClassroomId = undefined;
     }
 
+    const uploader = record.uploadedById
+      ? await prisma.user.findUnique({ where: { id: record.uploadedById } })
+      : null;
+    if (!uploader) throw new Error('Authenticated file uploader was not found.');
+    const { uploadedBy: _uploadedBy, sizeFormatted: _sizeFormatted, ...storageRecord } = record;
     const newRecord = await prisma.storedFileRecord.create({
       data: {
-        ...record,
+        ...storageRecord,
+        uploadedById: uploader.id,
         classroomId: validClassroomId,
         id,
         uploadedAt: new Date().toISOString(),
       },
+      include: { uploader: true },
     });
 
     logger.info(
       `[FileStorageDB] Stored new file record in PostgreSQL: ${newRecord.originalName} (ID: ${id})`,
     );
-    return newRecord as StoredFileRecord;
+    return toStoredFile(newRecord);
   }
 
   /**
@@ -54,8 +73,9 @@ class FileStorageDatabase {
   public async getAllFiles(classroomId?: string): Promise<StoredFileRecord[]> {
     const records = await prisma.storedFileRecord.findMany({
       where: classroomId ? { classroomId } : undefined,
+      include: { uploader: true },
     });
-    return records as StoredFileRecord[];
+    return records.map(toStoredFile);
   }
 
   /**
@@ -64,8 +84,9 @@ class FileStorageDatabase {
   public async getFileById(id: string): Promise<StoredFileRecord | null> {
     const record = await prisma.storedFileRecord.findUnique({
       where: { id },
+      include: { uploader: true },
     });
-    return record as StoredFileRecord | null;
+    return record ? toStoredFile(record) : null;
   }
 
   /**
@@ -91,12 +112,16 @@ class FileStorageDatabase {
       where: {
         OR: [
           { originalName: { contains: query, mode: 'insensitive' } },
-          { uploadedBy: { contains: query, mode: 'insensitive' } },
+          { uploader: { name: { contains: query, mode: 'insensitive' } } },
           { checksum: { contains: query, mode: 'insensitive' } },
         ],
       },
     });
-    return records as StoredFileRecord[];
+    const hydrated = await prisma.storedFileRecord.findMany({
+      where: { id: { in: records.map((record) => record.id) } },
+      include: { uploader: true },
+    });
+    return hydrated.map(toStoredFile);
   }
 }
 

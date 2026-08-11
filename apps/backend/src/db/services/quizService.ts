@@ -6,10 +6,13 @@ import { notificationService } from './notificationService';
 export class QuizService {
   public async getQuizzes(): Promise<Quiz[]> {
     const quizzes = await prisma.quiz.findMany({
-      include: { questions: true },
+      include: { questions: true, classroom: { include: { subjectRef: true } } },
     });
     return quizzes.map((q) => ({
       ...q,
+      classroomName: q.classroom.name,
+      subject: q.classroom.subjectRef.name,
+      totalQuestions: q.questions.length,
       revealMarksMode: (q.revealMarksMode as any) || 'immediate',
       questions: q.questions.map((qt) => ({ ...qt, type: qt.type as any })),
     }));
@@ -17,9 +20,18 @@ export class QuizService {
 
   public async addQuiz(quiz: Omit<Quiz, 'id' | 'createdAt'>): Promise<Quiz> {
     const { questions, ...quizData } = quiz;
+    const classroom = await prisma.classroom.findUniqueOrThrow({
+      where: { id: quiz.classroomId },
+      include: { subjectRef: true },
+    });
     const created = await prisma.quiz.create({
       data: {
-        ...quizData,
+        classroomId: quizData.classroomId,
+        title: quizData.title,
+        description: quizData.description,
+        durationMinutes: quizData.durationMinutes,
+        dueDate: quizData.dueDate,
+        published: quizData.published,
         revealMarksMode: quiz.revealMarksMode || 'immediate',
         createdAt: new Date().toISOString(),
         questions: {
@@ -42,7 +54,7 @@ export class QuizService {
         targetAudience: 'classroom',
         classroomId: created.classroomId,
         title: `⚡ Quiz Released: ${created.title}`,
-        body: `${created.durationMinutes} min assessment ready in ${created.subject}`,
+        body: `${created.durationMinutes} min assessment ready in ${classroom.subjectRef.name}`,
         category: 'CRITICAL',
         severity: 'high',
         type: 'quiz',
@@ -51,6 +63,9 @@ export class QuizService {
 
     return {
       ...created,
+      classroomName: classroom.name,
+      subject: classroom.subjectRef.name,
+      totalQuestions: created.questions.length,
       revealMarksMode: (created.revealMarksMode as any) || 'immediate',
       questions: created.questions.map((qt) => ({ ...qt, type: qt.type as any })),
     };
@@ -66,7 +81,7 @@ export class QuizService {
     const updated = await prisma.quiz.update({
       where: { id },
       data: { revealMarksMode },
-      include: { questions: true },
+      include: { questions: true, classroom: { include: { subjectRef: true } } },
     });
 
     if (revealMarksMode === 'immediate') {
@@ -85,6 +100,9 @@ export class QuizService {
 
     return {
       ...updated,
+      classroomName: updated.classroom.name,
+      subject: updated.classroom.subjectRef.name,
+      totalQuestions: updated.questions.length,
       revealMarksMode: (updated.revealMarksMode as any) || 'immediate',
       questions: updated.questions.map((qt) => ({ ...qt, type: qt.type as any })),
     };
@@ -108,19 +126,21 @@ export class QuizService {
         data: {
           id: submission.quizId,
           classroomId: 'cls-math-8a',
-          classroomName: 'Grade 8 Mathematics',
-          subject: 'Mathematics',
           title: 'Online Assessment',
           description: 'Quiz evaluation',
           durationMinutes: 10,
           dueDate: '2026-08-15',
-          totalQuestions: 1,
           published: true,
           revealMarksMode: 'immediate',
+          createdAt: new Date().toISOString(),
         },
       });
     }
 
+    const latestAttempt = await prisma.quizSubmission.aggregate({
+      where: { quizId: submission.quizId, studentId: submission.studentId },
+      _max: { attemptNumber: true },
+    });
     const created = await prisma.quizSubmission.create({
       data: {
         quizId: submission.quizId,
@@ -129,6 +149,7 @@ export class QuizService {
         totalPoints: submission.totalPoints,
         completedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         answers: (submission.answers as any) || {},
+        attemptNumber: (latestAttempt._max.attemptNumber || 0) + 1,
       },
     });
 
@@ -137,7 +158,7 @@ export class QuizService {
       await badgeService.assignBadge(
         submission.studentId,
         'bdg-def-2',
-        'System',
+        undefined,
         'Scored 100% on a quiz',
       );
     }

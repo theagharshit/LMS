@@ -1,0 +1,42 @@
+BEGIN;
+ALTER TABLE "Quiz" ALTER COLUMN "revealMarksMode" DROP DEFAULT;
+ALTER TABLE "QuizAttemptSession" ALTER COLUMN "status" DROP DEFAULT;
+ALTER TABLE "NotificationRecord" ALTER COLUMN "category" DROP DEFAULT,
+  ALTER COLUMN "severity" DROP DEFAULT, ALTER COLUMN "type" DROP DEFAULT;
+ALTER TABLE "AbsenceRequest" ALTER COLUMN "status" DROP DEFAULT;
+ALTER TABLE "AttendanceRecord" ALTER COLUMN "status" TYPE TEXT USING "status"::text;
+ALTER TABLE "Submission" ALTER COLUMN "status" TYPE TEXT USING "status"::text;
+ALTER TABLE "Quiz" ALTER COLUMN "revealMarksMode" TYPE TEXT USING "revealMarksMode"::text;
+ALTER TABLE "QuizAttemptSession" ALTER COLUMN "status" TYPE TEXT USING "status"::text;
+ALTER TABLE "NotificationRecord" ALTER COLUMN "category" TYPE TEXT USING "category"::text,
+  ALTER COLUMN "severity" TYPE TEXT USING "severity"::text, ALTER COLUMN "type" TYPE TEXT USING "type"::text;
+ALTER TABLE "PaymentRecord" ALTER COLUMN "status" TYPE TEXT USING "status"::text;
+ALTER TABLE "AbsenceRequest" ALTER COLUMN "status" TYPE TEXT USING "status"::text;
+ALTER TABLE "StoredFileRecord" ALTER COLUMN "integrityStatus" TYPE TEXT USING "integrityStatus"::text;
+ALTER TABLE "StudentLocationRecord" ALTER COLUMN "category" TYPE TEXT USING "category"::text;
+ALTER TABLE "Quiz" ALTER COLUMN "revealMarksMode" SET DEFAULT 'immediate';
+ALTER TABLE "QuizAttemptSession" ALTER COLUMN "status" SET DEFAULT 'active';
+ALTER TABLE "NotificationRecord" ALTER COLUMN "category" SET DEFAULT 'COMMUNICATION',
+  ALTER COLUMN "severity" SET DEFAULT 'normal', ALTER COLUMN "type" SET DEFAULT 'general';
+ALTER TABLE "AbsenceRequest" ALTER COLUMN "status" SET DEFAULT 'pending';
+DROP TYPE "LocationCategory";
+DROP TYPE "FileIntegrityStatus";
+DROP TYPE "AbsenceStatus";
+DROP TYPE "PaymentStatus";
+DROP TYPE "NotificationType";
+DROP TYPE "NotificationSeverity";
+DROP TYPE "NotificationCategory";
+DROP TYPE "QuizAttemptStatus";
+DROP TYPE "QuizRevealMarksMode";
+DROP TYPE "SubmissionStatus";
+DROP TYPE "AttendanceStatus";
+ALTER TABLE "AttendanceRecord" ADD CONSTRAINT "AttendanceRecord_status_check" CHECK ("status" IN ('present','absent','late','excused'));
+ALTER TABLE "Submission" ADD CONSTRAINT "Submission_status_check" CHECK ("status" IN ('pending','draft','submitted','graded','returned','late','overdue'));
+ALTER TABLE "Quiz" ADD CONSTRAINT "Quiz_reveal_marks_mode_check" CHECK ("revealMarksMode" IN ('immediate','later'));
+ALTER TABLE "QuizAttemptSession" ADD CONSTRAINT "QuizAttemptSession_status_check" CHECK ("status" IN ('active','submitted','auto_submitted','expired'));
+ALTER TABLE "NotificationRecord" ADD CONSTRAINT "NotificationRecord_category_check" CHECK ("category" IN ('CRITICAL','ACADEMIC','COMMUNICATION'));
+ALTER TABLE "NotificationRecord" ADD CONSTRAINT "NotificationRecord_severity_check" CHECK ("severity" IN ('urgent','high','normal','info'));
+ALTER TABLE "NotificationRecord" ADD CONSTRAINT "NotificationRecord_type_check" CHECK ("type" IN ('general','assignment','quiz','attendance','location','announcement','badge','message'));
+ALTER TABLE "PaymentRecord" ADD CONSTRAINT "PaymentRecord_status_check" CHECK ("status" IN ('pending','paid','failed','refunded','overdue'));
+ALTER TABLE "AbsenceRequest" ADD CONSTRAINT "AbsenceRequest_status_check" CHECK ("status" IN ('pending','approved','rejected','cancelled'));
+COMMIT;

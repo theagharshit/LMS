@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '@utils/apiFetch';
 import { useApp } from '../../context/AppContext';
 import { QuizQuestion } from '@lms/shared';
 import {
@@ -141,7 +142,7 @@ export const TeacherQuizHubView: React.FC = () => {
   const handleAiAutoGenerate = async () => {
     setIsAiGenerating(true);
     try {
-      const res = await fetch('/api/ai/quiz-generator', {
+      const res = await apiFetch('/api/ai/quiz-generator', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -150,7 +151,13 @@ export const TeacherQuizHubView: React.FC = () => {
           gradeLevel: 'Grade 8',
           questionCount: 3,
         }),
+        feedback: {
+          success: 'AI questions added to your quiz draft.',
+          error: 'Could not generate AI questions.',
+          successTitle: 'Questions generated',
+        },
       });
+      if (!res.ok) throw new Error('Quiz generation request failed.');
       const data = await res.json();
       if (data.questions && Array.isArray(data.questions)) {
         setQuestions(data.questions);

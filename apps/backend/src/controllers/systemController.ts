@@ -41,7 +41,8 @@ export const getDbState = async (_req: Request, res: Response) => {
 export const uploadFile = async (req: Request, res: Response) => {
   logger.info('Processing file upload and registering entry in PostgreSQL database...');
   const fileName = req.body?.name || 'Uploaded_Attachment.pdf';
-  const uploadedBy = req.body?.uploadedBy || 'Sikshya User';
+  const uploadedBy = req.user?.name || req.body?.uploadedBy || 'Sikshya User';
+  const uploadedById = req.user?.id || (process.env.NODE_ENV !== 'production' ? 'user-stu-1' : undefined);
   const classroomId = req.body?.classroomId;
   const sizeBytes = req.body?.sizeBytes || 1024 * 512;
   const sizeFormatted = req.body?.sizeFormatted || '512 KB';
@@ -54,6 +55,7 @@ export const uploadFile = async (req: Request, res: Response) => {
     sizeBytes,
     sizeFormatted,
     uploadedBy,
+    uploadedById,
     classroomId,
     checksum: `sha256-${Math.random().toString(36).substring(2, 18)}${Math.random().toString(36).substring(2, 18)}`,
     integrityStatus: 'verified',

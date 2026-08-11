@@ -3,6 +3,7 @@ import { User } from '@lms/shared';
 import { apiFetch } from '../../utils/apiFetch';
 
 export const useSyncState = (
+  authReady: boolean,
   currentUser: User,
   setCurrentUser: (user: User) => void,
   setAllUsers: (users: User[]) => void,
@@ -23,8 +24,14 @@ export const useSyncState = (
   setSubjectPerformances: (performances: any) => void,
 ) => {
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    apiFetch('/api/db/state')
+    if (typeof window === 'undefined' || !authReady) return;
+    apiFetch('/api/db/state', {
+      feedback: {
+        success: false,
+        error: 'Live school data is unavailable. The app is showing its last safe local state.',
+        errorTitle: 'Working from cached data',
+      },
+    })
       .then((res) => (res && res.ok ? res.json().catch(() => null) : null))
       .then((data) => {
         if (data && data.status === 'success') {
@@ -54,5 +61,5 @@ export const useSyncState = (
         console.error('[AppContext] Failed to load DB state:', err);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authReady]);
 };

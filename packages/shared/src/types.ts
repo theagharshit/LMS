@@ -303,7 +303,8 @@ export type LocationStatusCategory =
   | 'library'
   | 'sports_ground'
   | 'assembly_hall'
-  | 'dismissed_home';
+  | 'dismissed_home'
+  | 'laboratory';
 
 export interface StudentLocationRecord {
   id: string;

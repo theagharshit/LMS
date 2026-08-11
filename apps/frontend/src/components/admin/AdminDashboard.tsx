@@ -4,6 +4,7 @@ import { StudentProfile, User, BadgeDefinition } from '@lms/shared';
 import { AdminStudentModal } from './AdminStudentModal';
 import { AdminTeacherModal } from './AdminTeacherModal';
 import { AdminParentLinkModal } from './AdminParentLinkModal';
+import { toast } from '@utils/toast';
 import {
   ShieldAlert,
   Users,
@@ -144,6 +145,7 @@ export const AdminDashboard: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    toast.success(`${filename} is ready in your downloads.`, { title: 'Export complete' });
   };
 
   const handleExportStudents = () => {
@@ -192,7 +194,6 @@ export const AdminDashboard: React.FC = () => {
     setBadgeStudentId('');
     setBadgeDefId('');
     setIsAssigningBadge(false);
-    alert('Badge manually awarded successfully!');
   };
 
   const handleCreateBadgeSubmit = (e: React.FormEvent) => {
@@ -207,7 +208,6 @@ export const AdminDashboard: React.FC = () => {
     });
     setNewBadgeTitle('');
     setNewBadgeDesc('');
-    alert('New custom badge definition created!');
   };
 
   const handleCreateAnnouncement = (e: React.FormEvent) => {
@@ -222,7 +222,6 @@ export const AdminDashboard: React.FC = () => {
     });
     setAnnTitle('');
     setAnnContent('');
-    alert('Broadcast announcement posted successfully!');
   };
 
   const handleCreateClassroomSubmit = (e: React.FormEvent) => {
@@ -245,7 +244,6 @@ export const AdminDashboard: React.FC = () => {
         'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&auto=format&fit=crop&q=80',
     });
     setClsName('');
-    alert('New classroom created successfully!');
   };
 
   return (
@@ -658,9 +656,14 @@ export const AdminDashboard: React.FC = () => {
                         <span className="font-bold text-[#2D2D2A]">{s.parentName || 'Linked'}</span>
                       </div>
                       {s.parentPhone && (
-                        <div className="flex justify-between">
-                          <span className="text-[#7A7A72]">Parent Contact:</span>
-                          <span className="font-medium text-[#2D2D2A]">{s.parentPhone}</span>
+                        <div className="flex justify-between items-center gap-2">
+                          <span className="text-[#7A7A72]">Emergency Contact:</span>
+                          <span
+                            className="rounded-full bg-rose-100 px-2 py-0.5 font-bold text-rose-700"
+                            aria-label={`Emergency contact ${s.parentPhone}`}
+                          >
+                            {s.parentPhone}
+                          </span>
                         </div>
                       )}
                       {s.medicalNotes && (

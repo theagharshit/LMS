@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '@utils/apiFetch';
 import { useApp } from '../../context/AppContext';
 import {
   X,
@@ -45,7 +46,7 @@ export const AIParentSummaryModal: React.FC = () => {
   const handleGenerateFresh = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/ai/parent-summary', {
+      const response = await apiFetch('/api/ai/parent-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -57,8 +58,13 @@ export const AIParentSummaryModal: React.FC = () => {
           teacherNotes: 'Active participant, completes homework punctually.',
           language: 'English & Nepali',
         }),
+        feedback: {
+          success: `${activeChild.name}'s latest bilingual progress digest is ready.`,
+          error: 'Could not refresh the progress digest. The previous summary is still available.',
+          successTitle: 'Digest refreshed',
+        },
       });
-
+      if (!response.ok) throw new Error('Parent summary request failed.');
       const data = await response.json();
       if (data.englishSummary) {
         setSummaryData(data);

@@ -1,5 +1,4 @@
 import { execSync } from 'child_process';
-
 export default function () {
   return () => {
     console.log(

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '@utils/apiFetch';
 import { useApp } from '../../context/AppContext';
 import {
   X,
@@ -123,7 +124,7 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
   const handleGenerateAiQuiz = async () => {
     setIsAiGenerating(true);
     try {
-      const res = await fetch('/api/ai/quiz-generator', {
+      const res = await apiFetch('/api/ai/quiz-generator', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -132,7 +133,13 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
           gradeLevel,
           questionCount: 4,
         }),
+        feedback: {
+          success: 'AI quiz questions were generated and are ready to review.',
+          error: 'Could not generate quiz questions. Please try again.',
+          successTitle: 'Quiz draft ready',
+        },
       });
+      if (!res.ok) throw new Error('Quiz generation request failed.');
       const data = await res.json();
       if (data.quiz && data.quiz.questions) {
         setQuestions(

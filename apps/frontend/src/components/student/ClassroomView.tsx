@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { getAvatarUrl } from '../../utils/avatarUtils';
 import { Attachment } from '@lms/shared';
+import { useDebouncedValue } from '../../utils/hooks';
+import { apiFetch } from '@utils/apiFetch';
+import { toast } from '@utils/toast';
 import {
   MessageSquare,
   FileText,
@@ -56,6 +59,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
 
   // Landing Page Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
   const [subjectFilter, setSubjectFilter] = useState<string>('all');
   const [joinCodeInput, setJoinCodeInput] = useState('');
   const [joinError, setJoinError] = useState('');
@@ -71,7 +75,12 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
 
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!newPostText.trim() && !attachFileName) || !currentClassroom) return;
+    if ((!newPostText.trim() && !attachFileObj) || !currentClassroom) return;
+
+    if (attachFileName && !attachFileObj) {
+      toast.warning('Select the file before publishing the post.', { title: 'File not selected' });
+      return;
+    }
 
     let attachments: Attachment[] = [];
 
@@ -98,7 +107,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
 
       let fileUrl = '';
       try {
-        const res = await fetch('/api/upload', {
+        const res = await apiFetch('/api/upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -109,16 +118,31 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
             uploadedBy: currentUser.name,
             classroomId: currentClassroom.id,
           }),
+          feedback: {
+            success: `${attachFileName || attachFileObj.name} was uploaded securely.`,
+            error: 'The file was rejected and the post was not published.',
+            successTitle: 'File uploaded',
+          },
         });
 
-        if (res.ok) {
-          const data = await res.json();
-          fileUrl = data.record?.downloadUrl || URL.createObjectURL(attachFileObj);
-        } else {
-          fileUrl = URL.createObjectURL(attachFileObj);
+        if (!res.ok) return;
+        const data = await res.json();
+        fileUrl = data.record?.downloadUrl || '';
+        if (!fileUrl) {
+          toast.error(
+            'The upload did not return a valid file record. The post was not published.',
+            {
+              title: 'Upload incomplete',
+            },
+          );
+          return;
         }
       } catch (err) {
-        fileUrl = URL.createObjectURL(attachFileObj);
+        console.error('[ClassroomView] Failed to upload stream attachment:', err);
+        toast.error('The file could not be uploaded, so the post was not published.', {
+          title: 'Upload failed',
+        });
+        return;
       }
 
       attachments.push({
@@ -136,7 +160,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
       authorName: currentUser.name,
       authorAvatar: currentUser.avatar,
       authorRole: currentUser.role,
-      content: newPostText.trim() || `[Attachment: ${attachFileName}]`,
+      content: newPostText.trim() || `[Attachment: ${attachFileObj?.name}]`,
       attachments: attachments.length > 0 ? attachments : undefined,
     });
 
@@ -158,21 +182,39 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
     if (!joinCodeInput.trim()) return;
     const success = joinClassroomByCode(joinCodeInput);
     if (success) {
+      toast.success('You now have access to the classroom.', { title: 'Classroom joined' });
       setJoinCodeInput('');
       setJoinError('');
       setShowJoinModal(false);
     } else {
       setJoinError('Invalid Class Code. Please try code like MATH8A, SCI8A, NEP8A or COMP8A.');
+      toast.error('That classroom code was not recognized. Check it and try again.', {
+        title: 'Invalid class code',
+      });
     }
+  };
+
+  const copyClassCode = (classroomId: string, code: string) => {
+    void navigator.clipboard
+      .writeText(code)
+      .then(() => {
+        setCopiedCode(classroomId);
+        toast.success(`Class code ${code} copied to your clipboard.`, {
+          title: 'Code copied',
+          id: 'class-code-copy',
+        });
+        window.setTimeout(() => setCopiedCode(null), 800);
+      })
+      .catch(() => toast.error('Could not copy the class code. Please copy it manually.'));
   };
 
   // Filter classrooms for landing page
   const filteredClassrooms = classrooms.filter((cls) => {
     const matchesSearch =
-      cls.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cls.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cls.teacherName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cls.code.toLowerCase().includes(searchQuery.toLowerCase());
+      cls.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      cls.subject.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      cls.teacherName.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      cls.code.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
     const matchesSubject =
       subjectFilter === 'all' || cls.subject.toLowerCase().includes(subjectFilter.toLowerCase());
     return matchesSearch && matchesSubject;
@@ -342,9 +384,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                       {currentUser.role === 'teacher' && (
                         <span
                           onClick={() => {
-                            navigator.clipboard.writeText(cls.code);
-                            setCopiedCode(cls.id);
-                            setTimeout(() => setCopiedCode(null), 500);
+                            copyClassCode(cls.id, cls.code);
                           }}
                           title="Copy class code"
                           className="text-[10px] font-mono bg-black/20 text-[#FDEEDC] px-2 py-0.5 rounded-md border border-white/10 cursor-pointer"
@@ -475,9 +515,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
               {currentUser.role === 'teacher' && (
                 <span
                   onClick={() => {
-                    navigator.clipboard.writeText(currentClassroom.code);
-                    setCopiedCode(currentClassroom.id);
-                    setTimeout(() => setCopiedCode(null), 500);
+                    copyClassCode(currentClassroom.id, currentClassroom.code);
                   }}
                   title="Copy class code"
                   className="text-[10px] font-mono bg-black/20 text-[#FDEEDC] px-2 py-0.5 rounded-md border border-white/10 cursor-pointer"
@@ -613,7 +651,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                 </div>
                 <button
                   type="submit"
-                  disabled={!newPostText.trim() && !attachFileName}
+                  disabled={!newPostText.trim() && !attachFileObj}
                   className="px-4 py-2 rounded-xl bg-[#4A6741] text-white font-bold text-xs hover:bg-[#3D5535] disabled:opacity-50 transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
                 >
                   <span>Post Announcement</span>
@@ -1039,7 +1077,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                           : `${(attachFileObj.size / 1024).toFixed(2)} KB`}
                       </span>
                     )}
-                    <span className="text-[10px]">Maximum size: 10MB</span>
+                    <span className="text-[10px]">PDF, DOCX, PNG, or JPG · Maximum size: 25MB</span>
                   </label>
                 </div>
               </div>

@@ -1,0 +1,27 @@
+-- Manual rollback for the expand phase. Safe while legacy columns still exist.
+BEGIN;
+ALTER TABLE "TermProgress" DROP CONSTRAINT IF EXISTS "TermProgress_termId_fkey";
+ALTER TABLE "SubjectPerformance" DROP CONSTRAINT IF EXISTS "SubjectPerformance_subjectId_fkey";
+ALTER TABLE "CalendarEvent" DROP CONSTRAINT IF EXISTS "CalendarEvent_subjectId_fkey";
+ALTER TABLE "ModuleCompletion" DROP CONSTRAINT IF EXISTS "ModuleCompletion_studentId_fkey";
+ALTER TABLE "ModuleCompletion" DROP CONSTRAINT IF EXISTS "ModuleCompletion_moduleItemId_fkey";
+ALTER TABLE "ClassroomSubstitute" DROP CONSTRAINT IF EXISTS "ClassroomSubstitute_teacherId_fkey";
+ALTER TABLE "ClassroomSubstitute" DROP CONSTRAINT IF EXISTS "ClassroomSubstitute_classroomId_fkey";
+ALTER TABLE "Classroom" DROP CONSTRAINT IF EXISTS "Classroom_cohortId_fkey";
+ALTER TABLE "Classroom" DROP CONSTRAINT IF EXISTS "Classroom_subjectId_fkey";
+ALTER TABLE "Classroom" DROP CONSTRAINT IF EXISTS "Classroom_schoolId_fkey";
+ALTER TABLE "StudentProfile" DROP CONSTRAINT IF EXISTS "StudentProfile_cohortId_fkey";
+ALTER TABLE "TeacherSubject" DROP CONSTRAINT IF EXISTS "TeacherSubject_subjectId_fkey";
+ALTER TABLE "TeacherSubject" DROP CONSTRAINT IF EXISTS "TeacherSubject_teacherId_fkey";
+ALTER TABLE "ParentStudent" DROP CONSTRAINT IF EXISTS "ParentStudent_studentId_fkey";
+ALTER TABLE "ParentStudent" DROP CONSTRAINT IF EXISTS "ParentStudent_parentId_fkey";
+ALTER TABLE "User" DROP CONSTRAINT IF EXISTS "User_schoolId_fkey";
+DROP TABLE IF EXISTS "ModuleCompletion", "ClassroomSubstitute", "TeacherSubject", "ParentStudent";
+ALTER TABLE "TermProgress" DROP COLUMN IF EXISTS "termId";
+ALTER TABLE "SubjectPerformance" DROP COLUMN IF EXISTS "subjectId";
+ALTER TABLE "CalendarEvent" DROP COLUMN IF EXISTS "subjectId";
+ALTER TABLE "Classroom" DROP COLUMN IF EXISTS "cohortId", DROP COLUMN IF EXISTS "schoolId", DROP COLUMN IF EXISTS "subjectId";
+ALTER TABLE "StudentProfile" DROP COLUMN IF EXISTS "cohortId", DROP COLUMN IF EXISTS "normalizedRollNumber";
+ALTER TABLE "User" DROP COLUMN IF EXISTS "phone", DROP COLUMN IF EXISTS "schoolId";
+DROP TABLE IF EXISTS "AcademicTerm", "AcademicCohort", "Subject", "School";
+COMMIT;

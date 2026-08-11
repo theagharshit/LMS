@@ -11,11 +11,9 @@ import { adminRoutes } from '../../src/routes/adminRoutes';
 import { PrismaClient } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
-
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
-
 const app = express();
 app.use(express.json());
 app.use('/api', systemRoutes);
@@ -23,11 +21,9 @@ app.use('/api', studentRoutes);
 app.use('/api', teacherRoutes);
 app.use('/api', parentRoutes);
 app.use('/api', adminRoutes);
-
 app.get('/', (_req, res) => {
   res.json({ message: 'LMS API Backend is running' });
 });
-
 describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
   beforeAll(async () => {
     delete process.env.GEMINI_API_KEY;
@@ -45,9 +41,7 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
         role: 'student',
         avatar:
           'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
-        schoolName: 'S1',
-        gradeLevel: 8,
-        section: 'A',
+        schoolId: 'school-everest',
       },
     });
     await prisma.studentProfile.upsert({
@@ -56,13 +50,9 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       create: {
         id: 'user-stu-1',
         userId: 'user-stu-1',
-        attendancePercentage: 95,
         streakDays: 10,
         xpPoints: 500,
-        gradeLevel: 8,
-        section: 'A',
-        parentName: 'Bina',
-        parentPhone: '980',
+        cohortId: 'cohort-8-a',
       },
     });
     await prisma.user.upsert({
@@ -78,7 +68,7 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
         role: 'teacher',
         avatar:
           'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-        schoolName: 'S1',
+        schoolId: 'school-everest',
       },
     });
     await prisma.user.upsert({
@@ -94,8 +84,7 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
         role: 'parent',
         avatar:
           'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
-        schoolName: 'S1',
-        childrenIds: ['user-stu-1'],
+        schoolId: 'school-everest',
       },
     });
     await prisma.user.upsert({
@@ -111,10 +100,23 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
         role: 'admin',
         avatar:
           'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
-        schoolName: 'S1',
+        schoolId: 'school-everest',
       },
     });
-
+    for (const subjectName of ['Computer Science', 'Physics']) {
+      const subject = await prisma.subject.upsert({
+        where: { schoolId_name: { schoolId: 'school-everest', name: subjectName } },
+        update: {},
+        create: { schoolId: 'school-everest', name: subjectName },
+      });
+      await prisma.teacherSubject.upsert({
+        where: {
+          teacherId_subjectId: { teacherId: 'user-teach-1', subjectId: subject.id },
+        },
+        update: {},
+        create: { teacherId: 'user-teach-1', subjectId: subject.id },
+      });
+    }
     // Populate base classroom, assignment, quiz, badge definition
     await prisma.classroom.upsert({
       where: { id: 'cls-math-8a' },
@@ -122,16 +124,14 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       create: {
         id: 'cls-math-8a',
         name: 'Grade 8 Mathematics - Sec A',
-        subject: 'Mathematics',
-        gradeLevel: 8,
-        section: 'A',
         teacherId: 'user-teach-1',
-        teacherName: 'Mr. Ramesh Thapa',
-        teacherAvatar: 'a.png',
         roomNumber: '204',
         colorTheme: 'blue',
         bannerImage: 'b.png',
         code: 'MATH8A',
+        schoolId: 'school-everest',
+        subjectId: 'subject-mathematics',
+        cohortId: 'cohort-8-a',
       },
     });
     await prisma.assignment.upsert({
@@ -140,8 +140,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       create: {
         id: 'asg-1',
         classroomId: 'cls-math-8a',
-        classroomName: 'Math 8A',
-        subject: 'Math',
         title: 'Algebra Homework',
         instructions: 'Inst',
         dueDate: '2026-08-15',
@@ -157,13 +155,10 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       create: {
         id: 'quiz-1',
         classroomId: 'cls-math-8a',
-        classroomName: 'Math 8A',
-        subject: 'Math',
         title: 'Quiz 1',
         description: 'Desc',
         durationMinutes: 15,
         dueDate: '2026-08-10',
-        totalQuestions: 1,
         createdAt: new Date().toISOString(),
       },
     });
@@ -213,7 +208,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('ok');
     });
-
     it('2. GET /api/db/state returns full state payload', async () => {
       const res = await request(app).get('/api/db/state');
       expect(res.status).toBe(200);
@@ -221,7 +215,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(Array.isArray(res.body.users)).toBe(true);
       expect(Array.isArray(res.body.classrooms)).toBe(true);
     });
-
     it('3. POST /api/upload stores file record', async () => {
       const res = await request(app).post('/api/upload').send({
         name: 'Test_Doc.pdf',
@@ -233,27 +226,23 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.body.status).toBe('success');
       expect(res.body.record).toBeDefined();
     });
-
     it('4. GET /api/files returns list of stored files', async () => {
       const res = await request(app).get('/api/files');
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
       expect(Array.isArray(res.body.files)).toBe(true);
     });
-
     it('5. GET /api/files/:id returns 404 for non-existent file', async () => {
       const res = await request(app).get('/api/files/non-existent-id-999');
       expect(res.status).toBe(404);
       expect(res.body.status).toBe('error');
     });
-
     it('6. DELETE /api/files/:id returns 404 for non-existent file', async () => {
       const res = await request(app).delete('/api/files/non-existent-id-999');
       expect(res.status).toBe(404);
       expect(res.body.status).toBe('error');
     });
   });
-
   // 2. STUDENT ROUTES
   describe('Student Routes', () => {
     it('7. POST /api/db/submissions handles student homework submission', async () => {
@@ -267,7 +256,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
     });
-
     it('8. POST /api/db/quiz-submissions handles student quiz submission', async () => {
       const res = await request(app)
         .post('/api/db/quiz-submissions')
@@ -281,12 +269,10 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
     });
-
     it('9. GET /api/db/student-locations/:studentId returns location record', async () => {
       const res = await request(app).get('/api/db/student-locations/user-stu-1');
       expect([200, 404]).toContain(res.status);
     });
-
     it('10. POST /api/ai/tutor responds to student prompt', async () => {
       const res = await request(app).post('/api/ai/tutor').send({
         prompt: 'Explain Newton laws',
@@ -296,7 +282,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.text).toBeDefined();
     });
-
     it('11. POST /api/ai/homework-helper responds to student query', async () => {
       const res = await request(app).post('/api/ai/homework-helper').send({
         assignmentTitle: 'Pythagoras Theorem',
@@ -308,7 +293,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.body.text).toBeDefined();
     });
   });
-
   // 3. TEACHER ROUTES
   describe('Teacher Routes', () => {
     it('12. POST /api/db/classrooms creates new classroom', async () => {
@@ -328,7 +312,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.body.status).toBe('success');
       expect(res.body.classroom.code).toBeDefined();
     });
-
     it('13. POST /api/db/stream-posts creates classroom announcement', async () => {
       const res = await request(app).post('/api/db/stream-posts').send({
         classroomId: 'cls-math-8a',
@@ -342,7 +325,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
     });
-
     it('14. POST /api/db/stream-posts/:id/comments adds post comment', async () => {
       const res = await request(app).post('/api/db/stream-posts/post-1/comments').send({
         authorName: 'Mr. Ramesh Thapa',
@@ -352,7 +334,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
     });
-
     it('15. POST /api/db/assignments creates new assignment', async () => {
       const res = await request(app).post('/api/db/assignments').send({
         classroomId: 'cls-math-8a',
@@ -367,7 +348,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
     });
-
     it('16. POST /api/db/quizzes creates new quiz', async () => {
       const res = await request(app)
         .post('/api/db/quizzes')
@@ -395,7 +375,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
     });
-
     it('17. POST /api/db/attendance marks attendance record', async () => {
       const res = await request(app).post('/api/db/attendance').send({
         studentId: 'user-stu-1',
@@ -407,7 +386,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
     });
-
     it('18. POST /api/db/student-locations updates student real-time location', async () => {
       const res = await request(app).post('/api/db/student-locations').send({
         studentId: 'user-stu-1',
@@ -420,7 +398,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
     });
-
     it('19. POST /api/db/student-locations rejects missing required fields (400 Bad Request)', async () => {
       const res = await request(app).post('/api/db/student-locations').send({
         studentId: 'user-stu-1',
@@ -428,7 +405,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(400);
       expect(res.body.status).toBe('error');
     });
-
     it('20. POST /api/ai/quiz-generator generates AI quiz JSON', async () => {
       const res = await request(app).post('/api/ai/quiz-generator').send({
         topic: 'Photosynthesis',
@@ -439,7 +415,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.quiz).toBeDefined();
     });
-
     it('21. POST /api/ai/teacher-assistant drafts lesson feedback', async () => {
       const res = await request(app)
         .post('/api/ai/teacher-assistant')
@@ -451,7 +426,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.body.text).toBeDefined();
     });
   });
-
   // 4. PARENT ROUTES
   describe('Parent Routes', () => {
     it('22. POST /api/db/parent-controls updates parent settings', async () => {
@@ -472,7 +446,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
     });
-
     it('23. POST /api/db/messages sends direct message', async () => {
       const res = await request(app).post('/api/db/messages').send({
         senderId: 'user-parent-1',
@@ -486,7 +459,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
     });
-
     it('24. POST /api/ai/parent-summary generates weekly digest summary', async () => {
       const res = await request(app).post('/api/ai/parent-summary').send({
         studentName: 'Aarav Sharma',
@@ -499,7 +471,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
     });
   });
-
   // 5. ADMIN ROUTES & BADGE ASSIGNMENT
   describe('Admin Routes & Badges', () => {
     it('25. POST /api/db/student-badges manually awards badge to student', async () => {
@@ -513,7 +484,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.body.status).toBe('success');
       expect(res.body.badge).toBeDefined();
     });
-
     it('26. POST /api/db/student-badges returns 400 Bad Request when missing fields', async () => {
       const res = await request(app).post('/api/db/student-badges').send({
         studentProfileId: 'user-stu-1',
@@ -521,7 +491,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(400);
       expect(res.body.status).toBe('error');
     });
-
     it('27. GET /api/db/student-locations lists all student real-time locations', async () => {
       const res = await request(app).get('/api/db/student-locations');
       expect(res.status).toBe(200);
@@ -529,7 +498,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(Array.isArray(res.body.studentLocations)).toBe(true);
     });
   });
-
   // 6. ADDITIONAL CONTROLLER EDGE & BOUNDARY TESTS (28-45)
   describe('Additional Controller Edge & Boundary Assertions', () => {
     it('28. POST /api/upload handles default file sizes and PDF fallback mime types', async () => {
@@ -537,13 +505,11 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.record.originalName).toBe('Uploaded_Attachment.pdf');
     });
-
     it('29. GET /api/files handles classroomId filtering query string', async () => {
       const res = await request(app).get('/api/files?classroomId=cls-math-8a');
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body.files)).toBe(true);
     });
-
     it('30. POST /api/db/classrooms handles custom meeting links', async () => {
       const res = await request(app).post('/api/db/classrooms').send({
         name: 'Grade 10 Physics',
@@ -561,7 +527,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.classroom.meetLink).toBe('https://meet.google.com/phy-10a');
     });
-
     it('31. POST /api/db/submissions updates existing submission on re-submit', async () => {
       await request(app).post('/api/db/submissions').send({
         assignmentId: 'asg-repeat-1',
@@ -570,7 +535,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
         studentId: 'user-stu-1',
         notes: 'First draft',
       });
-
       const res = await request(app).post('/api/db/submissions').send({
         assignmentId: 'asg-repeat-1',
         fileName: 'V2.pdf',
@@ -581,7 +545,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.submission.fileName).toBe('V2.pdf');
     });
-
     it('32. POST /api/db/attendance updates status when attendance for date exists', async () => {
       await request(app).post('/api/db/attendance').send({
         studentId: 'user-stu-1',
@@ -590,7 +553,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
         status: 'absent',
         remarks: 'Sick',
       });
-
       const res = await request(app).post('/api/db/attendance').send({
         studentId: 'user-stu-1',
         studentName: 'Aarav Sharma',
@@ -601,7 +563,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.attendance.status).toBe('excused');
     });
-
     it('33. POST /api/ai/tutor supports custom language preferences', async () => {
       const res = await request(app).post('/api/ai/tutor').send({
         prompt: 'गणितका नियमहरू बुझाउनुहोस्',
@@ -611,7 +572,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       });
       expect(res.status).toBe(200);
     });
-
     it('34. POST /api/ai/quiz-generator handles custom question types', async () => {
       const res = await request(app)
         .post('/api/ai/quiz-generator')
@@ -624,7 +584,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
         });
       expect(res.status).toBe(200);
     });
-
     it('35. POST /api/ai/teacher-assistant handles announcement drafting task', async () => {
       const res = await request(app)
         .post('/api/ai/teacher-assistant')
@@ -634,7 +593,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
         });
       expect(res.status).toBe(200);
     });
-
     it('36. POST /api/db/messages supports approvedByParent boolean flag', async () => {
       const res = await request(app).post('/api/db/messages').send({
         senderId: 'user-stu-1',
@@ -649,7 +607,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.message.approvedByParent).toBe(true);
     });
-
     it('37. POST /api/db/student-locations handles bus number metadata', async () => {
       const res = await request(app).post('/api/db/student-locations').send({
         studentId: 'user-stu-1',
@@ -663,7 +620,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.location.busNumber).toBe('BA 3 KHA 4589');
     });
-
     it('38. POST /api/db/stream-posts handles post attachments', async () => {
       const res = await request(app)
         .post('/api/db/stream-posts')
@@ -679,7 +635,6 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.post.attachments.length).toBe(1);
     });
-
     it('39. POST /api/db/assignments supports rubric items array', async () => {
       const res = await request(app)
         .post('/api/db/assignments')
@@ -697,22 +652,19 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.assignment.rubric.length).toBe(2);
     });
-
     it('40. GET /api/db/state includes termProgress and studentActivities arrays', async () => {
       const res = await request(app).get('/api/db/state');
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body.termProgress)).toBe(true);
       expect(Array.isArray(res.body.studentActivities)).toBe(true);
     });
-
-    it('41. POST /api/db/student-badges rejects assignment when missing assignedBy', async () => {
+    it('41. POST /api/db/student-badges uses the authenticated/system actor', async () => {
       const res = await request(app).post('/api/db/student-badges').send({
         studentProfileId: 'user-stu-1',
         badgeDefinitionId: 'bdg-def-1',
       });
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(200);
     });
-
     it('42. POST /api/db/quiz-submissions returns answers Record object correctly', async () => {
       const res = await request(app)
         .post('/api/db/quiz-submissions')
@@ -726,37 +678,30 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.status).toBe(200);
       expect(res.body.quizSubmission.answers['q-1']).toBe('Option A');
     });
-
     it('43. GET /api/files/:id returns file object when valid file ID exists', async () => {
       const uploadRes = await request(app).post('/api/upload').send({ name: 'Lookup_File.pdf' });
       const fileId = uploadRes.body.record.id;
-
       const res = await request(app).get(`/api/files/${fileId}`);
       expect(res.status).toBe(200);
       expect(res.body.file.id).toBe(fileId);
     });
-
     it('44. DELETE /api/files/:id removes file object when valid file ID exists', async () => {
       const uploadRes = await request(app).post('/api/upload').send({ name: 'Delete_File.pdf' });
       const fileId = uploadRes.body.record.id;
-
       const res = await request(app).delete(`/api/files/${fileId}`);
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
     });
-
     it('45. GET / matches fallback backend status response', async () => {
       const res = await request(app).get('/');
       expect(res.status).toBe(200);
       expect(res.body.message).toContain('LMS API Backend is running');
     });
-
     it('46. DELETE /api/db/notifications/:id deletes notification record', async () => {
       const res = await request(app).delete('/api/db/notifications/n1-user-stu-1');
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
     });
-
     it('47. POST /api/db/notifications/clear-read clears read notifications', async () => {
       const res = await request(app)
         .post('/api/db/notifications/clear-read')

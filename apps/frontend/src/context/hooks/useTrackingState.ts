@@ -67,6 +67,10 @@ export const useTrackingState = (currentUser: User) => {
         remarks,
         markedBy: currentUser.name,
       }),
+      feedback: {
+        success: `${studentName}'s attendance was marked ${status}.`,
+        error: `Could not save ${studentName}'s attendance.`,
+      },
     }).catch((err) => console.error('[AppContext] Failed to persist attendance', err));
   };
 
@@ -93,6 +97,10 @@ export const useTrackingState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ studentId, settings: newSettings }),
+      feedback: {
+        success: 'Parental control settings updated.',
+        error: 'Could not update parental control settings.',
+      },
     }).catch((err) => console.error('[AppContext] Failed to persist parent controls', err));
   };
 
@@ -133,6 +141,10 @@ export const useTrackingState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updatedRecord),
+      feedback: {
+        success: `${studentName}'s location was updated.`,
+        error: `Could not update ${studentName}'s location.`,
+      },
     }).catch((err) =>
       console.error('[AppContext] Failed to post student location to server DB', err),
     );

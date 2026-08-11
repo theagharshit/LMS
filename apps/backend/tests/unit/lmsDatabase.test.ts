@@ -5,11 +5,9 @@ import { lmsDB } from '../../src/db/lmsDatabase';
 import { PrismaClient } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
-
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
-
 describe('LMS Database Service (Async)', () => {
   beforeAll(async () => {
     await prisma.user.upsert({
@@ -21,9 +19,7 @@ describe('LMS Database Service (Async)', () => {
         email: 'aarav@lms.com',
         role: 'student',
         avatar: 'a.png',
-        schoolName: 'S1',
-        gradeLevel: 8,
-        section: 'A',
+        schoolId: 'school-everest',
       },
     });
     await prisma.studentProfile.upsert({
@@ -32,13 +28,9 @@ describe('LMS Database Service (Async)', () => {
       create: {
         id: 'user-stu-1',
         userId: 'user-stu-1',
-        attendancePercentage: 95,
         streakDays: 10,
         xpPoints: 500,
-        gradeLevel: 8,
-        section: 'A',
-        parentName: 'Bina',
-        parentPhone: '980',
+        cohortId: 'cohort-8-a',
       },
     });
     await prisma.user.upsert({
@@ -50,7 +42,7 @@ describe('LMS Database Service (Async)', () => {
         email: 'ramesh@lms.com',
         role: 'teacher',
         avatar: 'a.png',
-        schoolName: 'S1',
+        schoolId: 'school-everest',
       },
     });
     await prisma.classroom.upsert({
@@ -59,16 +51,14 @@ describe('LMS Database Service (Async)', () => {
       create: {
         id: 'cls-math-8a',
         name: 'Grade 8 Mathematics - Sec A',
-        subject: 'Mathematics',
-        gradeLevel: 8,
-        section: 'A',
         teacherId: 'user-teach-1',
-        teacherName: 'Mr. Ramesh Thapa',
-        teacherAvatar: 'a.png',
         roomNumber: '204',
         colorTheme: 'blue',
         bannerImage: 'b.png',
         code: 'MATH8A',
+        schoolId: 'school-everest',
+        subjectId: 'subject-mathematics',
+        cohortId: 'cohort-8-a',
       },
     });
   });
@@ -77,17 +67,14 @@ describe('LMS Database Service (Async)', () => {
     expect(users.length).toBeGreaterThan(0);
     expect(users.some((u) => u.id === 'user-stu-1')).toBe(true);
   });
-
   it('should get student profiles', async () => {
     const profiles = await lmsDB.getStudentProfiles();
     expect(profiles.length).toBeGreaterThan(0);
   });
-
   it('should get classrooms', async () => {
     const classrooms = await lmsDB.getClassrooms();
     expect(classrooms.length).toBeGreaterThan(0);
   });
-
   it('should add a new classroom', async () => {
     const newClassroom = {
       name: 'Test Class',
@@ -105,11 +92,9 @@ describe('LMS Database Service (Async)', () => {
     const created = await lmsDB.addClassroom(newClassroom);
     expect(created.id).toBeDefined();
     expect(created.code).toBeDefined();
-
     const classrooms = await lmsDB.getClassrooms();
     expect(classrooms.some((c) => c.id === created.id)).toBe(true);
   });
-
   it('should update student location', async () => {
     const studentId = 'user-stu-1';
     const updated = await lmsDB.updateStudentLocation(
@@ -122,7 +107,6 @@ describe('LMS Database Service (Async)', () => {
     );
     expect(updated.currentLocation).toBe('Library');
     expect(updated.category).toBe('library');
-
     const fetched = await lmsDB.getStudentLocationById(studentId);
     expect(fetched?.currentLocation).toBe('Library');
   });

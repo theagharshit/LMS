@@ -16,6 +16,8 @@ import {
   ParentControlSettings,
   StudentLocationRecord,
   DirectMessage,
+  NotificationPreference,
+  NotificationItem,
 } from '@lms/shared';
 
 import {
@@ -179,10 +181,10 @@ export class LMSDatabaseService {
   public assignBadge(
     studentProfileId: string,
     badgeDefinitionId: string,
-    assignedBy: string,
+    assignedById?: string,
     remarks?: string,
   ) {
-    return badgeService.assignBadge(studentProfileId, badgeDefinitionId, assignedBy, remarks);
+    return badgeService.assignBadge(studentProfileId, badgeDefinitionId, assignedById, remarks);
   }
 
   public createBadgeDefinition(data: any) {
@@ -213,7 +215,7 @@ export class LMSDatabaseService {
     date: string,
     status: 'present' | 'absent' | 'late' | 'excused',
     remarks?: string,
-    markedBy?: string,
+    markedById?: string,
   ): Promise<AttendanceRecord> {
     return attendanceService.markAttendance(
       studentId,
@@ -221,7 +223,7 @@ export class LMSDatabaseService {
       date,
       status,
       remarks,
-      markedBy,
+      markedById,
     );
   }
 

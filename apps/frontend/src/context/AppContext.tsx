@@ -21,7 +21,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const uiState = useUIState();
   const academicState = useAcademicState(authState.currentUser);
   const trackingState = useTrackingState(authState.currentUser);
-  const communicationState = useCommunicationState(authState.currentUser);
+  const communicationState = useCommunicationState(authState.currentUser, authState.authReady);
 
   const adminState = useAdminState(
     authState.currentUser,
@@ -36,6 +36,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   useSyncState(
+    authState.authReady,
     authState.currentUser,
     authState.setCurrentUser,
     authState.setAllUsers,
@@ -91,9 +92,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         body: JSON.stringify({
           studentProfileId,
           badgeDefinitionId,
-          assignedBy: authState.currentUser.name,
           remarks,
         }),
+        feedback: {
+          success: 'The badge was awarded to the student.',
+          error: 'Could not award this badge.',
+        },
       });
       if (res.ok) {
         const data = await res.json().catch(() => null);

@@ -9,15 +9,68 @@
 export type Environment = 'development' | 'production';
 export type LogLevel = 'verbose' | 'normal';
 
+import fs from 'node:fs';
+import path from 'node:path';
+
 class Logger {
   private env: Environment;
   private level: LogLevel;
+  private logDirectory: string | null = null;
 
   constructor() {
     this.env = (process.env.NODE_ENV as Environment) || 'development';
     const rawLevel = process.env.LOG_LEVEL?.toLowerCase();
     this.level =
       rawLevel === 'verbose' || rawLevel === 'detailed' || rawLevel === '-v' ? 'verbose' : 'normal';
+    if (this.env === 'production') {
+      for (const directory of [process.env.LOG_DIR || '/var/log/lms', '/tmp/sikshya-lms-logs']) {
+        try {
+          fs.mkdirSync(directory, { recursive: true });
+          fs.accessSync(directory, fs.constants.W_OK);
+          this.logDirectory = directory;
+          break;
+        } catch {
+          /* Try the next safe location. */
+        }
+      }
+      this.rotateLogs();
+    }
+  }
+
+  private rotateLogs() {
+    if (!this.logDirectory) return;
+    const active = path.join(this.logDirectory, 'app.log');
+    try {
+      if (fs.existsSync(active)) {
+        const modified = fs.statSync(active).mtime.toISOString().slice(0, 10);
+        const today = new Date().toISOString().slice(0, 10);
+        if (modified !== today)
+          fs.renameSync(active, path.join(this.logDirectory, `app-${modified}.log`));
+      }
+      const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+      for (const file of fs.readdirSync(this.logDirectory)) {
+        if (
+          /^app-\d{4}-\d{2}-\d{2}\.log$/.test(file) &&
+          fs.statSync(path.join(this.logDirectory, file)).mtimeMs < cutoff
+        ) {
+          fs.unlinkSync(path.join(this.logDirectory, file));
+        }
+      }
+    } catch {
+      /* Logging must never stop the application. */
+    }
+  }
+
+  private write(level: string, message: string, details?: unknown) {
+    if (!this.logDirectory) return;
+    try {
+      fs.appendFileSync(
+        path.join(this.logDirectory, 'app.log'),
+        `${JSON.stringify({ timestamp: this.getTimestamp(), level, message, details })}\n`,
+      );
+    } catch {
+      /* Console logging remains available. */
+    }
   }
 
   public getEnvironment(): Environment {
@@ -46,6 +99,7 @@ class Logger {
    * In verbose mode: Timed, styled 1-liner with details
    */
   public info(message: string, details?: any) {
+    this.write('info', message, details);
     const prefix = `[${this.getTimestamp()}] [${this.env.toUpperCase()}:${this.level.toUpperCase()}] [INFO]`;
     if (this.isVerbose() && details !== undefined) {
       console.log(`\x1b[36m${prefix} ${message}\x1b[0m`, JSON.stringify(details, null, 2));
@@ -119,6 +173,7 @@ class Logger {
   }
 
   public warn(message: string, details?: any) {
+    this.write('warn', message, details);
     const prefix = `[${this.getTimestamp()}] [WARN]`;
     console.warn(`\x1b[33m${prefix} ${message}\x1b[0m`);
     if (this.isVerbose() && details !== undefined) {
@@ -127,6 +182,13 @@ class Logger {
   }
 
   public error(message: string, error?: any) {
+    this.write(
+      'error',
+      message,
+      error instanceof Error
+        ? { name: error.name, message: error.message, stack: error.stack }
+        : error,
+    );
     const prefix = `[${this.getTimestamp()}] [ERROR]`;
     console.error(`\x1b[31m${prefix} ${message}\x1b[0m`);
     if (error) {

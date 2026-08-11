@@ -27,6 +27,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: targetUser.id }),
+        feedback: {
+          success: `Welcome back, ${targetUser.name}.`,
+          error: 'Sign-in failed. Please try again.',
+          successTitle: 'Signed in',
+        },
       });
 
       if (!res.ok) {

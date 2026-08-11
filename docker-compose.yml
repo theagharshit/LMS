@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: lms_db
+      POSTGRES_USER: lms
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lms_local_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U lms -d lms_db']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    build:
+      context: .
+      target: backend-runtime
+    command: ['sh', '-c', 'cd apps/backend && ../../node_modules/.bin/prisma migrate deploy']
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://lms:${POSTGRES_PASSWORD:-lms_local_password}@postgres:5432/lms_db?schema=public&connection_limit=20&pool_timeout=10
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: 'no'
+
+  backend:
+    build:
+      context: .
+      target: backend-runtime
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://lms:${POSTGRES_PASSWORD:-lms_local_password}@postgres:5432/lms_db?schema=public&connection_limit=20&pool_timeout=10
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in your environment}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:4173,http://127.0.0.1:4173}
+    ports:
+      - '3001:3001'
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      target: frontend-runtime
+    environment:
+      BACKEND_URL: http://backend:3001
+    ports:
+      - '4173:4173'
+    depends_on:
+      backend: { condition: service_healthy }
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

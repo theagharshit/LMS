@@ -17,6 +17,7 @@ import {
   AlertCircle,
   Zap,
 } from 'lucide-react';
+import { useUnsavedChanges } from '../../utils/hooks';
 
 interface AdminStudentModalProps {
   isOpen: boolean;
@@ -119,18 +120,27 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
     }
   }, [initialData, isOpen]);
 
+  const hasEnteredData = Boolean(
+    name.trim() ||
+    email.trim() ||
+    rollNumber ||
+    dob ||
+    parentName.trim() ||
+    parentPhone.trim() ||
+    parentAddress.trim(),
+  );
+  useUnsavedChanges(isOpen && hasEnteredData);
+
   if (!isOpen) return null;
 
   const isFormDirty = (): boolean => {
-    if (initialData) return false;
-    return Boolean(
-      name.trim() ||
-      email.trim() ||
-      rollNumber ||
-      dob ||
-      parentName.trim() ||
-      parentPhone.trim() ||
-      parentAddress.trim(),
+    if (!initialData) return hasEnteredData;
+    return (
+      name !== (initialData.name || '') ||
+      email !== (initialData.email || '') ||
+      gradeLevel !== (initialData.gradeLevel || 8) ||
+      section !== (initialData.section || 'A') ||
+      rollNumber !== (initialData.rollNumber || '')
     );
   };
 

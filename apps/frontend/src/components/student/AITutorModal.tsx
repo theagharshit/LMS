@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '@utils/apiFetch';
+import { toast } from '@utils/toast';
 import { useApp } from '../../context/AppContext';
 import {
   X,
@@ -70,7 +72,7 @@ export const AITutorModal: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/ai/tutor', {
+      const response = await apiFetch('/api/ai/tutor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -79,8 +81,9 @@ export const AITutorModal: React.FC = () => {
           gradeLevel: currentUser.gradeLevel || 8,
           language: 'English/Nepali',
         }),
+        feedback: false,
       });
-
+      if (!response.ok) throw new Error('Tutor request failed.');
       const data = await response.json();
       const aiText =
         data.text || 'I apologize, I could not process that query. Please try asking again!';
@@ -94,6 +97,10 @@ export const AITutorModal: React.FC = () => {
         },
       ]);
     } catch (err) {
+      toast.warning('The AI tutor is temporarily unavailable, so a guided fallback was provided.', {
+        title: 'Fallback guidance',
+        id: 'ai-tutor-fallback',
+      });
       setMessages((prev) => [
         ...prev,
         {

@@ -65,6 +65,69 @@
   .font-serif-heading {
     font-family: 'Georgia', Cambria, 'Times New Roman', Times, serif;
   }
+
+  :focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--secondary) 75%, white);
+    outline-offset: 3px;
+  }
+}
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(1rem, -0.25rem, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.toast-enter {
+  animation: toast-enter 180ms ease-out both;
+}
+
+.toast-progress {
+  transform-origin: left;
+  animation: toast-progress linear both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-enter,
+  .toast-progress {
+    animation: none;
+  }
+}
+
+@media (max-width: 639px) {
+  [role='dialog'][aria-modal='true'] > section,
+  [role='dialog'][aria-modal='true'] > div:last-child {
+    width: 100%;
+    max-width: none;
+    margin-top: auto;
+    border-radius: 1.5rem 1.5rem 0 0;
+    animation: mobile-sheet-in 180ms ease-out;
+  }
+}
+
+@keyframes mobile-sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* Natural Tones Custom Utilities */

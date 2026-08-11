@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { apiFetch } from '@utils/apiFetch';
+import { toast } from '@utils/toast';
 import { useApp } from '../../context/AppContext';
 import {
   X,
@@ -90,7 +92,7 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
     if (!aiHelperQuery.trim() || isAiLoading) return;
     setIsAiLoading(true);
     try {
-      const res = await fetch('/api/ai/homework-helper', {
+      const res = await apiFetch('/api/ai/homework-helper', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -99,10 +101,19 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
           questionText: aiHelperQuery,
           gradeLevel: currentUser.gradeLevel || 8,
         }),
+        feedback: false,
       });
+      if (!res.ok) throw new Error('Homework helper request failed.');
       const data = await res.json();
       setAiHelperResult(data.text);
     } catch (err) {
+      toast.warning(
+        'AI help is temporarily unavailable, so a step-by-step fallback was provided.',
+        {
+          title: 'Fallback homework help',
+          id: 'homework-helper-fallback',
+        },
+      );
       setAiHelperResult(
         'Here are key steps to complete this homework:\n1. Identify the core mathematical or scientific principle.\n2. Write down your given variables.\n3. Solve step-by-step.',
       );
