@@ -3,6 +3,7 @@ import { prisma, readPrisma } from './prismaClient';
 import { User, StudentProfile } from '@lms/shared';
 import { withDeadlockRetry } from '@utils/transaction';
 import { cacheService } from './cacheService';
+import { normalizeCohortSelection } from '@utils/cohortValidation';
 
 const normalizeOptionalPhone = (value: unknown): string | null => {
   if (value === undefined || value === null || String(value).trim() === '') return null;
@@ -130,8 +131,10 @@ export class UserService {
     const studentUserId = data.id || `user-stu-${Date.now()}`;
     const studentName = (data.name || data.studentName || 'New Student').trim();
     const studentEmail = (data.email || `${studentUserId}@lms.com`).trim().toLowerCase();
-    const gradeLevel = Number(data.gradeLevel || 8);
-    const section = String(data.section || 'A');
+    const { gradeLevel, section } = normalizeCohortSelection(
+      data.gradeLevel ?? 8,
+      data.section ?? 'A',
+    );
     const schoolName = data.schoolName || 'Everest International Academy';
 
     const created = await withDeadlockRetry(() =>
@@ -286,8 +289,10 @@ export class UserService {
     if (data.rollNumber !== undefined) profileUpdate.normalizedRollNumber = data.rollNumber;
 
     if (data.gradeLevel || data.section) {
-      const gradeLevel = Number(data.gradeLevel || current.cohortRef.gradeLevel);
-      const section = String(data.section || current.cohortRef.section);
+      const { gradeLevel, section } = normalizeCohortSelection(
+        data.gradeLevel ?? current.cohortRef.gradeLevel,
+        data.section ?? current.cohortRef.section,
+      );
       const schoolId = current.user.schoolId;
       if (schoolId) {
         const cohort = await prisma.academicCohort.upsert({

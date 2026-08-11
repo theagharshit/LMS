@@ -586,7 +586,7 @@ export const AdminDashboard: React.FC = () => {
                 className="px-3 py-2 bg-white rounded-xl border border-[#EDEAE2] text-xs font-semibold text-[#2D2D2A] focus:outline-none"
               >
                 <option value="all">All Grades</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => (
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((g) => (
                   <option key={g} value={g}>
                     Grade {g}
                   </option>
@@ -1067,21 +1067,28 @@ export const AdminDashboard: React.FC = () => {
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="block font-semibold text-[#2D2D2A] mb-1">Grade Level</label>
-                <input
-                  type="number"
+                <select
                   value={clsGrade}
                   onChange={(e) => setClsGrade(Number(e.target.value))}
                   className="w-full px-3 py-2 bg-white rounded-xl border border-[#EDEAE2] text-xs"
-                />
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((grade) => (
+                    <option key={grade} value={grade}>
+                      Grade {grade}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block font-semibold text-[#2D2D2A] mb-1">Section</label>
-                <input
-                  type="text"
+                <select
                   value={clsSection}
                   onChange={(e) => setClsSection(e.target.value)}
                   className="w-full px-3 py-2 bg-white rounded-xl border border-[#EDEAE2] text-xs"
-                />
+                >
+                  <option value="A">Section A</option>
+                  <option value="B">Section B</option>
+                </select>
               </div>
               <div>
                 <label className="block font-semibold text-[#2D2D2A] mb-1">Room Number</label>
