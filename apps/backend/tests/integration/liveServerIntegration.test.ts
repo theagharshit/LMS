@@ -12,8 +12,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 let server: Server;
 const PORT = 3001;
-const BASE_URL = `http://127.0.0.1:${PORT}`;
-console.log('--- DEBUG: USE_REAL_SERVER is', process.env.USE_REAL_SERVER);
+let BASE_URL = process.env.TEST_BASE_URL || `http://127.0.0.1:${PORT}`;
 describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () => {
   let createdLiveStudentId = '';
   let createdLiveTeacherId = '';
@@ -46,6 +45,7 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
         streakDays: 10,
         xpPoints: 500,
         cohortId: 'cohort-8-a',
+        normalizedRollNumber: 901,
       },
     });
     await prisma.user.upsert({
@@ -117,22 +117,35 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
         createdAt: new Date().toISOString(),
       },
     });
-    // 2. Boot test Express server on dedicated test PORT (unless testing an already running server)
+    // 2. Boot an isolated server on a free port unless an external server was explicitly requested.
     if (process.env.USE_REAL_SERVER !== 'true') {
       const app = createApp();
       await new Promise<void>((resolve) => {
-        server = app.listen(PORT, '127.0.0.1', () => {
+        server = app.listen(0, '127.0.0.1', () => {
+          const address = server.address();
+          if (!address || typeof address === 'string') {
+            throw new Error('The integration test server did not expose a TCP port.');
+          }
+          BASE_URL = `http://127.0.0.1:${address.port}`;
           resolve();
         });
       });
     } else {
-      console.log(`[Test] Using already running actual server at ${BASE_URL}...`);
+      const health = await fetch(`${BASE_URL}/api/health`).catch(() => null);
+      if (!health?.ok) {
+        throw new Error(
+          `USE_REAL_SERVER=true requires a healthy API server at ${BASE_URL}. Start it first or run the self-contained test command.`,
+        );
+      }
+      console.log(`[Test] Using explicitly configured server at ${BASE_URL}...`);
     }
   });
   afterAll(async () => {
     if (server) {
       await new Promise<void>((resolve) => server.close(() => resolve()));
     }
+    await prisma.$disconnect();
+    await pool.end();
   });
   it('1. GET /api/health over TCP socket returns 200 OK under 100ms SLA', async () => {
     const startTime = performance.now();
