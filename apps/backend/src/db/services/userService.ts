@@ -1,9 +1,11 @@
+import { logger } from '@utils/logger';
 import { prisma } from './prismaClient';
 import { User, StudentProfile } from '@lms/shared';
 
 export class UserService {
   public async getUsers(): Promise<User[]> {
     const users = await prisma.user.findMany();
+
     return users.map((u) => ({
       id: u.id,
       name: u.name,
@@ -63,36 +65,109 @@ export class UserService {
   }
 
   public async addStudentProfile(data: any) {
-    const user = await prisma.user.create({
-      data: {
-        id: data.id || `user-stu-${Date.now()}`,
-        name: data.name,
-        email: data.email,
-        role: 'student',
-        avatar:
-          data.avatar ||
-          'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
-        schoolName: data.schoolName || 'Everest International Academy',
-        gradeLevel: data.gradeLevel || 8,
-        section: data.section || 'A',
-        rollNumber: data.rollNumber,
-      },
-    });
+    logger.log('[UserService] Processing addStudentProfile payload:', data);
+    console.log(JSON.stringify(data, null, 2));
+    const studentUserId = data.id || `user-stu-${Date.now()}`;
+    const studentName = (data.name || data.studentName || 'New Student').trim();
+    const studentEmail = (data.email || `${studentUserId}@lms.com`).trim().toLowerCase();
+    const rollNum = data.rollNumber ? Number(data.rollNumber) : Math.floor(Math.random() * 50) + 1;
 
-    const profile = await prisma.studentProfile.create({
-      data: {
-        user: { connect: { id: user.id } },
-        attendancePercentage: data.attendancePercentage || 100,
-        streakDays: data.streakDays || 1,
-        xpPoints: data.xpPoints || 0,
-        gradeLevel: data.gradeLevel || 8,
-        section: data.section || 'A',
-        parentName: data.parentName || 'Parent',
-        parentPhone: data.parentPhone || '+977-9800000000',
-      },
-    });
+    return prisma.$transaction(async (tx) => {
+      // 1. Create Student User record
+      // Resolve unique student email if collision occurs
+      let finalStudentEmail = studentEmail;
+      const existingStudentUser = await tx.user.findUnique({ where: { email: studentEmail } });
+      if (existingStudentUser) {
+        const parts = studentEmail.split('@');
+        finalStudentEmail = `${parts[0]}_${Date.now()}@${parts[1] || 'lms.com'}`;
+        logger.warn(
+          `[UserService] Email ${studentEmail} already registered. Generated unique email: ${finalStudentEmail}`,
+        );
+      }
 
-    return { ...user, ...profile };
+      const user = await tx.user.create({
+        data: {
+          id: studentUserId,
+          name: studentName,
+          email: finalStudentEmail,
+          role: 'student',
+          avatar:
+            data.avatar ||
+            'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+          schoolName: data.schoolName || 'Everest International Academy',
+          gradeLevel: data.gradeLevel || 8,
+          section: data.section || 'A',
+          rollNumber: rollNum,
+        },
+      });
+
+      // 2. Create Student Profile record
+      const profile = await tx.studentProfile.create({
+        data: {
+          user: { connect: { id: user.id } },
+          attendancePercentage: data.attendancePercentage || 100,
+          streakDays: data.streakDays || 1,
+          xpPoints: data.xpPoints || 0,
+          gradeLevel: data.gradeLevel || 8,
+          section: data.section || 'A',
+          parentName: data.parentName || 'Parent',
+          parentPhone: data.parentPhone || '+977-9800000000',
+        },
+      });
+
+      // 3. Create default NotificationPreference for student atomically
+      await tx.notificationPreference.create({
+        data: {
+          userId: user.id,
+          enableAcademic: true,
+          enableCommunication: true,
+          enableReminders: true,
+        },
+      });
+
+      // 4. Create or Link Parent User Account if parent email provided
+      if (data.parentEmail && data.parentEmail.trim()) {
+        const normalizedParentEmail = data.parentEmail.trim().toLowerCase();
+        const existingParent = await tx.user.findUnique({
+          where: { email: normalizedParentEmail },
+        });
+
+        if (existingParent) {
+          const currentChildren = existingParent.childrenIds || [];
+          if (!currentChildren.includes(user.id)) {
+            await tx.user.update({
+              where: { id: existingParent.id },
+              data: { childrenIds: [...currentChildren, user.id] },
+            });
+          }
+        } else {
+          const parentUserId = `user-parent-${Date.now()}`;
+          const newParent = await tx.user.create({
+            data: {
+              id: parentUserId,
+              name: data.parentName || 'Parent',
+              email: normalizedParentEmail,
+              role: 'parent',
+              avatar:
+                'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+              schoolName: data.schoolName || 'Everest International Academy',
+              childrenIds: [user.id],
+            },
+          });
+
+          await tx.notificationPreference.create({
+            data: {
+              userId: newParent.id,
+              enableAcademic: true,
+              enableCommunication: true,
+              enableReminders: true,
+            },
+          });
+        }
+      }
+
+      return { ...user, ...profile };
+    });
   }
 
   public async updateStudentProfile(id: string, data: any) {

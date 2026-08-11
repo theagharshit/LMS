@@ -212,7 +212,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
                     Switch Demo Role
                   </p>
                 </div>
-                <div className="p-1 space-y-1">
+                <div className="p-1 space-y-1 border-t border-[#EDEAE2]">
                   {allUsers.map((user) => (
                     <button
                       key={user.id}
@@ -247,6 +247,18 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
                       )}
                     </button>
                   ))}
+                  <button
+                    onClick={() => {
+                      if (typeof localStorage !== 'undefined') {
+                        localStorage.removeItem('lms_jwt_token');
+                      }
+                      setActiveView('login');
+                      setIsRoleDropdownOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 p-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors"
+                  >
+                    <span>🔒 Log Out (Clear JWT Token)</span>
+                  </button>
                 </div>
               </div>
             )}

@@ -308,8 +308,14 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
 
       {/* Preferences Modal */}
       {isSettingsOpen && (
-        <div className="fixed inset-0 z-60 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 border border-[#EDEAE2] dark:border-slate-800 shadow-2xl space-y-6 animate-in zoom-in-95 duration-150">
+        <div
+          onClick={() => setIsSettingsOpen(false)}
+          className="fixed inset-0 z-60 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 border border-[#EDEAE2] dark:border-slate-800 shadow-2xl space-y-6 animate-in zoom-in-95 duration-150"
+          >
             <div className="flex items-center justify-between border-b border-[#EDEAE2] dark:border-slate-800 pb-4">
               <div className="flex items-center gap-2">
                 <Settings className="w-5 h-5 text-[#4A6741]" />

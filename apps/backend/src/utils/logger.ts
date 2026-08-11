@@ -55,6 +55,13 @@ class Logger {
   }
 
   /**
+   * Alias for info log
+   */
+  public log(message: string, details?: any) {
+    this.info(message, details);
+  }
+
+  /**
    * Verbose log - only outputs when LOG_LEVEL is 'verbose'
    */
   public debug(message: string, details?: any) {

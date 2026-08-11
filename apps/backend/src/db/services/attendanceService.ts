@@ -19,6 +19,7 @@ export class AttendanceService {
     date: string,
     status: 'present' | 'absent' | 'late' | 'excused',
     remarks?: string,
+    markedBy: string = 'System',
   ): Promise<AttendanceRecord> {
     const existing = await prisma.attendanceRecord.findFirst({
       where: { studentId, date },
@@ -27,7 +28,7 @@ export class AttendanceService {
     if (existing) {
       const updated = await prisma.attendanceRecord.update({
         where: { id: existing.id },
-        data: { status, remarks },
+        data: { status, remarks, markedBy },
       });
       return {
         ...updated,
@@ -38,7 +39,7 @@ export class AttendanceService {
     }
 
     const created = await prisma.attendanceRecord.create({
-      data: { studentId, studentName, date, status, remarks, markedBy: 'System' },
+      data: { studentId, studentName, date, status, remarks, markedBy },
     });
 
     if (status === 'absent' || status === 'late') {

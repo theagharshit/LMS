@@ -67,8 +67,16 @@ export const updateQuizMarksMode = async (req: Request, res: Response) => {
 
 export const markAttendance = async (req: Request, res: Response) => {
   try {
-    const { studentId, studentName, date, status, remarks } = req.body;
-    const record = await lmsDB.markAttendance(studentId, studentName, date, status, remarks);
+    const { studentId, studentName, date, status, remarks, markedBy } = req.body;
+    const effectiveMarkedBy = markedBy || req.user?.name || 'Teacher';
+    const record = await lmsDB.markAttendance(
+      studentId,
+      studentName,
+      date,
+      status,
+      remarks,
+      effectiveMarkedBy,
+    );
     res.json({ status: 'success', attendance: record });
   } catch (err) {
     logger.error('Failed to mark attendance:', err);

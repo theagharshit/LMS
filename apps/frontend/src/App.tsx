@@ -23,9 +23,14 @@ import { QuizBuilderModal } from './components/teacher/QuizBuilderModal';
 import { TeacherQuizHubView } from './components/teacher/TeacherQuizHubView';
 import { ParentalControlsModal } from './components/parent/ParentalControlsModal';
 import { InDevelopmentView } from './components/common/InDevelopmentView';
+import { LoginView } from './components/common/LoginView';
 
 const AppContent: React.FC = () => {
   const { currentUser, activeView, isCompletedQuizzesOpen, setIsCompletedQuizzesOpen } = useApp();
+
+  if (activeView === 'login') {
+    return <LoginView />;
+  }
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isDispatchNotificationOpen, setIsDispatchNotificationOpen] = useState(false);

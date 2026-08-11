@@ -213,8 +213,16 @@ export class LMSDatabaseService {
     date: string,
     status: 'present' | 'absent' | 'late' | 'excused',
     remarks?: string,
+    markedBy?: string,
   ): Promise<AttendanceRecord> {
-    return attendanceService.markAttendance(studentId, studentName, date, status, remarks);
+    return attendanceService.markAttendance(
+      studentId,
+      studentName,
+      date,
+      status,
+      remarks,
+      markedBy,
+    );
   }
 
   // --- LOCATION SERVICE DELEGATES ---
