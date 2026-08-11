@@ -304,9 +304,7 @@ export class PlatformService {
       level: Math.floor(Math.sqrt((profile?.xpPoints || 0) / 100)),
       xpPoints: profile?.xpPoints || 0,
       streakDays: profile?.streakDays || 0,
-      attendancePercentage: attendance.length
-        ? round2((present / attendance.length) * 100)
-        : 0,
+      attendancePercentage: attendance.length ? round2((present / attendance.length) * 100) : 0,
       subjects,
       terms,
       generatedAt: new Date().toISOString(),
@@ -418,18 +416,16 @@ export class PlatformService {
     });
     if (teachers.length !== uniqueTeacherIds.length)
       throw new Error('Every substitute must be an active teacher.');
-    const mismatched = teachers.find(
-      (teacher) => {
-        const allocatedSubjects = teacher.teacherSubjects.map((entry) => entry.subject.name);
-        const classroomSubject = classroom.subjectRef.name;
-        return (
-          allocatedSubjects.length > 0 &&
-          !allocatedSubjects.some(
-            (subject) => subject.toLowerCase() === classroomSubject.toLowerCase(),
-          )
-        );
-      },
-    );
+    const mismatched = teachers.find((teacher) => {
+      const allocatedSubjects = teacher.teacherSubjects.map((entry) => entry.subject.name);
+      const classroomSubject = classroom.subjectRef.name;
+      return (
+        allocatedSubjects.length > 0 &&
+        !allocatedSubjects.some(
+          (subject) => subject.toLowerCase() === classroomSubject.toLowerCase(),
+        )
+      );
+    });
     if (mismatched)
       throw new Error(`${mismatched.name} is not allocated to ${classroom.subjectRef.name}.`);
     return prisma.$transaction(async (tx) => {

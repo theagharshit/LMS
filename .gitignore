@@ -6,7 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
-package-lock.json
 /src/generated/prisma
 .agents/
 .claude/

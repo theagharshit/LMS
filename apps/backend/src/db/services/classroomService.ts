@@ -76,14 +76,14 @@ export class ClassroomService {
       });
       return tx.classroom.create({
         data: {
-        name: classroom.name,
-        teacherId: validTeacherId,
-        roomNumber: classroom.roomNumber,
-        colorTheme: classroom.colorTheme,
-        bannerImage: classroom.bannerImage,
-        meetLink: classroom.meetLink,
-        code,
-        maxCapacity: (classroom as any).maxCapacity || 40,
+          name: classroom.name,
+          teacherId: validTeacherId,
+          roomNumber: classroom.roomNumber,
+          colorTheme: classroom.colorTheme,
+          bannerImage: classroom.bannerImage,
+          meetLink: classroom.meetLink,
+          code,
+          maxCapacity: (classroom as any).maxCapacity || 40,
           schoolId: school.id,
           subjectId: subject.id,
           cohortId: cohort.id,

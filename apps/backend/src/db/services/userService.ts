@@ -4,6 +4,15 @@ import { User, StudentProfile } from '@lms/shared';
 import { withDeadlockRetry } from '@utils/transaction';
 import { cacheService } from './cacheService';
 
+const normalizeOptionalPhone = (value: unknown): string | null => {
+  if (value === undefined || value === null || String(value).trim() === '') return null;
+  const phone = String(value).trim();
+  if (!/^\+?[0-9][0-9 -]{6,19}$/.test(phone)) {
+    throw new Error('Secondary phone must contain 7-20 digits, spaces, or hyphens.');
+  }
+  return phone;
+};
+
 export class UserService {
   public async getUsers(): Promise<User[]> {
     const cached = await cacheService.get<User[]>('lms:users');
@@ -25,6 +34,8 @@ export class UserService {
       role: u.role as any,
       avatar: u.avatar,
       schoolName: u.schoolRef.name,
+      phone: u.phone || undefined,
+      secondaryPhone: u.secondaryPhone || undefined,
       gradeLevel: u.studentProfile?.cohortRef.gradeLevel,
       section: u.studentProfile?.cohortRef.section,
       rollNumber: u.studentProfile?.normalizedRollNumber,
@@ -73,6 +84,7 @@ export class UserService {
       xpPoints: p.xpPoints,
       parentName: p.user.guardianLinks[0]?.parent.name || 'Parent',
       parentPhone: p.user.guardianLinks[0]?.parent.phone || '',
+      parentSecondaryPhone: p.user.guardianLinks[0]?.parent.secondaryPhone || undefined,
       badges: p.badges.map((b) => ({
         id: b.id,
         earnedDate: b.earnedDate,
@@ -195,6 +207,15 @@ export class UserService {
           });
 
           if (existingParent) {
+            const parentSecondaryPhone = normalizeOptionalPhone(
+              data.parentSecondaryPhone ?? data.secondaryContact,
+            );
+            if (parentSecondaryPhone) {
+              await tx.user.update({
+                where: { id: existingParent.id },
+                data: { secondaryPhone: parentSecondaryPhone },
+              });
+            }
             await tx.parentStudent.upsert({
               where: { parentId_studentId: { parentId: existingParent.id, studentId: user.id } },
               update: { isPrimary: true },
@@ -212,6 +233,9 @@ export class UserService {
                   'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
                 schoolId: school.id,
                 phone: data.parentPhone || '+977-9800000000',
+                secondaryPhone: normalizeOptionalPhone(
+                  data.parentSecondaryPhone ?? data.secondaryContact,
+                ),
               },
             });
 
@@ -280,6 +304,27 @@ export class UserService {
         where: { OR: [{ id }, { userId: id }] },
         data: profileUpdate,
       });
+    }
+
+    if (data.parentPhone !== undefined || data.parentSecondaryPhone !== undefined) {
+      const guardian = await prisma.parentStudent.findFirst({
+        where: { studentId: current.userId },
+        orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }],
+        select: { parentId: true },
+      });
+      if (guardian) {
+        await prisma.user.update({
+          where: { id: guardian.parentId },
+          data: {
+            ...(data.parentPhone !== undefined && {
+              phone: String(data.parentPhone).trim() || null,
+            }),
+            ...(data.parentSecondaryPhone !== undefined && {
+              secondaryPhone: normalizeOptionalPhone(data.parentSecondaryPhone),
+            }),
+          },
+        });
+      }
     }
 
     await cacheService.invalidate('lms:users', 'lms:student-profiles');
@@ -377,6 +422,7 @@ export class UserService {
           'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
         schoolId: school.id,
         phone: data.phone,
+        secondaryPhone: normalizeOptionalPhone(data.secondaryPhone),
       },
     });
     await cacheService.invalidate('lms:users');

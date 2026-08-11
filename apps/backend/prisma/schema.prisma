@@ -158,14 +158,15 @@ model AcademicTerm {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  role      UserRole
-  avatar    String
-  schoolId  String
-  schoolRef School   @relation(fields: [schoolId], references: [id], onDelete: Restrict)
-  phone     String?
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  role           UserRole
+  avatar         String
+  schoolId       String
+  schoolRef      School   @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+  phone          String?
+  secondaryPhone String?
 
   passwordHash  String?
   isArchived    Boolean   @default(false)
