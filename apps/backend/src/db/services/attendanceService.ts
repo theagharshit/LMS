@@ -7,19 +7,6 @@ import { cacheService } from './cacheService';
 
 export class AttendanceService {
   private async refreshPercentage(studentId: string) {
-    const records = await prisma.attendanceRecord.findMany({
-      where: { studentId },
-      select: { status: true },
-    });
-    if (!records.length) return;
-    const present = records.filter(
-      (record) => record.status === 'present' || record.status === 'late',
-    ).length;
-    const attendancePercentage = Math.round((present / records.length) * 10_000) / 100;
-    await prisma.studentProfile.updateMany({
-      where: { userId: studentId },
-      data: { attendancePercentage },
-    });
     await cacheService.invalidate(`lms:performance:${studentId}`, 'lms:student-profiles');
   }
 
@@ -28,21 +15,22 @@ export class AttendanceService {
       studentId: string;
       studentName: string;
       date: string;
-      status: string;
+      status: 'present' | 'absent' | 'late' | 'excused';
       remarks?: string;
     }>,
-    markedBy: string,
+    markedById?: string,
   ) {
+    if (markedById) await this.validateMarker(markedById);
     const result = await withDeadlockRetry(() =>
       prisma.$transaction(
         records.map((record) =>
           prisma.attendanceRecord.upsert({
             where: { id: `${record.studentId}:${record.date}` },
-            update: { status: record.status, remarks: record.remarks, markedBy },
+            update: { status: record.status, remarks: record.remarks, markedById },
             create: {
               id: `${record.studentId}:${record.date}`,
               ...record,
-              markedBy,
+              markedById,
             },
           }),
         ),
@@ -61,9 +49,10 @@ export class AttendanceService {
     return result;
   }
   public async getAttendance(): Promise<AttendanceRecord[]> {
-    const records = await prisma.attendanceRecord.findMany();
+    const records = await prisma.attendanceRecord.findMany({ include: { markedBy: true } });
     return records.map((r) => ({
       ...r,
+      markedBy: r.markedBy?.name || 'System',
       status: r.status as any,
       remarks: r.remarks || undefined,
       checkInTime: r.checkInTime || undefined,
@@ -76,8 +65,9 @@ export class AttendanceService {
     date: string,
     status: 'present' | 'absent' | 'late' | 'excused',
     remarks?: string,
-    markedBy: string = 'System',
+    markedById?: string,
   ): Promise<AttendanceRecord> {
+    if (markedById) await this.validateMarker(markedById);
     const existing = await prisma.attendanceRecord.findFirst({
       where: { studentId, date },
     });
@@ -85,12 +75,14 @@ export class AttendanceService {
     if (existing) {
       const updated = await prisma.attendanceRecord.update({
         where: { id: existing.id },
-        data: { status, remarks, markedBy },
+        data: { status, remarks, markedById },
+        include: { markedBy: true },
       });
       await this.refreshPercentage(studentId);
       await platformService.evaluateBadges(studentId);
       return {
         ...updated,
+        markedBy: updated.markedBy?.name || 'System',
         status: updated.status as any,
         remarks: updated.remarks || undefined,
         checkInTime: updated.checkInTime || undefined,
@@ -98,7 +90,8 @@ export class AttendanceService {
     }
 
     const created = await prisma.attendanceRecord.create({
-      data: { studentId, studentName, date, status, remarks, markedBy },
+      data: { studentId, studentName, date, status, remarks, markedById },
+      include: { markedBy: true },
     });
     await this.refreshPercentage(studentId);
     await platformService.evaluateBadges(studentId);
@@ -118,10 +111,19 @@ export class AttendanceService {
 
     return {
       ...created,
+      markedBy: created.markedBy?.name || 'System',
       status: created.status as any,
       remarks: created.remarks || undefined,
       checkInTime: created.checkInTime || undefined,
     };
+  }
+
+  private async validateMarker(userId: string) {
+    const marker = await prisma.user.findFirst({
+      where: { id: userId, role: { in: ['teacher', 'admin'] }, isArchived: false },
+      select: { id: true },
+    });
+    if (!marker) throw new Error('Attendance marker must be an active teacher or administrator.');
   }
 }
 

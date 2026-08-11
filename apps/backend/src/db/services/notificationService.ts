@@ -15,7 +15,30 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 export class NotificationService {
+  /**
+   * Notification records are relational data. Never create a preference or
+   * notification for an ID supplied by a stale browser session or an
+   * optimistic client-side record.
+   */
+  public async hasActiveUser(userId: string): Promise<boolean> {
+    return Boolean(
+      await prisma.user.findFirst({
+        where: { id: userId, isArchived: false },
+        select: { id: true },
+      }),
+    );
+  }
+
   public async getNotificationPreferences(userId: string): Promise<NotificationPreference> {
+    if (!(await this.hasActiveUser(userId))) {
+      return {
+        userId,
+        enableAcademic: true,
+        enableCommunication: true,
+        enableReminders: true,
+      };
+    }
+
     let pref = await prisma.notificationPreference.findUnique({
       where: { userId },
     });
@@ -43,6 +66,10 @@ export class NotificationService {
     userId: string,
     prefs: Partial<Omit<NotificationPreference, 'userId'>>,
   ): Promise<NotificationPreference> {
+    if (!(await this.hasActiveUser(userId))) {
+      throw new Error('Notification preferences require an active user account.');
+    }
+
     const updated = await prisma.notificationPreference.upsert({
       where: { userId },
       update: {
@@ -79,6 +106,13 @@ export class NotificationService {
     severity?: NotificationSeverity;
     type?: NotificationType;
   }): Promise<NotificationItem | null> {
+    if (!(await this.hasActiveUser(data.recipientId))) {
+      logger.warn(
+        `[NotificationEngine] Ignored notification for missing or archived user ${data.recipientId}`,
+      );
+      return null;
+    }
+
     const category = data.category || 'COMMUNICATION';
     const severity = data.severity || 'normal';
     const type = data.type || 'general';
@@ -100,10 +134,12 @@ export class NotificationService {
       }
     }
 
+    const senderId =
+      data.senderId && (await this.hasActiveUser(data.senderId)) ? data.senderId : undefined;
     const created = await prisma.notificationRecord.create({
       data: {
         recipientId: data.recipientId,
-        senderId: data.senderId,
+        senderId,
         senderName: data.senderName,
         senderRole: data.senderRole,
         title: data.title,
@@ -179,6 +215,11 @@ export class NotificationService {
   }
 
   public async getUserNotifications(userId: string): Promise<NotificationItem[]> {
+    if (!(await this.hasActiveUser(userId))) {
+      logger.warn(`[NotificationEngine] Ignored notification read for missing user ${userId}`);
+      return [];
+    }
+
     let records = await prisma.notificationRecord.findMany({
       where: { recipientId: userId },
       orderBy: { createdAt: 'desc' },

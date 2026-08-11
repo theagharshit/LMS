@@ -42,7 +42,7 @@ export const getStreamPostsPage = asyncHandler(async (req, res) => {
 export const markBulkAttendance = asyncHandler(async (req, res) => {
   const rows = await attendanceService.markBulk(
     req.body.records,
-    req.body.markedBy || req.user?.name || 'Teacher',
+    req.user?.id,
   );
   res.status(201).json({ status: 'success', count: rows.length, attendance: rows });
 });

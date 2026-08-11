@@ -1,8 +1,6 @@
 import type { Classroom, Quiz, StudentProfile, User } from '@lms/shared';
-
 let sequence = 0;
 const next = () => ++sequence;
-
 export function createMockUser(overrides: Partial<User> = {}): User {
   const id = next();
   return {
@@ -17,7 +15,6 @@ export function createMockUser(overrides: Partial<User> = {}): User {
     ...overrides,
   };
 }
-
 export function createMockStudentProfile(overrides: Partial<StudentProfile> = {}): StudentProfile {
   const user = createMockUser({ role: 'student' });
   return {
@@ -34,7 +31,6 @@ export function createMockStudentProfile(overrides: Partial<StudentProfile> = {}
     ...overrides,
   };
 }
-
 export function createMockClassroom(overrides: Partial<Classroom> = {}): Classroom {
   const id = next();
   return {
@@ -55,7 +51,6 @@ export function createMockClassroom(overrides: Partial<Classroom> = {}): Classro
     ...overrides,
   };
 }
-
 export function createMockQuiz(overrides: Partial<Quiz> = {}): Quiz {
   const id = next();
   return {

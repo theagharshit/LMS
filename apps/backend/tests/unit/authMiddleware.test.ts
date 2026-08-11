@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { signToken, verifyToken } from '../../src/utils/jwtUtils';
 import { authenticateJwt, requireRoles } from '../../src/middlewares/authMiddleware';
-
 describe('JWT Utility & Middleware Test Suite', () => {
   it('should sign and verify valid JWT tokens', () => {
     const payload = {
@@ -10,22 +9,18 @@ describe('JWT Utility & Middleware Test Suite', () => {
       email: 'ramesh.thapa@everest.edu.np',
       role: 'teacher' as const,
     };
-
     const token = signToken(payload);
     expect(token).toBeDefined();
     expect(typeof token).toBe('string');
-
     const decoded = verifyToken(token);
     expect(decoded.id).toBe(payload.id);
     expect(decoded.name).toBe(payload.name);
     expect(decoded.role).toBe(payload.role);
   });
-
   it('should reject unauthenticated requests in authenticateJwt middleware in strict mode', () => {
     process.env.ENFORCE_STRICT_JWT = 'true';
     let statusCode = 0;
     let responseBody: any = null;
-
     const req: any = { headers: {} };
     const res: any = {
       status: (code: number) => {
@@ -40,15 +35,12 @@ describe('JWT Utility & Middleware Test Suite', () => {
     const next = () => {
       nextCalled = true;
     };
-
     authenticateJwt(req, res, next);
     expect(nextCalled).toBe(false);
     expect(statusCode).toBe(401);
     expect(responseBody.status).toBe('error');
-
     delete process.env.ENFORCE_STRICT_JWT;
   });
-
   it('should allow authorized role in requireRoles middleware', () => {
     const req: any = {
       user: {
@@ -70,14 +62,11 @@ describe('JWT Utility & Middleware Test Suite', () => {
     const next = () => {
       nextCalled = true;
     };
-
     const middleware = requireRoles('admin', 'teacher');
     middleware(req, res, next);
-
     expect(nextCalled).toBe(true);
     expect(statusCode).toBe(0);
   });
-
   it('should reject unauthorized role with HTTP 403 in requireRoles middleware', () => {
     const req: any = {
       user: {
@@ -102,10 +91,8 @@ describe('JWT Utility & Middleware Test Suite', () => {
     const next = () => {
       nextCalled = true;
     };
-
     const middleware = requireRoles('admin');
     middleware(req, res, next);
-
     expect(nextCalled).toBe(false);
     expect(statusCode).toBe(403);
     expect(responseBody.status).toBe('error');

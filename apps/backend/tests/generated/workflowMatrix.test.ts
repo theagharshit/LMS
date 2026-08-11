@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { withDeadlockRetry } from '../../src/utils/transaction';
 import { platformService } from '../../src/db/services/platformService';
 import { createMockClassroom, createMockQuiz, createMockStudentProfile } from '../factories';
-
 describe('Concurrent transaction stress contracts (15 tests)', () => {
   it.each(Array.from({ length: 15 }, (_, index) => index))(
     'completes concurrent atomic operations #%i',
@@ -15,7 +14,6 @@ describe('Concurrent transaction stress contracts (15 tests)', () => {
     },
   );
 });
-
 describe('WebSocket real-time event payload contracts (15 tests)', () => {
   it.each(Array.from({ length: 15 }, (_, index) => index))(
     'serializes authenticated broadcast payload #%i',
@@ -31,7 +29,6 @@ describe('WebSocket real-time event payload contracts (15 tests)', () => {
     },
   );
 });
-
 describe('End-to-end persona data journeys (15 tests)', () => {
   it.each(Array.from({ length: 15 }, (_, index) => index))(
     'maintains enrollment → quiz → grade invariants #%i',

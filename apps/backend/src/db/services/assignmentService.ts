@@ -6,10 +6,12 @@ import { withDeadlockRetry } from '@utils/transaction';
 export class AssignmentService {
   public async getAssignments(): Promise<Assignment[]> {
     const assignments = await prisma.assignment.findMany({
-      include: { attachments: true },
+      include: { attachments: true, classroom: { include: { subjectRef: true } } },
     });
     return assignments.map((a) => ({
       ...a,
+      classroomName: a.classroom.name,
+      subject: a.classroom.subjectRef.name,
       attachments: a.attachments.map((at) => ({ ...at, type: at.type as any })),
     }));
   }
@@ -17,11 +19,13 @@ export class AssignmentService {
   public async addAssignment(
     assignment: Omit<Assignment, 'id' | 'createdAt'>,
   ): Promise<Assignment> {
+    const classroom = await prisma.classroom.findUniqueOrThrow({
+      where: { id: assignment.classroomId },
+      include: { subjectRef: true },
+    });
     const created = await prisma.assignment.create({
       data: {
         classroomId: assignment.classroomId,
-        classroomName: assignment.classroomName,
-        subject: assignment.subject,
         title: assignment.title,
         instructions: assignment.instructions,
         dueDate: assignment.dueDate,
@@ -47,7 +51,7 @@ export class AssignmentService {
       .dispatchBroadcastNotification({
         targetAudience: 'classroom',
         classroomId: created.classroomId,
-        title: `New ${created.subject} Assignment`,
+        title: `New ${classroom.subjectRef.name} Assignment`,
         body: `${created.title} has been assigned (Due ${created.dueDate})`,
         category: 'ACADEMIC',
         severity: 'normal',
@@ -57,6 +61,8 @@ export class AssignmentService {
 
     return {
       ...created,
+      classroomName: classroom.name,
+      subject: classroom.subjectRef.name,
       attachments: created.attachments.map((at) => ({ ...at, type: at.type as any })),
     };
   }

@@ -92,7 +92,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         body: JSON.stringify({
           studentProfileId,
           badgeDefinitionId,
-          assignedBy: authState.currentUser.name,
           remarks,
         }),
         feedback: {

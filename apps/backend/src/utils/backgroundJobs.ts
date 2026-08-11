@@ -10,7 +10,15 @@ type LocationPing = {
   latitude: number;
   longitude: number;
   location: string;
-  category: string;
+  category:
+    | 'in_class'
+    | 'canteen_lunch'
+    | 'en_route_bus'
+    | 'library'
+    | 'sports_ground'
+    | 'assembly_hall'
+    | 'dismissed_home'
+    | 'laboratory';
   updatedBy: string;
   updatedByRole: string;
   busNumber?: string;
@@ -43,12 +51,17 @@ export async function flushLocationPings() {
 
 export async function dispatchWeeklyParentDigests() {
   const parents = await prisma.user.findMany({
-    where: { role: 'parent', isArchived: false, childrenIds: { isEmpty: false } },
-    select: { id: true, childrenIds: true },
+    where: {
+      role: 'parent',
+      isArchived: false,
+      parentLinks: { some: {} },
+    },
+    select: { id: true, parentLinks: { select: { studentId: true } } },
   });
   let dispatched = 0;
   for (const parent of parents) {
-    for (const studentId of parent.childrenIds) {
+    const studentIds = parent.parentLinks.map((link) => link.studentId);
+    for (const studentId of studentIds) {
       const [student, controls, performance, pendingHomework] = await Promise.all([
         prisma.user.findUnique({ where: { id: studentId }, select: { name: true } }),
         prisma.parentControlSettings.findUnique({ where: { studentId } }),

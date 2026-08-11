@@ -1,6 +1,9 @@
 # syntax=docker/dockerfile:1.7
 FROM node:22-slim AS dependencies
 WORKDIR /app
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl \
+  && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
 COPY apps/backend/package.json apps/backend/package.json
 COPY apps/backend/prisma.config.ts apps/backend/prisma.config.ts
@@ -17,6 +20,9 @@ RUN npm run build
 FROM node:22-slim AS backend-runtime
 ENV NODE_ENV=production PORT=3001
 WORKDIR /app
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl \
+  && rm -rf /var/lib/apt/lists/*
 COPY --chown=node:node --from=dependencies /app/node_modules ./node_modules
 COPY --chown=node:node --from=build /app/apps/backend/dist ./apps/backend/dist
 COPY --chown=node:node --from=build /app/apps/backend/package.json ./apps/backend/package.json
@@ -27,7 +33,7 @@ COPY --chown=node:node --from=build /app/package.json ./package.json
 USER node
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD ["node", "apps/backend/scripts/healthcheck.mjs"]
-CMD ["sh", "-c", "cd apps/backend && ../../node_modules/.bin/prisma migrate deploy && node dist/server.cjs"]
+CMD ["node", "apps/backend/dist/server.cjs"]
 
 FROM node:22-slim AS frontend-runtime
 ENV NODE_ENV=production
@@ -38,4 +44,3 @@ USER node
 EXPOSE 4173
 WORKDIR /app/apps/frontend
 CMD ["../../node_modules/.bin/vite", "preview", "--host", "0.0.0.0"]
-

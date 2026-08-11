@@ -49,7 +49,6 @@ const rolesInStrictMode =
   };
 
 const attendanceSchema = z.object({
-  markedBy: z.string().min(1).max(120).optional(),
   records: z
     .array(
       z.object({

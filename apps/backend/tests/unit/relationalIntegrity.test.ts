@@ -4,11 +4,9 @@ loadEnv();
 import { PrismaClient } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
-
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
-
 describe('Relational Database Integrity & Constraint Enforcement', () => {
   beforeEach(async () => {
     // Ensure clean state before each relational test block
@@ -35,7 +33,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
     await prisma.parentControlSettings.deleteMany();
     await prisma.user.deleteMany();
   });
-
   // 1. CASCADE DELETE TESTS
   describe('Cascade Delete Behavior', () => {
     it('1. should cascade delete StudentProfile when User is deleted', async () => {
@@ -46,28 +43,22 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'cas1@test.com',
           role: 'student',
           avatar: 'avatar.png',
-          schoolName: 'School 1',
+          schoolId: 'school-everest',
         },
       });
       await prisma.studentProfile.create({
         data: {
           id: user.id,
           userId: user.id,
-          attendancePercentage: 90,
           streakDays: 5,
           xpPoints: 100,
-          gradeLevel: 8,
-          section: 'A',
-          parentName: 'Parent 1',
-          parentPhone: '9800000000',
+          cohortId: 'cohort-8-a',
         },
       });
-
       await prisma.user.delete({ where: { id: user.id } });
       const profile = await prisma.studentProfile.findUnique({ where: { userId: user.id } });
       expect(profile).toBeNull();
     });
-
     it('2. should cascade delete ParentControlSettings when User is deleted', async () => {
       const user = await prisma.user.create({
         data: {
@@ -76,7 +67,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'cas2@test.com',
           role: 'student',
           avatar: 'avatar.png',
-          schoolName: 'School 1',
+          schoolId: 'school-everest',
         },
       });
       await prisma.parentControlSettings.create({
@@ -91,14 +82,12 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           requireApprovalForOutboundMsgs: false,
         },
       });
-
       await prisma.user.delete({ where: { id: user.id } });
       const settings = await prisma.parentControlSettings.findUnique({
         where: { studentId: user.id },
       });
       expect(settings).toBeNull();
     });
-
     it('3. should cascade delete Submissions when User is deleted', async () => {
       const teacher = await prisma.user.create({
         data: {
@@ -107,31 +96,27 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tch1@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const classroom = await prisma.classroom.create({
         data: {
           id: 'cls-cas-1',
           name: 'Class 1',
-          subject: 'Math',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '101',
           colorTheme: 'blue',
           bannerImage: 'b.png',
           code: 'CODE1',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
       const assignment = await prisma.assignment.create({
         data: {
           id: 'asg-cas-1',
           classroomId: classroom.id,
-          classroomName: classroom.name,
-          subject: classroom.subject,
           title: 'Asg 1',
           instructions: 'Inst 1',
           dueDate: '2026-08-10',
@@ -148,7 +133,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'stu1@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await prisma.submission.create({
@@ -162,12 +147,10 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           submittedAt: '12:00',
         },
       });
-
       await prisma.user.delete({ where: { id: student.id } });
       const subs = await prisma.submission.findMany({ where: { studentId: student.id } });
       expect(subs.length).toBe(0);
     });
-
     it('4. should cascade delete QuizSubmissions when Quiz is deleted', async () => {
       const teacher = await prisma.user.create({
         data: {
@@ -176,36 +159,31 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tch2@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const classroom = await prisma.classroom.create({
         data: {
           id: 'cls-cas-2',
           name: 'Class 2',
-          subject: 'Science',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '102',
           colorTheme: 'green',
           bannerImage: 'b.png',
           code: 'CODE2',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
       const quiz = await prisma.quiz.create({
         data: {
           id: 'quiz-cas-1',
           classroomId: classroom.id,
-          classroomName: classroom.name,
-          subject: classroom.subject,
           title: 'Quiz 1',
           description: 'Desc 1',
           durationMinutes: 30,
           dueDate: '2026-08-10',
-          totalQuestions: 5,
           createdAt: new Date().toISOString(),
         },
       });
@@ -216,7 +194,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'stu2@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await prisma.quizSubmission.create({
@@ -230,12 +208,10 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           answers: {},
         },
       });
-
       await prisma.quiz.delete({ where: { id: quiz.id } });
       const qsubs = await prisma.quizSubmission.findMany({ where: { quizId: quiz.id } });
       expect(qsubs.length).toBe(0);
     });
-
     it('5. should cascade delete StreamPosts and Comments when Classroom is deleted', async () => {
       const teacher = await prisma.user.create({
         data: {
@@ -244,23 +220,21 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tch3@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const classroom = await prisma.classroom.create({
         data: {
           id: 'cls-cas-3',
           name: 'Class 3',
-          subject: 'English',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '103',
           colorTheme: 'red',
           bannerImage: 'b.png',
           code: 'CODE3',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
       const post = await prisma.streamPost.create({
@@ -286,14 +260,12 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           createdAt: '12:05',
         },
       });
-
       await prisma.classroom.delete({ where: { id: classroom.id } });
       const posts = await prisma.streamPost.findMany({ where: { classroomId: classroom.id } });
       const cmts = await prisma.postComment.findMany({ where: { streamPostId: post.id } });
       expect(posts.length).toBe(0);
       expect(cmts.length).toBe(0);
     });
-
     it('6. should cascade delete AttendanceRecords when User is deleted', async () => {
       const student = await prisma.user.create({
         data: {
@@ -302,7 +274,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'stu6@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await prisma.attendanceRecord.create({
@@ -311,15 +283,13 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           studentName: student.name,
           date: '2026-08-07',
           status: 'present',
-          markedBy: 'Teacher',
+          markedById: null,
         },
       });
-
       await prisma.user.delete({ where: { id: student.id } });
       const atts = await prisma.attendanceRecord.findMany({ where: { studentId: student.id } });
       expect(atts.length).toBe(0);
     });
-
     it('7. should cascade delete DirectMessages when sender or receiver User is deleted', async () => {
       const sender = await prisma.user.create({
         data: {
@@ -328,7 +298,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'sender@test.com',
           role: 'parent',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const receiver = await prisma.user.create({
@@ -338,7 +308,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'receiver@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await prisma.directMessage.create({
@@ -353,12 +323,10 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           createdAt: '10:00',
         },
       });
-
       await prisma.user.delete({ where: { id: sender.id } });
       const msgs = await prisma.directMessage.findMany({ where: { senderId: sender.id } });
       expect(msgs.length).toBe(0);
     });
-
     it('8. should cascade delete SubjectPerformance records when User is deleted', async () => {
       const student = await prisma.user.create({
         data: {
@@ -367,27 +335,25 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'sp@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await prisma.subjectPerformance.create({
         data: {
           studentId: student.id,
-          subject: 'Math',
           scorePercentage: 95,
-          grade: 'A+',
           assignmentsCompleted: 10,
           totalAssignments: 10,
           quizzesScoreAvg: 95,
+          grade: 'A',
           teacherRemark: 'Excellent',
+          subjectId: 'subject-mathematics',
         },
       });
-
       await prisma.user.delete({ where: { id: student.id } });
       const sps = await prisma.subjectPerformance.findMany({ where: { studentId: student.id } });
       expect(sps.length).toBe(0);
     });
-
     it('9. should cascade delete TermProgress records when User is deleted', async () => {
       const student = await prisma.user.create({
         data: {
@@ -396,18 +362,16 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tp@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await prisma.termProgress.create({
-        data: { studentId: student.id, term: '1st Term', score: 88 },
+        data: { studentId: student.id, score: 88, termId: 'term-1' },
       });
-
       await prisma.user.delete({ where: { id: student.id } });
       const tps = await prisma.termProgress.findMany({ where: { studentId: student.id } });
       expect(tps.length).toBe(0);
     });
-
     it('10. should cascade delete StudentActivity records when User is deleted', async () => {
       const student = await prisma.user.create({
         data: {
@@ -416,7 +380,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'act@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await prisma.studentActivity.create({
@@ -429,13 +393,11 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           description: 'Solar power model',
         },
       });
-
       await prisma.user.delete({ where: { id: student.id } });
       const acts = await prisma.studentActivity.findMany({ where: { studentId: student.id } });
       expect(acts.length).toBe(0);
     });
   });
-
   // 2. FOREIGN KEY CONSTRAINT REJECTION TESTS
   describe('Foreign Key Constraint Rejection Rules', () => {
     it('11. should reject Classroom creation with non-existent teacherId', async () => {
@@ -444,21 +406,18 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           data: {
             id: 'cls-invalid-tch',
             name: 'Invalid Teacher Class',
-            subject: 'Math',
-            gradeLevel: 8,
-            section: 'A',
             teacherId: 'non-existent-teacher-id',
-            teacherName: 'Ghost Teacher',
-            teacherAvatar: 'a.png',
             roomNumber: '101',
             colorTheme: 'blue',
             bannerImage: 'b.png',
             code: 'INV1',
+            schoolId: 'school-everest',
+            subjectId: 'subject-mathematics',
+            cohortId: 'cohort-8-a',
           },
         }),
       ).rejects.toThrow();
     });
-
     it('12. should reject StreamPost creation with non-existent classroomId', async () => {
       const author = await prisma.user.create({
         data: {
@@ -467,7 +426,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'auth@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await expect(
@@ -485,7 +444,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
         }),
       ).rejects.toThrow();
     });
-
     it('13. should reject Submission creation with non-existent studentId', async () => {
       const teacher = await prisma.user.create({
         data: {
@@ -494,31 +452,27 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tchsub@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const classroom = await prisma.classroom.create({
         data: {
           id: 'cls-sub-err',
           name: 'Class',
-          subject: 'Math',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '101',
           colorTheme: 'blue',
           bannerImage: 'b.png',
           code: 'CLS_SUB',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
       const assignment = await prisma.assignment.create({
         data: {
           id: 'asg-sub-err',
           classroomId: classroom.id,
-          classroomName: classroom.name,
-          subject: classroom.subject,
           title: 'Asg',
           instructions: 'Inst',
           dueDate: '2026-08-10',
@@ -528,7 +482,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           createdAt: new Date().toISOString(),
         },
       });
-
       await expect(
         prisma.submission.create({
           data: {
@@ -543,7 +496,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
         }),
       ).rejects.toThrow();
     });
-
     it('14. should reject QuizSubmission creation with non-existent quizId', async () => {
       const student = await prisma.user.create({
         data: {
@@ -552,7 +504,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'stuqsub@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await expect(
@@ -569,7 +521,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
         }),
       ).rejects.toThrow();
     });
-
     it('15. should reject ClassroomEnrollment with non-existent studentId', async () => {
       const teacher = await prisma.user.create({
         data: {
@@ -578,26 +529,23 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tchenr@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const classroom = await prisma.classroom.create({
         data: {
           id: 'cls-enr-err',
           name: 'Class',
-          subject: 'Math',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '101',
           colorTheme: 'blue',
           bannerImage: 'b.png',
           code: 'CLS_ENR',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
-
       await expect(
         prisma.classroomEnrollment.create({
           data: {
@@ -608,7 +556,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
       ).rejects.toThrow();
     });
   });
-
   // 3. UNIQUE CONSTRAINT REJECTION TESTS
   describe('Unique Constraint Enforcement Rules', () => {
     it('16. should reject duplicate User email', async () => {
@@ -619,7 +566,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'dup@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await expect(
@@ -630,12 +577,11 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
             email: 'dup@test.com',
             role: 'student',
             avatar: 'a.png',
-            schoolName: 'S1',
+            schoolId: 'school-everest',
           },
         }),
       ).rejects.toThrow();
     });
-
     it('17. should reject duplicate Classroom code', async () => {
       const teacher = await prisma.user.create({
         data: {
@@ -644,23 +590,21 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tchcode@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await prisma.classroom.create({
         data: {
           id: 'cls-code-1',
           name: 'Class 1',
-          subject: 'Math',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '101',
           colorTheme: 'blue',
           bannerImage: 'b.png',
           code: 'UNIQUE_CODE_1',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
       await expect(
@@ -668,21 +612,18 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           data: {
             id: 'cls-code-2',
             name: 'Class 2',
-            subject: 'Science',
-            gradeLevel: 8,
-            section: 'B',
             teacherId: teacher.id,
-            teacherName: teacher.name,
-            teacherAvatar: teacher.avatar,
             roomNumber: '102',
             colorTheme: 'green',
             bannerImage: 'b.png',
             code: 'UNIQUE_CODE_1',
+            schoolId: 'school-everest',
+            subjectId: 'subject-mathematics',
+            cohortId: 'cohort-8-a',
           },
         }),
       ).rejects.toThrow();
     });
-
     it('18. should reject duplicate ClassroomEnrollment for same student in same class', async () => {
       const teacher = await prisma.user.create({
         data: {
@@ -691,23 +632,21 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tchenrdup@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const classroom = await prisma.classroom.create({
         data: {
           id: 'cls-enr-dup',
           name: 'Class',
-          subject: 'Math',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '101',
           colorTheme: 'blue',
           bannerImage: 'b.png',
           code: 'CODE_ENR_DUP',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
       const student = await prisma.user.create({
@@ -717,21 +656,18 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'stuenrdup@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
-
       await prisma.classroomEnrollment.create({
         data: { classroomId: classroom.id, studentId: student.id },
       });
-
       await expect(
         prisma.classroomEnrollment.create({
           data: { classroomId: classroom.id, studentId: student.id },
         }),
       ).rejects.toThrow();
     });
-
     it('19. should reject duplicate ParentControlSettings for same studentId', async () => {
       const student = await prisma.user.create({
         data: {
@@ -740,7 +676,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'stupcdup@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await prisma.parentControlSettings.create({
@@ -755,7 +691,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           requireApprovalForOutboundMsgs: false,
         },
       });
-
       await expect(
         prisma.parentControlSettings.create({
           data: {
@@ -771,7 +706,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
         }),
       ).rejects.toThrow();
     });
-
     it('20. should reject duplicate StudentProfile for same userId', async () => {
       const student = await prisma.user.create({
         data: {
@@ -780,41 +714,31 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'stuprofdup@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await prisma.studentProfile.create({
         data: {
           id: 'sp-1',
           userId: student.id,
-          attendancePercentage: 90,
           streakDays: 5,
           xpPoints: 100,
-          gradeLevel: 8,
-          section: 'A',
-          parentName: 'Parent',
-          parentPhone: '9800000000',
+          cohortId: 'cohort-8-a',
         },
       });
-
       await expect(
         prisma.studentProfile.create({
           data: {
             id: 'sp-2',
             userId: student.id,
-            attendancePercentage: 95,
             streakDays: 10,
             xpPoints: 200,
-            gradeLevel: 8,
-            section: 'A',
-            parentName: 'Parent 2',
-            parentPhone: '9800000001',
+            cohortId: 'cohort-8-a',
           },
         }),
       ).rejects.toThrow();
     });
   });
-
   // 4. DYNAMIC STUDENT COUNT COMPUTATION TESTS
   describe('Dynamic Student Count Calculation', () => {
     it('21. should return 0 studentCount for classroom with 0 enrollments', async () => {
@@ -825,33 +749,29 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tchdyn0@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const classroom = await prisma.classroom.create({
         data: {
           id: 'cls-dyn-0',
           name: 'Empty Class',
-          subject: 'Math',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '101',
           colorTheme: 'blue',
           bannerImage: 'b.png',
           code: 'CODE_DYN_0',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
-
       const res = await prisma.classroom.findUnique({
         where: { id: classroom.id },
         include: { enrollments: true },
       });
       expect(res?.enrollments.length).toBe(0);
     });
-
     it('22. should dynamically calculate studentCount = 1 when 1 student enrolls', async () => {
       const teacher = await prisma.user.create({
         data: {
@@ -860,23 +780,21 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tchdyn1@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const classroom = await prisma.classroom.create({
         data: {
           id: 'cls-dyn-1',
           name: 'Class 1 Student',
-          subject: 'Math',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '101',
           colorTheme: 'blue',
           bannerImage: 'b.png',
           code: 'CODE_DYN_1',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
       const student = await prisma.user.create({
@@ -886,20 +804,18 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'studyn1@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await prisma.classroomEnrollment.create({
         data: { classroomId: classroom.id, studentId: student.id },
       });
-
       const res = await prisma.classroom.findUnique({
         where: { id: classroom.id },
         include: { enrollments: true },
       });
       expect(res?.enrollments.length).toBe(1);
     });
-
     it('23. should dynamically calculate studentCount = 5 when 5 students enroll', async () => {
       const teacher = await prisma.user.create({
         data: {
@@ -908,26 +824,23 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tchdyn5@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const classroom = await prisma.classroom.create({
         data: {
           id: 'cls-dyn-5',
           name: 'Class 5 Students',
-          subject: 'Science',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '102',
           colorTheme: 'green',
           bannerImage: 'b.png',
           code: 'CODE_DYN_5',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
-
       for (let i = 1; i <= 5; i++) {
         const student = await prisma.user.create({
           data: {
@@ -936,21 +849,19 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
             email: `studyn5_${i}@test.com`,
             role: 'student',
             avatar: 'a.png',
-            schoolName: 'S1',
+            schoolId: 'school-everest',
           },
         });
         await prisma.classroomEnrollment.create({
           data: { classroomId: classroom.id, studentId: student.id },
         });
       }
-
       const res = await prisma.classroom.findUnique({
         where: { id: classroom.id },
         include: { enrollments: true },
       });
       expect(res?.enrollments.length).toBe(5);
     });
-
     it('24. should dynamically decrement studentCount when enrollment is removed', async () => {
       const teacher = await prisma.user.create({
         data: {
@@ -959,23 +870,21 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tchdyndec@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const classroom = await prisma.classroom.create({
         data: {
           id: 'cls-dyn-dec',
           name: 'Class Dec',
-          subject: 'Science',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '102',
           colorTheme: 'green',
           bannerImage: 'b.png',
           code: 'CODE_DYN_DEC',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
       const student1 = await prisma.user.create({
@@ -985,7 +894,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'sdec1@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const student2 = await prisma.user.create({
@@ -995,7 +904,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'sdec2@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const enr1 = await prisma.classroomEnrollment.create({
@@ -1004,9 +913,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
       await prisma.classroomEnrollment.create({
         data: { classroomId: classroom.id, studentId: student2.id },
       });
-
       await prisma.classroomEnrollment.delete({ where: { id: enr1.id } });
-
       const res = await prisma.classroom.findUnique({
         where: { id: classroom.id },
         include: { enrollments: true },
@@ -1014,7 +921,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
       expect(res?.enrollments.length).toBe(1);
     });
   });
-
   // 5. DATA SANITY & RELATION BOUNDARIES (25-35)
   describe('Data Sanity & Boundary Rules', () => {
     it('25. should maintain independent student profiles for distinct users', async () => {
@@ -1025,7 +931,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'b1@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const u2 = await prisma.user.create({
@@ -1035,42 +941,32 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'b2@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await prisma.studentProfile.create({
         data: {
           id: u1.id,
           userId: u1.id,
-          attendancePercentage: 90,
           streakDays: 5,
           xpPoints: 100,
-          gradeLevel: 8,
-          section: 'A',
-          parentName: 'P1',
-          parentPhone: '980',
+          cohortId: 'cohort-8-a',
         },
       });
       await prisma.studentProfile.create({
         data: {
           id: u2.id,
           userId: u2.id,
-          attendancePercentage: 95,
           streakDays: 10,
           xpPoints: 200,
-          gradeLevel: 8,
-          section: 'B',
-          parentName: 'P2',
-          parentPhone: '981',
+          cohortId: 'cohort-8-a',
         },
       });
-
       const p1 = await prisma.studentProfile.findUnique({ where: { userId: u1.id } });
       const p2 = await prisma.studentProfile.findUnique({ where: { userId: u2.id } });
       expect(p1?.xpPoints).toBe(100);
       expect(p2?.xpPoints).toBe(200);
     });
-
     it('26. should support multi-classroom enrollment for a single student', async () => {
       const teacher = await prisma.user.create({
         data: {
@@ -1079,39 +975,35 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tchmulti@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const cls1 = await prisma.classroom.create({
         data: {
           id: 'cls-m1',
           name: 'Math',
-          subject: 'Math',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '1',
           colorTheme: 'blue',
           bannerImage: 'b.png',
           code: 'C_M1',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
       const cls2 = await prisma.classroom.create({
         data: {
           id: 'cls-m2',
           name: 'Sci',
-          subject: 'Sci',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '2',
           colorTheme: 'green',
           bannerImage: 'b.png',
           code: 'C_M2',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
       const student = await prisma.user.create({
@@ -1121,23 +1013,20 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'stumulti@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
-
       await prisma.classroomEnrollment.create({
         data: { classroomId: cls1.id, studentId: student.id },
       });
       await prisma.classroomEnrollment.create({
         data: { classroomId: cls2.id, studentId: student.id },
       });
-
       const studentEnrollments = await prisma.classroomEnrollment.findMany({
         where: { studentId: student.id },
       });
       expect(studentEnrollments.length).toBe(2);
     });
-
     it('27. should correctly set StoredFileRecord classroomId to null on Classroom deletion', async () => {
       const teacher = await prisma.user.create({
         data: {
@@ -1146,23 +1035,21 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tchfiledel@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const classroom = await prisma.classroom.create({
         data: {
           id: 'cls-file-del',
           name: 'Math',
-          subject: 'Math',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '1',
           colorTheme: 'blue',
           bannerImage: 'b.png',
           code: 'C_FD',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
       const file = await prisma.storedFileRecord.create({
@@ -1172,21 +1059,18 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           storedName: '123_Doc.pdf',
           mimeType: 'application/pdf',
           sizeBytes: 1000,
-          sizeFormatted: '1KB',
-          uploadedBy: 'Teacher',
           classroomId: classroom.id,
           checksum: 'sha256-xxx',
           integrityStatus: 'verified',
           downloadUrl: '/url',
           uploadedAt: new Date().toISOString(),
+          uploadedById: teacher.id,
         },
       });
-
       await prisma.classroom.delete({ where: { id: classroom.id } });
       const updatedFile = await prisma.storedFileRecord.findUnique({ where: { id: file.id } });
       expect(updatedFile?.classroomId).toBeNull();
     });
-
     it('28. should support QuizQuestion ordering and deletion with Quiz', async () => {
       const teacher = await prisma.user.create({
         data: {
@@ -1195,36 +1079,31 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tchqdel@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const classroom = await prisma.classroom.create({
         data: {
           id: 'cls-q-del',
           name: 'Math',
-          subject: 'Math',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '1',
           colorTheme: 'blue',
           bannerImage: 'b.png',
           code: 'C_QD',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
       const quiz = await prisma.quiz.create({
         data: {
           id: 'quiz-q-del',
           classroomId: classroom.id,
-          classroomName: classroom.name,
-          subject: classroom.subject,
           title: 'Quiz Q Del',
           description: 'Desc',
           durationMinutes: 10,
           dueDate: '2026-08-10',
-          totalQuestions: 2,
           createdAt: new Date().toISOString(),
           questions: {
             create: [
@@ -1249,13 +1128,11 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
         },
         include: { questions: true },
       });
-
       expect(quiz.questions.length).toBe(2);
       await prisma.quiz.delete({ where: { id: quiz.id } });
       const questions = await prisma.quizQuestion.findMany({ where: { quizId: quiz.id } });
       expect(questions.length).toBe(0);
     });
-
     it('29. should preserve BadgeDefinition when StudentBadge is deleted', async () => {
       const user = await prisma.user.create({
         data: {
@@ -1264,20 +1141,16 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'ubadgedel@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const profile = await prisma.studentProfile.create({
         data: {
           id: user.id,
           userId: user.id,
-          attendancePercentage: 90,
           streakDays: 5,
           xpPoints: 100,
-          gradeLevel: 8,
-          section: 'A',
-          parentName: 'P',
-          parentPhone: '98',
+          cohortId: 'cohort-8-a',
         },
       });
       const def = await prisma.badgeDefinition.create({
@@ -1292,12 +1165,10 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
       const sBadge = await prisma.studentBadge.create({
         data: { earnedDate: '2026-08-07', badgeDefinitionId: def.id, studentProfileId: profile.id },
       });
-
       await prisma.studentBadge.delete({ where: { id: sBadge.id } });
       const defRef = await prisma.badgeDefinition.findUnique({ where: { id: def.id } });
       expect(defRef).not.toBeNull();
     });
-
     it('30. should enforce non-null values for essential User attributes', async () => {
       await expect(
         prisma.user.create({
@@ -1307,12 +1178,11 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
             email: 'null@test.com',
             role: 'student',
             avatar: 'a.png',
-            schoolName: 'S1',
+            schoolId: 'school-everest',
           },
         }),
       ).rejects.toThrow();
     });
-
     it('31. should handle StudentLocationRecord updates without mutating studentId FK', async () => {
       const student = await prisma.user.create({
         data: {
@@ -1321,7 +1191,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'stulocupd@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const loc = await prisma.studentLocationRecord.create({
@@ -1335,7 +1205,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           updatedAt: new Date().toISOString(),
         },
       });
-
       const updated = await prisma.studentLocationRecord.update({
         where: { id: loc.id },
         data: { currentLocation: 'Canteen', category: 'canteen_lunch' },
@@ -1343,7 +1212,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
       expect(updated.currentLocation).toBe('Canteen');
       expect(updated.studentId).toBe(student.id);
     });
-
     it('32. should query User with all nested relations populated', async () => {
       const user = await prisma.user.create({
         data: {
@@ -1352,30 +1220,24 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'nested@test.com',
           role: 'student',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       await prisma.studentProfile.create({
         data: {
           id: user.id,
           userId: user.id,
-          attendancePercentage: 90,
           streakDays: 5,
           xpPoints: 100,
-          gradeLevel: 8,
-          section: 'A',
-          parentName: 'P',
-          parentPhone: '98',
+          cohortId: 'cohort-8-a',
         },
       });
-
       const res = await prisma.user.findUnique({
         where: { id: user.id },
         include: { studentProfile: true, parentControlSettings: true, enrollments: true },
       });
       expect(res?.studentProfile).not.toBeNull();
     });
-
     it('33. should support zero-length array defaults for json and array fields', async () => {
       const user = await prisma.user.create({
         data: {
@@ -1384,15 +1246,16 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'arr@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
-          childrenIds: [],
-          subjectsTaught: [],
+          schoolId: 'school-everest',
         },
       });
-      expect(user.childrenIds.length).toBe(0);
-      expect(user.subjectsTaught.length).toBe(0);
+      const [children, subjects] = await Promise.all([
+        prisma.parentStudent.count({ where: { parentId: user.id } }),
+        prisma.teacherSubject.count({ where: { teacherId: user.id } }),
+      ]);
+      expect(children).toBe(0);
+      expect(subjects).toBe(0);
     });
-
     it('34. should handle large numbers of concurrent ClassroomEnrollment records', async () => {
       const teacher = await prisma.user.create({
         data: {
@@ -1401,26 +1264,23 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           email: 'tchconc@test.com',
           role: 'teacher',
           avatar: 'a.png',
-          schoolName: 'S1',
+          schoolId: 'school-everest',
         },
       });
       const classroom = await prisma.classroom.create({
         data: {
           id: 'cls-conc-1',
           name: 'Class',
-          subject: 'Math',
-          gradeLevel: 8,
-          section: 'A',
           teacherId: teacher.id,
-          teacherName: teacher.name,
-          teacherAvatar: teacher.avatar,
           roomNumber: '1',
           colorTheme: 'blue',
           bannerImage: 'b.png',
           code: 'C_CONC',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
         },
       });
-
       for (let i = 1; i <= 15; i++) {
         const student = await prisma.user.create({
           data: {
@@ -1429,26 +1289,23 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
             email: `stuconc_${i}@test.com`,
             role: 'student',
             avatar: 'a.png',
-            schoolName: 'S1',
+            schoolId: 'school-everest',
           },
         });
         await prisma.classroomEnrollment.create({
           data: { classroomId: classroom.id, studentId: student.id },
         });
       }
-
       const res = await prisma.classroom.findUnique({
         where: { id: classroom.id },
         include: { enrollments: true },
       });
       expect(res?.enrollments.length).toBe(15);
     });
-
     it('35. should properly disconnect prisma client on teardown', async () => {
       expect(prisma).toBeDefined();
     });
   });
-
   afterAll(async () => {
     // Restore base fixtures for other test suites
     await prisma.user.upsert({
@@ -1460,9 +1317,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
         email: 'aarav@mteverest.edu.np',
         role: 'student',
         avatar: 'a.png',
-        schoolName: 'S1',
-        gradeLevel: 8,
-        section: 'A',
+        schoolId: 'school-everest',
       },
     });
     await prisma.studentProfile.upsert({
@@ -1471,13 +1326,9 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
       create: {
         id: 'user-stu-1',
         userId: 'user-stu-1',
-        attendancePercentage: 95,
         streakDays: 10,
         xpPoints: 500,
-        gradeLevel: 8,
-        section: 'A',
-        parentName: 'Bina',
-        parentPhone: '980',
+        cohortId: 'cohort-8-a',
       },
     });
     await prisma.user.upsert({
@@ -1489,7 +1340,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
         email: 'ramesh@mteverest.edu.np',
         role: 'teacher',
         avatar: 'a.png',
-        schoolName: 'S1',
+        schoolId: 'school-everest',
       },
     });
     await prisma.classroom.upsert({
@@ -1498,16 +1349,14 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
       create: {
         id: 'cls-math-8a',
         name: 'Grade 8 Mathematics - Sec A',
-        subject: 'Mathematics',
-        gradeLevel: 8,
-        section: 'A',
         teacherId: 'user-teach-1',
-        teacherName: 'Mr. Ramesh Thapa',
-        teacherAvatar: 'a.png',
         roomNumber: '204',
         colorTheme: 'blue',
         bannerImage: 'b.png',
         code: 'MATH8A',
+        schoolId: 'school-everest',
+        subjectId: 'subject-mathematics',
+        cohortId: 'cohort-8-a',
       },
     });
     await prisma.storedFileRecord.createMany({
@@ -1518,13 +1367,12 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           storedName: '1785850000_Pythagoras_Theorem.pdf',
           mimeType: 'application/pdf',
           sizeBytes: 1548576,
-          sizeFormatted: '1.48 MB',
-          uploadedBy: 'Ramesh Thapa',
           classroomId: 'cls-math-8a',
           checksum: 'sha256-a9f8b4c2e1d7532098471abcfe094857',
           integrityStatus: 'verified',
           uploadedAt: new Date(Date.now() - 86400000).toISOString(),
           downloadUrl: '/uploads/Grade_8_Math_Pythagoras_Theorem.pdf',
+          uploadedById: 'user-teach-1',
         },
       ],
     });

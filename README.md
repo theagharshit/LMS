@@ -42,8 +42,8 @@ GEMINI_API_KEY=your_google_gemini_api_key_here
 Apply Prisma migrations to your PostgreSQL instance and seed initial administrative, teacher, student, and parent records:
 
 ```bash
-# Run Prisma migrations
-npm run prisma:migrate -w lms-backend
+# Apply committed Prisma migrations
+npm run prisma:deploy
 
 # Seed database with initial records
 npm run seed
@@ -58,6 +58,7 @@ npm run dev
 ```
 
 The application will be accessible at:
+
 - **Frontend App**: `http://localhost:5173` (or `http://localhost:5174`)
 - **Backend API**: `http://localhost:3001`
 
@@ -65,16 +66,16 @@ The application will be accessible at:
 
 ## Available NPM Scripts
 
-| Script | Workspace | Description |
-| :--- | :--- | :--- |
-| `npm run dev` | Root | Start frontend and backend concurrently in development mode |
-| `npm run dev:v` | Root | Start development server with verbose HTTP payload logging |
-| `npm run build` | Root | Compile frontend (Vite) and backend (Esbuild) production bundles |
-| `npm run test` | Root | Execute full automated test suite (1,390+ unit, integration, and RBAC tests) |
-| `npm run prod` | Root | Build and run production server bundles |
-| `npm run seed` | Backend | Seed PostgreSQL database with initial test users and classrooms |
-| `npm run format` | Root | Format entire codebase using Prettier |
-| `npm run lint` | Root | Run TypeScript type checking across all workspace packages |
+| Script           | Workspace | Description                                                                  |
+| :--------------- | :-------- | :--------------------------------------------------------------------------- |
+| `npm run dev`    | Root      | Start frontend and backend concurrently in development mode                  |
+| `npm run dev:v`  | Root      | Start development server with verbose HTTP payload logging                   |
+| `npm run build`  | Root      | Compile frontend (Vite) and backend (Esbuild) production bundles             |
+| `npm run test`   | Root      | Execute full automated test suite (1,390+ unit, integration, and RBAC tests) |
+| `npm run prod`   | Root      | Build and run production server bundles                                      |
+| `npm run seed`   | Backend   | Seed PostgreSQL database with initial test users and classrooms              |
+| `npm run format` | Root      | Format entire codebase using Prettier                                        |
+| `npm run lint`   | Root      | Run TypeScript type checking across all workspace packages                   |
 
 ---
 
@@ -100,12 +101,12 @@ The project `Dockerfile` uses a four-stage build pipeline to produce lightweight
 
 1. **`dependencies`**: Copies package manifests and installs workspace dependencies (`npm ci`), then compiles the Prisma ORM Client (`prisma generate`).
 2. **`build`**: Copies all workspace source code and compiles production server bundles (backend esbuild -> `dist/server.cjs` and frontend Vite bundle -> `dist/`).
-3. **`backend-runtime`**: Production container for `lms-backend`. Runs automatic database migrations (`prisma migrate deploy`), listens on port 3001, and includes HTTP health checks via `/api/health`.
+3. **`backend-runtime`**: Production container for `lms-backend`. Runs the API server on port 3001 and includes HTTP health checks via `/api/health`.
 4. **`frontend-runtime`**: Production preview container for `lms-frontend`. Serves compiled assets on port 4173.
 
 ### Docker Compose Orchestration
 
-Docker Compose manages all application services in proper dependency order.
+Docker Compose manages all application services in proper dependency order. The one-shot `migrate` service runs `prisma migrate deploy` after PostgreSQL is healthy; the backend starts only after that service completes successfully. This applies pending committed migrations and never resets or seeds the database.
 
 #### 1. Start All Services
 
@@ -123,12 +124,13 @@ JWT_SECRET="your_jwt_secret_key" docker compose up -d --build
 
 #### 2. Service Architecture Matrix
 
-| Service | Image / Target | Container Port | Purpose |
-| :--- | :--- | :--- | :--- |
-| `postgres` | `postgres:17-alpine` | `5432` | Relational PostgreSQL database engine with healthchecks |
-| `redis` | `redis:7-alpine` | `6379` | In-memory cache store and rate limiter |
-| `backend` | `backend-runtime` | `3001` | Express REST API server, WebSockets, and Prisma ORM |
-| `frontend` | `frontend-runtime` | `4173` | Production preview web server |
+| Service    | Image / Target       | Container Port | Purpose                                                 |
+| :--------- | :------------------- | :------------- | :------------------------------------------------------ |
+| `postgres` | `postgres:17-alpine` | `5432`         | Relational PostgreSQL database engine with healthchecks |
+| `redis`    | `redis:7-alpine`     | `6379`         | In-memory cache store and rate limiter                  |
+| `migrate`  | `backend-runtime`    | —              | One-shot Prisma migration deployment before API startup |
+| `backend`  | `backend-runtime`    | `3001`         | Express REST API server, WebSockets, and Prisma ORM     |
+| `frontend` | `frontend-runtime`   | `4173`         | Production preview web server                           |
 
 #### 3. View Logs and Monitor Services
 

@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { UserRole } from '@lms/shared';
 import { requireRoles } from '../../src/middlewares/authMiddleware';
-
 const roles: UserRole[] = ['admin', 'teacher', 'student', 'parent'];
 const personas: Array<UserRole | 'principal'> = [
   'admin',
@@ -21,7 +20,6 @@ const policies = Array.from({ length: 40 }, (_, index) => ({
           ? (['admin', 'parent'] as UserRole[])
           : (['admin', 'student'] as UserRole[]),
 }));
-
 describe('Parameterized 40 endpoint × 5 persona RBAC matrix (200 tests)', () => {
   it.each(policies.flatMap((policy) => personas.map((persona) => ({ ...policy, persona }))))(
     '$persona permission for $endpoint',

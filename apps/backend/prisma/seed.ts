@@ -54,6 +54,10 @@ async function main() {
   }
 
   console.log('Clearing database...');
+  await prisma.moduleCompletion.deleteMany();
+  await prisma.classroomSubstitute.deleteMany();
+  await prisma.teacherSubject.deleteMany();
+  await prisma.parentStudent.deleteMany();
   await prisma.refreshToken.deleteMany();
   await prisma.tokenRevocation.deleteMany();
   await prisma.securityAudit.deleteMany();
@@ -90,6 +94,53 @@ async function main() {
   await prisma.studentProfile.deleteMany();
   await prisma.parentControlSettings.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.academicTerm.deleteMany();
+  await prisma.academicCohort.deleteMany();
+  await prisma.subject.deleteMany();
+  await prisma.school.deleteMany();
+
+  const schoolId = 'school-everest';
+  await prisma.school.create({
+    data: {
+      id: schoolId,
+      name: 'Everest International Academy',
+      timezone: 'Asia/Kathmandu',
+    },
+  });
+
+  const subjectNames = [
+    'Mathematics',
+    'Algebra',
+    'Geometry',
+    'Science',
+    'Physics',
+    'Chemistry',
+    'English',
+  ];
+  await prisma.subject.createMany({
+    data: subjectNames.map((name) => ({
+      id: `subject-${name.toLowerCase()}`,
+      schoolId,
+      name,
+    })),
+  });
+
+  await prisma.academicCohort.createMany({
+    data: [
+      { id: 'cohort-8-a', schoolId, gradeLevel: 8, section: 'A' },
+      { id: 'cohort-9-b', schoolId, gradeLevel: 9, section: 'B' },
+    ],
+  });
+
+  const termNames = ['1st Term', 'Mid Term', '2nd Term'];
+  await prisma.academicTerm.createMany({
+    data: termNames.map((name, index) => ({
+      id: `term-${index + 1}`,
+      schoolId,
+      name,
+      sequence: index + 1,
+    })),
+  });
 
   console.log('Seeding Users (1 Principal, 1 Admin, 2 Teachers, 2 Parents, 4 Students)...');
 
@@ -102,7 +153,7 @@ async function main() {
       role: 'admin' as const,
       avatar:
         'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80',
-      schoolName: 'Everest International Academy',
+      schoolId,
     },
     // 1 Admin Normal
     {
@@ -112,7 +163,7 @@ async function main() {
       role: 'admin' as const,
       avatar:
         'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
-      schoolName: 'Everest International Academy',
+      schoolId,
     },
     // 2 Teachers
     {
@@ -122,8 +173,7 @@ async function main() {
       role: 'teacher' as const,
       avatar:
         'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      schoolName: 'Everest International Academy',
-      subjectsTaught: ['Mathematics', 'Algebra', 'Geometry'],
+      schoolId,
     },
     {
       id: 'user-teach-2',
@@ -132,8 +182,7 @@ async function main() {
       role: 'teacher' as const,
       avatar:
         'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
-      schoolName: 'Everest International Academy',
-      subjectsTaught: ['Science', 'Physics', 'Chemistry'],
+      schoolId,
     },
     // 2 Parents
     {
@@ -143,8 +192,8 @@ async function main() {
       role: 'parent' as const,
       avatar:
         'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
-      schoolName: 'Everest International Academy',
-      childrenIds: ['user-stu-1', 'user-stu-2'],
+      schoolId,
+      phone: '+977 9841000001',
     },
     {
       id: 'user-parent-2',
@@ -153,8 +202,8 @@ async function main() {
       role: 'parent' as const,
       avatar:
         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-      schoolName: 'Everest International Academy',
-      childrenIds: ['user-stu-3', 'user-stu-4'],
+      schoolId,
+      phone: '+977 9851098765',
     },
     // 4 Students
     {
@@ -164,10 +213,7 @@ async function main() {
       role: 'student' as const,
       avatar:
         'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
-      schoolName: 'Everest International Academy',
-      gradeLevel: 8,
-      section: 'A',
-      rollNumber: 1,
+      schoolId,
     },
     {
       id: 'user-stu-2',
@@ -176,10 +222,7 @@ async function main() {
       role: 'student' as const,
       avatar:
         'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
-      schoolName: 'Everest International Academy',
-      gradeLevel: 8,
-      section: 'A',
-      rollNumber: 2,
+      schoolId,
     },
     {
       id: 'user-stu-3',
@@ -188,10 +231,7 @@ async function main() {
       role: 'student' as const,
       avatar:
         'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
-      schoolName: 'Everest International Academy',
-      gradeLevel: 9,
-      section: 'B',
-      rollNumber: 10,
+      schoolId,
     },
     {
       id: 'user-stu-4',
@@ -200,16 +240,35 @@ async function main() {
       role: 'student' as const,
       avatar:
         'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-      schoolName: 'Everest International Academy',
-      gradeLevel: 9,
-      section: 'B',
-      rollNumber: 11,
+      schoolId,
     },
   ];
 
   for (const u of usersData) {
     await prisma.user.create({ data: u });
   }
+
+  await prisma.parentStudent.createMany({
+    data: [
+      { parentId: 'user-parent-1', studentId: 'user-stu-1', isPrimary: true },
+      { parentId: 'user-parent-1', studentId: 'user-stu-2' },
+      { parentId: 'user-parent-2', studentId: 'user-stu-3', isPrimary: true },
+      { parentId: 'user-parent-2', studentId: 'user-stu-4' },
+    ],
+  });
+
+  await prisma.teacherSubject.createMany({
+    data: [
+      ...['Mathematics', 'Algebra', 'Geometry'].map((name) => ({
+        teacherId: 'user-teach-1',
+        subjectId: `subject-${name.toLowerCase()}`,
+      })),
+      ...['Science', 'Physics', 'Chemistry'].map((name) => ({
+        teacherId: 'user-teach-2',
+        subjectId: `subject-${name.toLowerCase()}`,
+      })),
+    ],
+  });
 
   await prisma.notificationPreference.createMany({
     data: usersData.map((user) => ({
@@ -269,26 +328,20 @@ async function main() {
     {
       id: 'user-stu-1',
       userId: 'user-stu-1',
-      attendancePercentage: 96.5,
       streakDays: 14,
       xpPoints: 1450,
-      gradeLevel: 8,
-      section: 'A',
-      parentName: 'Bina Sharma',
-      parentPhone: '+977 9841234567',
       badges: [
         {
           id: 'badge-stu1-1',
           earnedDate: '2026-05-10',
           badgeDefinitionId: 'bdg-def-1',
-          assignedBy: 'Dr. Ramesh Thapa',
+          assignedById: 'user-teach-1',
           remarks: 'Outstanding geometry score',
         },
         {
           id: 'badge-stu1-2',
           earnedDate: '2026-05-15',
           badgeDefinitionId: 'bdg-def-3',
-          assignedBy: 'System Auto',
           remarks: 'Consistent 100% attendance in May',
         },
       ],
@@ -296,19 +349,13 @@ async function main() {
     {
       id: 'user-stu-2',
       userId: 'user-stu-2',
-      attendancePercentage: 92.0,
       streakDays: 8,
       xpPoints: 1120,
-      gradeLevel: 8,
-      section: 'A',
-      parentName: 'Bina Sharma',
-      parentPhone: '+977 9841234567',
       badges: [
         {
           id: 'badge-stu2-1',
           earnedDate: '2026-05-12',
           badgeDefinitionId: 'bdg-def-3',
-          assignedBy: 'System Auto',
           remarks: 'Great classroom presence',
         },
       ],
@@ -316,26 +363,21 @@ async function main() {
     {
       id: 'user-stu-3',
       userId: 'user-stu-3',
-      attendancePercentage: 98.0,
       streakDays: 21,
       xpPoints: 1890,
-      gradeLevel: 9,
-      section: 'B',
-      parentName: 'Hari Adhikari',
-      parentPhone: '+977 9851098765',
       badges: [
         {
           id: 'badge-stu3-1',
           earnedDate: '2026-05-18',
           badgeDefinitionId: 'bdg-def-2',
-          assignedBy: 'Saraswati Gurung',
+          assignedById: 'user-teach-2',
           remarks: 'Excellent lab report on photosynthesis',
         },
         {
           id: 'badge-stu3-2',
           earnedDate: '2026-05-20',
           badgeDefinitionId: 'bdg-def-4',
-          assignedBy: 'Principal K.P. Sharma',
+          assignedById: 'user-principal-1',
           remarks: 'Leadership in Science Exhibition',
         },
       ],
@@ -343,22 +385,26 @@ async function main() {
     {
       id: 'user-stu-4',
       userId: 'user-stu-4',
-      attendancePercentage: 88.5,
       streakDays: 5,
       xpPoints: 940,
-      gradeLevel: 9,
-      section: 'B',
-      parentName: 'Hari Adhikari',
-      parentPhone: '+977 9851098765',
       badges: [],
     },
   ];
 
   for (const sp of studentProfiles) {
     const { badges, ...profileData } = sp;
+    const studentIdentity: Record<string, { cohortId: string; rollNumber: number }> = {
+      'user-stu-1': { cohortId: 'cohort-8-a', rollNumber: 1 },
+      'user-stu-2': { cohortId: 'cohort-8-a', rollNumber: 2 },
+      'user-stu-3': { cohortId: 'cohort-9-b', rollNumber: 10 },
+      'user-stu-4': { cohortId: 'cohort-9-b', rollNumber: 11 },
+    };
+    const identity = studentIdentity[profileData.userId];
     await prisma.studentProfile.create({
       data: {
         ...profileData,
+        cohortId: identity.cohortId,
+        normalizedRollNumber: identity.rollNumber,
         badges: {
           create: badges,
         },
@@ -423,13 +469,10 @@ async function main() {
     {
       id: 'cls-math-8a',
       name: 'Grade 8 Mathematics & Algebra',
-      subject: 'Mathematics',
-      gradeLevel: 8,
-      section: 'A',
+      schoolId,
+      subjectId: 'subject-mathematics',
+      cohortId: 'cohort-8-a',
       teacherId: 'user-teach-1',
-      teacherName: 'Dr. Ramesh Thapa',
-      teacherAvatar:
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       roomNumber: 'Room 301',
       colorTheme: '#2D5A27',
       bannerImage:
@@ -440,13 +483,10 @@ async function main() {
     {
       id: 'cls-sci-9b',
       name: 'Grade 9 General Science & Physics',
-      subject: 'Science',
-      gradeLevel: 9,
-      section: 'B',
+      schoolId,
+      subjectId: 'subject-science',
+      cohortId: 'cohort-9-b',
       teacherId: 'user-teach-2',
-      teacherName: 'Saraswati Gurung',
-      teacherAvatar:
-        'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
       roomNumber: 'Lab 102',
       colorTheme: '#1E3A8A',
       bannerImage:
@@ -571,8 +611,6 @@ async function main() {
     {
       id: 'asgn-math-1',
       classroomId: 'cls-math-8a',
-      classroomName: 'Grade 8 Mathematics & Algebra',
-      subject: 'Mathematics',
       title: 'Pythagorean Theorem Worksheet & Proofs',
       instructions:
         'Solve problems 1 through 10 on page 45. Include step-by-step geometric proofs for questions 8 and 9.',
@@ -599,8 +637,6 @@ async function main() {
     {
       id: 'asgn-sci-1',
       classroomId: 'cls-sci-9b',
-      classroomName: 'Grade 9 General Science & Physics',
-      subject: 'Science',
       title: 'Photosynthesis & Solar Energy Experiment Report',
       instructions:
         'Write a 2-page detailed report explaining light absorption spectrum in chlorophyll during lab experiment 4.',
@@ -641,7 +677,7 @@ async function main() {
       studentName: 'Aarav Sharma',
       studentAvatar:
         'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
-      status: 'graded',
+      status: 'graded' as const,
       fileUrl: '/uploads/Aarav_Math_HW1_Solved.pdf',
       fileName: 'Aarav_Math_HW1_Solved.pdf',
       responseText: 'Completed all 10 problems with diagrams attached.',
@@ -657,7 +693,7 @@ async function main() {
       studentName: 'Ananya Sharma',
       studentAvatar:
         'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
-      status: 'submitted',
+      status: 'submitted' as const,
       fileUrl: '/uploads/Ananya_Math_HW1.pdf',
       fileName: 'Ananya_Math_HW1.pdf',
       responseText: 'All questions attempted.',
@@ -674,7 +710,7 @@ async function main() {
       studentName: 'Biban Adhikari',
       studentAvatar:
         'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
-      status: 'graded',
+      status: 'graded' as const,
       fileUrl: '/uploads/Biban_Science_Lab_Report.pdf',
       fileName: 'Biban_Science_Lab_Report.pdf',
       responseText: 'Included solar spectrum observations in data table.',
@@ -690,7 +726,7 @@ async function main() {
       studentName: 'Diya Adhikari',
       studentAvatar:
         'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-      status: 'graded',
+      status: 'graded' as const,
       fileUrl: '/uploads/Diya_Science_Report.pdf',
       fileName: 'Diya_Science_Report.pdf',
       responseText: 'Lab report attached.',
@@ -711,14 +747,11 @@ async function main() {
     {
       id: 'quiz-math-1',
       classroomId: 'cls-math-8a',
-      classroomName: 'Grade 8 Mathematics & Algebra',
-      subject: 'Mathematics',
       title: 'Algebra & Geometry Speed Quiz',
       description:
         'Tests core concepts of linear equations, right-angled triangles, and exponent rules.',
       durationMinutes: 15,
       dueDate: '2026-08-18',
-      totalQuestions: 3,
       published: true,
       createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
       questions: [
@@ -756,13 +789,10 @@ async function main() {
     {
       id: 'quiz-sci-1',
       classroomId: 'cls-sci-9b',
-      classroomName: 'Grade 9 General Science & Physics',
-      subject: 'Science',
       title: "Newton's Laws & Physical Mechanics Quiz",
       description: 'Assessment on force, inertia, acceleration, and action-reaction principles.',
       durationMinutes: 20,
       dueDate: '2026-08-22',
-      totalQuestions: 3,
       published: true,
       createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
       questions: [
@@ -860,8 +890,8 @@ async function main() {
       studentId: 'user-stu-1',
       studentName: 'Aarav Sharma',
       date: '2026-08-01',
-      status: 'present',
-      markedBy: 'Dr. Ramesh Thapa',
+      status: 'present' as const,
+      markedById: 'user-teach-1',
       checkInTime: '09:00 AM',
     },
     {
@@ -869,8 +899,8 @@ async function main() {
       studentId: 'user-stu-2',
       studentName: 'Ananya Sharma',
       date: '2026-08-01',
-      status: 'present',
-      markedBy: 'Dr. Ramesh Thapa',
+      status: 'present' as const,
+      markedById: 'user-teach-1',
       checkInTime: '09:05 AM',
     },
     {
@@ -878,8 +908,8 @@ async function main() {
       studentId: 'user-stu-1',
       studentName: 'Aarav Sharma',
       date: '2026-08-02',
-      status: 'present',
-      markedBy: 'Dr. Ramesh Thapa',
+      status: 'present' as const,
+      markedById: 'user-teach-1',
       checkInTime: '08:58 AM',
     },
     {
@@ -887,8 +917,8 @@ async function main() {
       studentId: 'user-stu-2',
       studentName: 'Ananya Sharma',
       date: '2026-08-02',
-      status: 'absent',
-      markedBy: 'Dr. Ramesh Thapa',
+      status: 'absent' as const,
+      markedById: 'user-teach-1',
       remarks: 'Sick leave approved',
     },
 
@@ -898,8 +928,8 @@ async function main() {
       studentId: 'user-stu-3',
       studentName: 'Biban Adhikari',
       date: '2026-08-01',
-      status: 'present',
-      markedBy: 'Saraswati Gurung',
+      status: 'present' as const,
+      markedById: 'user-teach-2',
       checkInTime: '10:00 AM',
     },
     {
@@ -907,8 +937,8 @@ async function main() {
       studentId: 'user-stu-4',
       studentName: 'Diya Adhikari',
       date: '2026-08-01',
-      status: 'late',
-      markedBy: 'Saraswati Gurung',
+      status: 'late' as const,
+      markedById: 'user-teach-2',
       checkInTime: '10:18 AM',
       remarks: 'Bus delay',
     },
@@ -973,7 +1003,7 @@ async function main() {
       studentId: 'user-stu-1',
       studentName: 'Aarav Sharma',
       currentLocation: 'In Classroom - Room 301',
-      category: 'Classroom',
+      category: 'in_class' as const,
       busNumber: null,
       updatedBy: 'Dr. Ramesh Thapa',
       updatedByRole: 'Teacher',
@@ -985,7 +1015,7 @@ async function main() {
       studentId: 'user-stu-2',
       studentName: 'Ananya Sharma',
       currentLocation: 'School Library',
-      category: 'Library',
+      category: 'library' as const,
       busNumber: null,
       updatedBy: 'Bikram Shrestha',
       updatedByRole: 'Admin',
@@ -997,7 +1027,7 @@ async function main() {
       studentId: 'user-stu-3',
       studentName: 'Biban Adhikari',
       currentLocation: 'On School Bus #4 (Route A)',
-      category: 'Transit',
+      category: 'en_route_bus' as const,
       busNumber: 'Bus #4',
       updatedBy: 'Driver Ram',
       updatedByRole: 'Staff',
@@ -1009,7 +1039,7 @@ async function main() {
       studentId: 'user-stu-4',
       studentName: 'Diya Adhikari',
       currentLocation: 'Science Lab 102',
-      category: 'Lab',
+      category: 'laboratory' as const,
       busNumber: null,
       updatedBy: 'Saraswati Gurung',
       updatedByRole: 'Teacher',
@@ -1124,10 +1154,12 @@ async function main() {
   ];
 
   for (const perf of performances) {
+    const { subject, ...performance } = perf;
     await prisma.subjectPerformance.create({
       data: {
-        id: `sp-${perf.studentId}-${perf.subject.toLowerCase()}`,
-        ...perf,
+        id: `sp-${perf.studentId}-${subject.toLowerCase()}`,
+        ...performance,
+        subjectId: `subject-${subject.toLowerCase()}`,
       },
     });
   }
@@ -1152,7 +1184,10 @@ async function main() {
   ];
 
   for (const tp of termProgressData) {
-    await prisma.termProgress.create({ data: tp });
+    const { term, ...progress } = tp;
+    await prisma.termProgress.create({
+      data: { ...progress, termId: `term-${termNames.indexOf(term) + 1}` },
+    });
   }
 
   console.log('Seeding Student Activities...');
@@ -1208,8 +1243,7 @@ async function main() {
         storedName: '1785850000_Pythagoras_Theorem.pdf',
         mimeType: 'application/pdf',
         sizeBytes: 1548576,
-        sizeFormatted: '1.48 MB',
-        uploadedBy: 'Dr. Ramesh Thapa',
+        uploadedById: 'user-teach-1',
         classroomId: 'cls-math-8a',
         checksum: 'sha256-a9f8b4c2e1d7532098471abcfe094857',
         integrityStatus: 'verified',
@@ -1222,8 +1256,7 @@ async function main() {
         storedName: '1785850001_Science_Lab_Guide.pdf',
         mimeType: 'application/pdf',
         sizeBytes: 2411724,
-        sizeFormatted: '2.30 MB',
-        uploadedBy: 'Saraswati Gurung',
+        uploadedById: 'user-teach-2',
         classroomId: 'cls-sci-9b',
         checksum: 'sha256-b7e3f1a098c4321156890defab123456',
         integrityStatus: 'verified',

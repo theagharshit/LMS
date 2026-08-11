@@ -6,17 +6,17 @@ export class ClassroomService {
   public async getClassrooms(): Promise<Classroom[]> {
     const classrooms = await prisma.classroom.findMany({
       where: { isArchived: false },
-      include: { enrollments: true },
+      include: { enrollments: true, subjectRef: true, cohortRef: true, teacher: true },
     });
     return classrooms.map((c) => ({
       id: c.id,
       name: c.name,
-      subject: c.subject,
-      gradeLevel: c.gradeLevel,
-      section: c.section,
+      subject: c.subjectRef.name,
+      gradeLevel: c.cohortRef.gradeLevel,
+      section: c.cohortRef.section,
       teacherId: c.teacherId,
-      teacherName: c.teacherName,
-      teacherAvatar: c.teacherAvatar,
+      teacherName: c.teacher.name,
+      teacherAvatar: c.teacher.avatar,
       roomNumber: c.roomNumber,
       colorTheme: c.colorTheme,
       bannerImage: c.bannerImage,
@@ -33,14 +33,17 @@ export class ClassroomService {
     const code = `CLS${Math.floor(1000 + Math.random() * 9000)}`;
     let validTeacherId = classroom.teacherId;
     if (validTeacherId) {
-      const teacher = await prisma.user.findUnique({ where: { id: validTeacherId } });
+      const teacher = await prisma.user.findUnique({
+        where: { id: validTeacherId },
+        include: { teacherSubjects: { include: { subject: true } } },
+      });
       if (!teacher) validTeacherId = 'user-teach-1';
       else if (
         teacher.role !== 'teacher' ||
-        (teacher.subjectsTaught.length > 0 &&
-          !teacher.subjectsTaught.some(
-            (subject) => subject.toLowerCase() === classroom.subject.toLowerCase(),
-          ))
+        (teacher.teacherSubjects.length > 0 &&
+          !teacher.teacherSubjects
+            .map((entry) => entry.subject.name)
+            .some((subject) => subject.toLowerCase() === classroom.subject.toLowerCase()))
       ) {
         throw new Error(`Teacher is not allocated to the subject ${classroom.subject}.`);
       }
@@ -48,26 +51,58 @@ export class ClassroomService {
       validTeacherId = 'user-teach-1';
     }
 
-    const created = await prisma.classroom.create({
-      data: {
+    const created = await prisma.$transaction(async (tx) => {
+      const teacher = await tx.user.findUniqueOrThrow({ where: { id: validTeacherId } });
+      const school = await tx.school.findUniqueOrThrow({ where: { id: teacher.schoolId } });
+      const subject = await tx.subject.upsert({
+        where: { schoolId_name: { schoolId: school.id, name: classroom.subject } },
+        update: {},
+        create: { schoolId: school.id, name: classroom.subject },
+      });
+      const cohort = await tx.academicCohort.upsert({
+        where: {
+          schoolId_gradeLevel_section: {
+            schoolId: school.id,
+            gradeLevel: classroom.gradeLevel,
+            section: classroom.section,
+          },
+        },
+        update: {},
+        create: {
+          schoolId: school.id,
+          gradeLevel: classroom.gradeLevel,
+          section: classroom.section,
+        },
+      });
+      return tx.classroom.create({
+        data: {
         name: classroom.name,
-        subject: classroom.subject,
-        gradeLevel: classroom.gradeLevel,
-        section: classroom.section,
         teacherId: validTeacherId,
-        teacherName: classroom.teacherName,
-        teacherAvatar: classroom.teacherAvatar,
         roomNumber: classroom.roomNumber,
         colorTheme: classroom.colorTheme,
         bannerImage: classroom.bannerImage,
         meetLink: classroom.meetLink,
         code,
         maxCapacity: (classroom as any).maxCapacity || 40,
-      },
-      include: { enrollments: true },
+          schoolId: school.id,
+          subjectId: subject.id,
+          cohortId: cohort.id,
+        },
+        include: {
+          enrollments: true,
+          subjectRef: true,
+          cohortRef: true,
+          teacher: true,
+        },
+      });
     });
     return {
       ...created,
+      subject: created.subjectRef.name,
+      gradeLevel: created.cohortRef.gradeLevel,
+      section: created.cohortRef.section,
+      teacherName: created.teacher.name,
+      teacherAvatar: created.teacher.avatar,
       studentCount: created.enrollments.length,
       meetLink: created.meetLink || undefined,
     };

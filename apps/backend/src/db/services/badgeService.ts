@@ -8,25 +8,35 @@ export class BadgeService {
   public async assignBadge(
     studentProfileId: string,
     badgeDefinitionId: string,
-    assignedBy: string,
+    assignedById?: string,
     remarks?: string,
   ) {
+    if (assignedById) {
+      const assigner = await prisma.user.findFirst({
+        where: { id: assignedById, role: { in: ['teacher', 'admin'] }, isArchived: false },
+        select: { id: true },
+      });
+      if (!assigner) throw new Error('Badge assigner must be an active teacher or administrator.');
+    }
     const existing = await prisma.studentBadge.findFirst({
       where: { studentProfileId, badgeDefinitionId },
+      include: { assignedBy: true },
     });
     if (existing) {
-      return existing;
+      return { ...existing, assignedBy: existing.assignedBy?.name || 'System' };
     }
 
-    return prisma.studentBadge.create({
+    const created = await prisma.studentBadge.create({
       data: {
         studentProfileId,
         badgeDefinitionId,
         earnedDate: new Date().toISOString().split('T')[0],
-        assignedBy,
+        assignedById,
         remarks,
       },
+      include: { assignedBy: true },
     });
+    return { ...created, assignedBy: created.assignedBy?.name || 'System' };
   }
 
   public async createBadgeDefinition(data: any) {

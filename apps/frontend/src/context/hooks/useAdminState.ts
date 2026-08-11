@@ -40,7 +40,7 @@ export const useAdminState = (
     setAdminAuditLogs((prev) => [newLog, ...prev]);
   };
 
-  const addStudentProfile = (
+  const addStudentProfile = async (
     studentData: Omit<
       StudentProfile,
       'id' | 'attendancePercentage' | 'streakDays' | 'xpPoints' | 'badges'
@@ -60,19 +60,23 @@ export const useAdminState = (
         'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
     };
 
-    setStudentProfiles((prev) => [...prev, newStudent]);
-    setAllUsers((prev) => [...prev, newStudent]);
-
     logger.log('[Frontend:AdminState] Dispatching POST /api/db/students payload:', newStudent);
 
-    apiFetch('/api/db/students', {
+    const response = await apiFetch('/api/db/students', {
       method: 'POST',
       body: JSON.stringify(newStudent),
       feedback: {
         success: `${newStudent.name} was enrolled successfully.`,
         error: `Could not enroll ${newStudent.name}. The local change may not be saved.`,
       },
-    }).catch((err) => console.error('Failed to create student via API:', err));
+    }).catch((err) => {
+      console.error('Failed to create student via API:', err);
+      return null;
+    });
+    if (!response?.ok) return;
+
+    setStudentProfiles((prev) => [...prev, newStudent]);
+    setAllUsers((prev) => [...prev, newStudent]);
 
     addAuditLog(
       'Enrolled New Student',
@@ -117,7 +121,7 @@ export const useAdminState = (
     );
   };
 
-  const addTeacherProfile = (teacherData: Omit<User, 'id'>) => {
+  const addTeacherProfile = async (teacherData: Omit<User, 'id'>) => {
     const newTeacher: User = {
       ...teacherData,
       id: `user-teach-${Date.now()}`,
@@ -127,16 +131,20 @@ export const useAdminState = (
         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     };
 
-    setAllUsers((prev) => [...prev, newTeacher]);
-
-    apiFetch('/api/db/teachers', {
+    const response = await apiFetch('/api/db/teachers', {
       method: 'POST',
       body: JSON.stringify(newTeacher),
       feedback: {
         success: `${newTeacher.name} was added to the faculty directory.`,
         error: `Could not add ${newTeacher.name}.`,
       },
-    }).catch((err) => console.error('Failed to create teacher via API:', err));
+    }).catch((err) => {
+      console.error('Failed to create teacher via API:', err);
+      return null;
+    });
+    if (!response?.ok) return;
+
+    setAllUsers((prev) => [...prev, newTeacher]);
 
     addAuditLog('Registered Teacher Staff', 'teacher', `Added faculty member ${newTeacher.name}.`);
   };
@@ -175,7 +183,7 @@ export const useAdminState = (
     );
   };
 
-  const addParentProfile = (parentData: Omit<User, 'id'>) => {
+  const addParentProfile = async (parentData: Omit<User, 'id'>) => {
     const newParent: User = {
       ...parentData,
       id: `user-parent-${Date.now()}`,
@@ -186,16 +194,20 @@ export const useAdminState = (
         'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
     };
 
-    setAllUsers((prev) => [...prev, newParent]);
-
-    apiFetch('/api/db/parents', {
+    const response = await apiFetch('/api/db/parents', {
       method: 'POST',
       body: JSON.stringify(newParent),
       feedback: {
         success: `${newParent.name}'s parent account was created.`,
         error: `Could not create ${newParent.name}'s account.`,
       },
-    }).catch((err) => console.error('Failed to create parent via API:', err));
+    }).catch((err) => {
+      console.error('Failed to create parent via API:', err);
+      return null;
+    });
+    if (!response?.ok) return;
+
+    setAllUsers((prev) => [...prev, newParent]);
 
     addAuditLog(
       'Registered Parent Account',

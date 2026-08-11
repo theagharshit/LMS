@@ -61,12 +61,12 @@ export const StudentProfileView: React.FC = () => {
 
   const termProgressData = termProgress
     .filter((t) => t.studentId === studentData.id)
-    .sort((a, b) => a.term.localeCompare(b.term));
+    .sort((a, b) => String(a.term || '').localeCompare(String(b.term || '')));
 
   const subjectPerformanceData = subjectPerformances
     .filter((s) => s.studentId === studentData.id)
     .map((s) => ({
-      subject: s.subject,
+      subject: s.subject || 'Subject',
       score: s.scorePercentage,
     }));
 

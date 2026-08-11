@@ -11,7 +11,7 @@ export const verifyFileIntegrity = (req: Request, res: Response, next: NextFunct
 
   const fileName = String(req.body?.name || 'Uploaded_Attachment.pdf');
   const extension = fileName.toLowerCase().match(/\.[a-z0-9]+$/)?.[0];
-  const allowedExtensions = new Set(['.pdf', '.docx', '.png', '.jpg', '.jpeg']);
+  const allowedExtensions = new Set(['.pdf', '.docx', '.png', '.jpg', '.jpeg', '.csv']);
   const sizeBytes = Number(req.body?.sizeBytes || 0);
   const isMalicious =
     !extension ||

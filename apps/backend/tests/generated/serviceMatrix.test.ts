@@ -6,9 +6,7 @@ import {
   createMockStudentProfile,
   createMockUser,
 } from '../factories';
-
 const cases = Array.from({ length: 230 }, (_, index) => index);
-
 describe('Database service contract matrix (230 tests)', () => {
   it.each(cases)('service factory and calculation contract #%i', (index) => {
     const user = createMockUser();

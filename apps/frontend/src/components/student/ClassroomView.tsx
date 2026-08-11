@@ -75,7 +75,12 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
 
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!newPostText.trim() && !attachFileName) || !currentClassroom) return;
+    if ((!newPostText.trim() && !attachFileObj) || !currentClassroom) return;
+
+    if (attachFileName && !attachFileObj) {
+      toast.warning('Select the file before publishing the post.', { title: 'File not selected' });
+      return;
+    }
 
     let attachments: Attachment[] = [];
 
@@ -115,25 +120,29 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
           }),
           feedback: {
             success: `${attachFileName || attachFileObj.name} was uploaded securely.`,
-            error: 'The file could not be uploaded; a local preview will be attached instead.',
+            error: 'The file was rejected and the post was not published.',
             successTitle: 'File uploaded',
           },
         });
 
-        if (res.ok) {
-          const data = await res.json();
-          fileUrl = data.record?.downloadUrl || URL.createObjectURL(attachFileObj);
-        } else {
-          fileUrl = URL.createObjectURL(attachFileObj);
+        if (!res.ok) return;
+        const data = await res.json();
+        fileUrl = data.record?.downloadUrl || '';
+        if (!fileUrl) {
+          toast.error(
+            'The upload did not return a valid file record. The post was not published.',
+            {
+              title: 'Upload incomplete',
+            },
+          );
+          return;
         }
       } catch (err) {
-        fileUrl = URL.createObjectURL(attachFileObj);
-        toast.warning(
-          'The server upload failed; this attachment is available only in this session.',
-          {
-            title: 'Using local preview',
-          },
-        );
+        console.error('[ClassroomView] Failed to upload stream attachment:', err);
+        toast.error('The file could not be uploaded, so the post was not published.', {
+          title: 'Upload failed',
+        });
+        return;
       }
 
       attachments.push({
@@ -151,7 +160,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
       authorName: currentUser.name,
       authorAvatar: currentUser.avatar,
       authorRole: currentUser.role,
-      content: newPostText.trim() || `[Attachment: ${attachFileName}]`,
+      content: newPostText.trim() || `[Attachment: ${attachFileObj?.name}]`,
       attachments: attachments.length > 0 ? attachments : undefined,
     });
 
@@ -642,7 +651,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                 </div>
                 <button
                   type="submit"
-                  disabled={!newPostText.trim() && !attachFileName}
+                  disabled={!newPostText.trim() && !attachFileObj}
                   className="px-4 py-2 rounded-xl bg-[#4A6741] text-white font-bold text-xs hover:bg-[#3D5535] disabled:opacity-50 transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
                 >
                   <span>Post Announcement</span>
@@ -1068,7 +1077,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                           : `${(attachFileObj.size / 1024).toFixed(2)} KB`}
                       </span>
                     )}
-                    <span className="text-[10px]">Maximum size: 10MB</span>
+                    <span className="text-[10px]">PDF, DOCX, PNG, or JPG · Maximum size: 25MB</span>
                   </label>
                 </div>
               </div>

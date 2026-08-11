@@ -9,11 +9,16 @@ import path from 'node:path';
 
 export const assignStudentBadge = async (req: Request, res: Response) => {
   try {
-    const { studentProfileId, badgeDefinitionId, assignedBy, remarks } = req.body;
-    if (!studentProfileId || !badgeDefinitionId || !assignedBy) {
+    const { studentProfileId, badgeDefinitionId, remarks } = req.body;
+    if (!studentProfileId || !badgeDefinitionId) {
       return res.status(400).json({ status: 'error', message: 'Missing required fields' });
     }
-    const badge = await lmsDB.assignBadge(studentProfileId, badgeDefinitionId, assignedBy, remarks);
+    const badge = await lmsDB.assignBadge(
+      studentProfileId,
+      badgeDefinitionId,
+      req.user?.id,
+      remarks,
+    );
     res.json({ status: 'success', badge });
   } catch (err) {
     logger.error('Failed to assign badge:', err);
@@ -121,15 +126,33 @@ export const deleteParent = async (req: Request, res: Response) => {
 
 export const updateParent = async (req: Request, res: Response) => {
   try {
-    const parent = await prisma.user.update({
-      where: { id: req.params.id },
-      data: {
-        name: req.body.name,
-        email: req.body.email,
-        avatar: req.body.avatar,
-        childrenIds: req.body.childrenIds,
-        isArchived: req.body.isArchived,
-      },
+    const childrenIds = Array.isArray(req.body.childrenIds) ? req.body.childrenIds : undefined;
+    const parent = await prisma.$transaction(async (tx) => {
+      if (childrenIds) {
+        const childCount = await tx.user.count({
+          where: { id: { in: childrenIds }, role: 'student', isArchived: false },
+        });
+        if (childCount !== new Set(childrenIds).size)
+          throw new Error('Every linked child must be an active student.');
+        await tx.parentStudent.deleteMany({ where: { parentId: req.params.id } });
+        if (childrenIds.length)
+          await tx.parentStudent.createMany({
+            data: [...new Set<string>(childrenIds)].map((studentId, index) => ({
+              parentId: req.params.id,
+              studentId,
+              isPrimary: index === 0,
+            })),
+          });
+      }
+      return tx.user.update({
+        where: { id: req.params.id },
+        data: {
+          name: req.body.name,
+          email: req.body.email,
+          avatar: req.body.avatar,
+          isArchived: req.body.isArchived,
+        },
+      });
     });
     res.json({ status: 'success', parent });
   } catch (err) {
@@ -194,14 +217,31 @@ export const bulkImportStudents = async (req: Request, res: Response) => {
       const result = [];
       for (const row of rows) {
         const studentId = `user-stu-${randomUUID()}`;
+        const schoolName = row.schoolname || 'Everest International Academy';
+        const school = await tx.school.upsert({
+          where: { name: schoolName },
+          update: {},
+          create: { name: schoolName },
+        });
+        const cohort = await tx.academicCohort.upsert({
+          where: {
+            schoolId_gradeLevel_section: {
+              schoolId: school.id,
+              gradeLevel: row.gradeLevel,
+              section: row.section,
+            },
+          },
+          update: {},
+          create: { schoolId: school.id, gradeLevel: row.gradeLevel, section: row.section },
+        });
         const roll = row.rollnumber
           ? Number(row.rollnumber)
           : ((
-              await tx.user.aggregate({
-                where: { role: 'student', gradeLevel: row.gradeLevel, section: row.section },
-                _max: { rollNumber: true },
+              await tx.studentProfile.aggregate({
+                where: { cohortId: cohort.id, isArchived: false },
+                _max: { normalizedRollNumber: true },
               })
-            )._max.rollNumber || 0) + 1;
+            )._max.normalizedRollNumber || 0) + 1;
         const student = await tx.user.create({
           data: {
             id: studentId,
@@ -209,22 +249,16 @@ export const bulkImportStudents = async (req: Request, res: Response) => {
             email: row.email.toLowerCase(),
             role: 'student',
             avatar: '',
-            schoolName: row.schoolname || 'Everest International Academy',
-            gradeLevel: row.gradeLevel,
-            section: row.section,
-            rollNumber: roll,
+            schoolId: school.id,
           },
         });
         await tx.studentProfile.create({
           data: {
             userId: student.id,
-            attendancePercentage: 100,
             streakDays: 1,
             xpPoints: 0,
-            gradeLevel: row.gradeLevel,
-            section: row.section,
-            parentName: row.parentname || 'Parent',
-            parentPhone: row.parentphone || '',
+            cohortId: cohort.id,
+            normalizedRollNumber: roll,
           },
         });
         await tx.notificationPreference.create({ data: { userId: student.id } });
@@ -238,14 +272,15 @@ export const bulkImportStudents = async (req: Request, res: Response) => {
               email: row.parentemail.toLowerCase(),
               role: 'parent',
               avatar: '',
-              schoolName: row.schoolname || 'Everest International Academy',
+              schoolId: school.id,
+              phone: row.parentphone || null,
             },
           });
-          if (!parent.childrenIds.includes(student.id))
-            await tx.user.update({
-              where: { id: parent.id },
-              data: { childrenIds: [...parent.childrenIds, student.id] },
-            });
+          await tx.parentStudent.upsert({
+            where: { parentId_studentId: { parentId: parent.id, studentId: student.id } },
+            update: {},
+            create: { parentId: parent.id, studentId: student.id, isPrimary: true },
+          });
           await tx.notificationPreference.upsert({
             where: { userId: parent.id },
             update: {},

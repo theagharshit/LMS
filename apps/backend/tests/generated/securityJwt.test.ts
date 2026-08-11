@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { describe, expect, it } from 'vitest';
 import { getJwtSecret, signToken, verifyToken } from '../../src/utils/jwtUtils';
-
 describe('Authentication and JWT edge matrix (30 tests)', () => {
   it.each(Array.from({ length: 30 }, (_, index) => index))(
     'rejects altered, expired, or malformed token #%i',

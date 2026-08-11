@@ -82,7 +82,7 @@ export class PlatformService {
               studentProfileId: profile.id,
               badgeDefinitionId: definition.id,
               earnedDate: new Date().toISOString().slice(0, 10),
-              assignedBy: 'System',
+              assignedById: null,
               remarks: 'Automatically awarded from verified milestone data.',
             },
           }),
@@ -121,10 +121,9 @@ export class PlatformService {
         const profile = await tx.studentProfile.findUnique({ where: { userId } });
         if (!profile) throw new Error('Student profile not found.');
         const xpPoints = Math.max(0, profile.xpPoints + Math.max(0, xpEarned));
-        const level = Math.floor(Math.sqrt(xpPoints / 100));
         const updated = await tx.studentProfile.update({
           where: { userId },
-          data: { xpPoints, level },
+          data: { xpPoints },
         });
         return updated;
       }),
@@ -302,12 +301,12 @@ export class PlatformService {
     ).length;
     const result = {
       studentId,
-      level: profile?.level || 0,
+      level: Math.floor(Math.sqrt((profile?.xpPoints || 0) / 100)),
       xpPoints: profile?.xpPoints || 0,
       streakDays: profile?.streakDays || 0,
       attendancePercentage: attendance.length
         ? round2((present / attendance.length) * 100)
-        : profile?.attendancePercentage || 0,
+        : 0,
       subjects,
       terms,
       generatedAt: new Date().toISOString(),
@@ -407,25 +406,42 @@ export class PlatformService {
   }
 
   async setSubstituteTeachers(classroomId: string, substituteTeacherIds: string[]) {
-    const classroom = await prisma.classroom.findUnique({ where: { id: classroomId } });
+    const classroom = await prisma.classroom.findUnique({
+      where: { id: classroomId },
+      include: { subjectRef: true },
+    });
     if (!classroom) throw new Error('Classroom not found.');
     const uniqueTeacherIds = [...new Set(substituteTeacherIds)];
     const teachers = await prisma.user.findMany({
       where: { id: { in: uniqueTeacherIds }, role: 'teacher', isArchived: false },
+      include: { teacherSubjects: { include: { subject: true } } },
     });
     if (teachers.length !== uniqueTeacherIds.length)
       throw new Error('Every substitute must be an active teacher.');
     const mismatched = teachers.find(
-      (teacher) =>
-        teacher.subjectsTaught.length > 0 &&
-        !teacher.subjectsTaught.some(
-          (subject) => subject.toLowerCase() === classroom.subject.toLowerCase(),
-        ),
+      (teacher) => {
+        const allocatedSubjects = teacher.teacherSubjects.map((entry) => entry.subject.name);
+        const classroomSubject = classroom.subjectRef.name;
+        return (
+          allocatedSubjects.length > 0 &&
+          !allocatedSubjects.some(
+            (subject) => subject.toLowerCase() === classroomSubject.toLowerCase(),
+          )
+        );
+      },
     );
-    if (mismatched) throw new Error(`${mismatched.name} is not allocated to ${classroom.subject}.`);
-    return prisma.classroom.update({
-      where: { id: classroomId },
-      data: { substituteTeacherIds: uniqueTeacherIds },
+    if (mismatched)
+      throw new Error(`${mismatched.name} is not allocated to ${classroom.subjectRef.name}.`);
+    return prisma.$transaction(async (tx) => {
+      await tx.classroomSubstitute.deleteMany({ where: { classroomId } });
+      if (uniqueTeacherIds.length)
+        await tx.classroomSubstitute.createMany({
+          data: uniqueTeacherIds.map((teacherId) => ({ classroomId, teacherId })),
+        });
+      return tx.classroom.findUniqueOrThrow({
+        where: { id: classroomId },
+        include: { substitutes: true },
+      });
     });
   }
 
@@ -497,14 +513,20 @@ export class PlatformService {
           ],
         },
         take: 20,
-        select: { id: true, name: true, email: true, role: true, gradeLevel: true, section: true },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          studentProfile: { select: { cohortRef: true } },
+        },
       }),
       prisma.classroom.findMany({
         where: {
           isArchived: false,
           OR: [
             { name: { contains: q, mode: 'insensitive' } },
-            { subject: { contains: q, mode: 'insensitive' } },
+            { subjectRef: { name: { contains: q, mode: 'insensitive' } } },
             { code: { contains: q, mode: 'insensitive' } },
           ],
         },
@@ -512,14 +534,25 @@ export class PlatformService {
         select: {
           id: true,
           name: true,
-          subject: true,
-          gradeLevel: true,
-          section: true,
+          subjectRef: { select: { name: true } },
+          cohortRef: { select: { gradeLevel: true, section: true } },
           code: true,
         },
       }),
     ]);
-    return { users, classrooms };
+    return {
+      users: users.map(({ studentProfile, ...user }) => ({
+        ...user,
+        gradeLevel: studentProfile?.cohortRef.gradeLevel,
+        section: studentProfile?.cohortRef.section,
+      })),
+      classrooms: classrooms.map(({ subjectRef, cohortRef, ...classroom }) => ({
+        ...classroom,
+        subject: subjectRef.name,
+        gradeLevel: cohortRef.gradeLevel,
+        section: cohortRef.section,
+      })),
+    };
   }
 
   async dbHealth() {
@@ -571,13 +604,12 @@ export class PlatformService {
         return [
           student.id,
           student.name,
-          student.rollNumber,
-          profile?.attendancePercentage ||
-            (attendance.length
-              ? (attendance.filter((item) => ['present', 'late'].includes(item.status)).length /
-                  attendance.length) *
-                100
-              : 0),
+          profile?.normalizedRollNumber || '',
+          attendance.length
+            ? (attendance.filter((item) => ['present', 'late'].includes(item.status)).length /
+                attendance.length) *
+              100
+            : 0,
           round2(average),
         ];
       }),
