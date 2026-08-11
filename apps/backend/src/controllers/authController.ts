@@ -23,6 +23,11 @@ const refreshCookieOptions = {
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
+const clearRefreshCookie = (res: Response) => {
+  const { maxAge: _maxAge, ...clearOptions } = refreshCookieOptions;
+  res.clearCookie('refresh_token', clearOptions);
+};
+
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId, email, password } = req.body;
@@ -129,6 +134,7 @@ export const refreshSession = async (req: Request, res: Response): Promise<void>
     });
   } catch (error) {
     logger.warn(`[Auth] Refresh rejected: ${(error as Error).message}`);
+    clearRefreshCookie(res);
     res.status(401).json({ status: 'error', message: 'Refresh token is invalid or expired.' });
   }
 };
@@ -139,7 +145,7 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
     authService.revokeRefreshToken(req.cookies?.refresh_token),
     accessToken ? authService.revokeAccessToken(accessToken) : Promise.resolve(),
   ]);
-  res.clearCookie('refresh_token', { path: '/api/auth' });
+  clearRefreshCookie(res);
   res.json({ status: 'success', message: 'Session revoked.' });
 };
 

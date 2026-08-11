@@ -13,11 +13,7 @@ export type ToastEventDetail = ToastOptions & {
 
 export const TOAST_EVENT = 'sikshya:toast';
 
-export function showToast(
-  message: string,
-  kind: ToastKind = 'info',
-  options: ToastOptions = {},
-) {
+export function showToast(message: string, kind: ToastKind = 'info', options: ToastOptions = {}) {
   if (typeof window === 'undefined' || !message.trim()) return;
   window.dispatchEvent(
     new CustomEvent<ToastEventDetail>(TOAST_EVENT, {

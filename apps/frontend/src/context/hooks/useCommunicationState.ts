@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { User, DirectMessage, NotificationItem, NotificationPreference } from '@lms/shared';
 import { apiFetch } from '../../utils/apiFetch';
 
-export const useCommunicationState = (currentUser: User) => {
+export const useCommunicationState = (currentUser: User, authReady = true) => {
   const [messages, setMessages] = useState<DirectMessage[]>([]);
 
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreference>({
@@ -65,7 +65,7 @@ export const useCommunicationState = (currentUser: User) => {
 
   // Load preferences from API
   useEffect(() => {
-    if (!currentUser?.id) return;
+    if (!currentUser?.id || !authReady) return;
     apiFetch(`/api/db/notification-preferences/${currentUser.id}`)
       .then((res) => res.json())
       .then((data: any) => {
@@ -89,7 +89,7 @@ export const useCommunicationState = (currentUser: User) => {
       .catch((err) =>
         console.error('[useCommunicationState] Failed to fetch user notifications', err),
       );
-  }, [currentUser?.id]);
+  }, [authReady, currentUser?.id]);
 
   const updateNotificationPreferences = (
     prefs: Partial<Omit<NotificationPreference, 'userId'>>,
@@ -100,6 +100,10 @@ export const useCommunicationState = (currentUser: User) => {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(prefs),
+        feedback: {
+          success: 'Notification preferences updated.',
+          error: 'Could not update notification preferences.',
+        },
       }).catch((err) => console.error('[useCommunicationState] Failed to update preferences', err));
       return updated;
     });
@@ -124,12 +128,16 @@ export const useCommunicationState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newMsg),
+      feedback: {
+        success: `Message sent to ${receiverName}.`,
+        error: `Your message to ${receiverName} could not be sent.`,
+      },
     }).catch((err) => console.error('[AppContext] Failed to persist message', err));
   };
 
   const markNotificationRead = (id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-    apiFetch(`/api/db/notifications/${id}/read`, { method: 'POST' }).catch((err) =>
+    apiFetch(`/api/db/notifications/${id}/read`, { method: 'POST', feedback: false }).catch((err) =>
       console.error('[useCommunicationState] Failed to mark read', err),
     );
   };
@@ -140,14 +148,19 @@ export const useCommunicationState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: currentUser.id }),
+      feedback: {
+        success: 'All notifications marked as read.',
+        error: 'Could not mark notifications as read.',
+      },
     }).catch((err) => console.error('[useCommunicationState] Failed to mark all read', err));
   };
 
   const deleteNotification = (id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
-    apiFetch(`/api/db/notifications/${id}`, { method: 'DELETE' }).catch((err) =>
-      console.error('[useCommunicationState] Failed to delete notification', err),
-    );
+    apiFetch(`/api/db/notifications/${id}`, {
+      method: 'DELETE',
+      feedback: { success: 'Notification removed.', error: 'Could not remove the notification.' },
+    }).catch((err) => console.error('[useCommunicationState] Failed to delete notification', err));
   };
 
   const clearReadNotifications = () => {
@@ -156,6 +169,10 @@ export const useCommunicationState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: currentUser.id }),
+      feedback: {
+        success: 'Read notifications cleared.',
+        error: 'Could not clear read notifications.',
+      },
     }).catch((err) =>
       console.error('[useCommunicationState] Failed to clear read notifications', err),
     );
@@ -201,6 +218,10 @@ export const useCommunicationState = (currentUser: User) => {
         senderName: currentUser.name,
         senderRole: currentUser.role,
       }),
+      feedback: {
+        success: 'Notification dispatched successfully.',
+        error: 'Could not dispatch the notification.',
+      },
     }).catch((err) =>
       console.error('[useCommunicationState] Failed to dispatch custom notification', err),
     );

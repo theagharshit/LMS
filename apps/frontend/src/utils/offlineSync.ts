@@ -1,4 +1,5 @@
 type QueuedRequest = { id?: number; url: string; options: RequestInit; createdAt: string };
+import { toast } from './toast';
 const DB_NAME = 'sikshya-offline';
 const STORE_NAME = 'pending-requests';
 
@@ -64,5 +65,24 @@ export async function flushOfflineRequests(fetcher: typeof fetch = fetch) {
 }
 
 if (typeof window !== 'undefined') {
-  window.addEventListener('online', () => void flushOfflineRequests());
+  window.addEventListener('offline', () =>
+    toast.warning('You can keep working. Supported changes will be queued until you reconnect.', {
+      title: 'You are offline',
+      id: 'connection-status',
+    }),
+  );
+  window.addEventListener('online', () => {
+    void flushOfflineRequests().then((synced) => {
+      if (synced > 0)
+        toast.success(`${synced} queued ${synced === 1 ? 'change' : 'changes'} synced.`, {
+          title: 'Back online',
+          id: 'connection-status',
+        });
+      else
+        toast.info('Your connection has been restored.', {
+          title: 'Back online',
+          id: 'connection-status',
+        });
+    });
+  });
 }

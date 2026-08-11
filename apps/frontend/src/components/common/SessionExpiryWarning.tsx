@@ -26,7 +26,14 @@ export const SessionExpiryWarning: React.FC = () => {
   if (remaining > 120_000) return null;
 
   const extend = async () => {
-    const response = await apiFetch('/api/auth/refresh', { method: 'POST' });
+    const response = await apiFetch('/api/auth/refresh', {
+      method: 'POST',
+      feedback: {
+        success: 'Your secure session was extended by 15 minutes.',
+        error: 'We could not extend your session. Please sign in again.',
+        successTitle: 'Session extended',
+      },
+    });
     if (response.ok) {
       const data = await response.json();
       localStorage.setItem('lms_jwt_token', data.accessToken);

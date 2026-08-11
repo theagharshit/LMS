@@ -168,7 +168,7 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Bottom Footer Info */}
-      <div className="pt-4 border-t border-[#E5E1D8] space-y-2 mb-5">
+      <div className="pt-4 border-t border-[#E5E1D8] space-y-2 mb-20">
         <div className="px-3 py-2.5 rounded-xl bg-[#EBF1E8] text-[#2D2D2A] text-xs border border-[#4A6741]/20">
           <p className="font-bold text-[11px] text-[#4A6741]">🇳🇵 CDC Nepal Standard</p>
           <p className="text-[10px] text-[#7A7A72] mt-0.5">

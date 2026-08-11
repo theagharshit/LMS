@@ -4,6 +4,7 @@ import { StudentProfile, User, BadgeDefinition } from '@lms/shared';
 import { AdminStudentModal } from './AdminStudentModal';
 import { AdminTeacherModal } from './AdminTeacherModal';
 import { AdminParentLinkModal } from './AdminParentLinkModal';
+import { toast } from '@utils/toast';
 import {
   ShieldAlert,
   Users,
@@ -144,6 +145,7 @@ export const AdminDashboard: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    toast.success(`${filename} is ready in your downloads.`, { title: 'Export complete' });
   };
 
   const handleExportStudents = () => {
@@ -192,7 +194,6 @@ export const AdminDashboard: React.FC = () => {
     setBadgeStudentId('');
     setBadgeDefId('');
     setIsAssigningBadge(false);
-    alert('Badge manually awarded successfully!');
   };
 
   const handleCreateBadgeSubmit = (e: React.FormEvent) => {
@@ -207,7 +208,6 @@ export const AdminDashboard: React.FC = () => {
     });
     setNewBadgeTitle('');
     setNewBadgeDesc('');
-    alert('New custom badge definition created!');
   };
 
   const handleCreateAnnouncement = (e: React.FormEvent) => {
@@ -222,7 +222,6 @@ export const AdminDashboard: React.FC = () => {
     });
     setAnnTitle('');
     setAnnContent('');
-    alert('Broadcast announcement posted successfully!');
   };
 
   const handleCreateClassroomSubmit = (e: React.FormEvent) => {
@@ -245,7 +244,6 @@ export const AdminDashboard: React.FC = () => {
         'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&auto=format&fit=crop&q=80',
     });
     setClsName('');
-    alert('New classroom created successfully!');
   };
 
   return (

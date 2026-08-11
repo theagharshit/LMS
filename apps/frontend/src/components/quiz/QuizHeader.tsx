@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Clock, AlertTriangle, Maximize2, Minimize2 } from 'lucide-react';
+import { toast } from '@utils/toast';
 
 interface QuizHeaderProps {
   title: string;
@@ -32,14 +33,29 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = async () => {
     if (!document.fullscreenElement) {
       if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
+        try {
+          await document.documentElement.requestFullscreen();
+          toast.info('Fullscreen mode is active for a distraction-free quiz.', {
+            title: 'Fullscreen enabled',
+            id: 'quiz-fullscreen',
+          });
+        } catch {
+          toast.warning('Fullscreen mode was blocked by your browser.', {
+            title: 'Fullscreen unavailable',
+          });
+        }
       }
     } else {
       if (document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
+        try {
+          await document.exitFullscreen();
+          toast.info('Fullscreen mode was closed.', { id: 'quiz-fullscreen' });
+        } catch {
+          toast.warning('Could not exit fullscreen mode. Press Escape to close it.');
+        }
       }
     }
   };
@@ -89,7 +105,7 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
 
         {/* Fullscreen Toggle Button */}
         <button
-          onClick={toggleFullscreen}
+          onClick={() => void toggleFullscreen()}
           title={isFullscreen ? 'Exit Full Screen' : 'Enter Full Screen'}
           aria-label={isFullscreen ? 'Exit Full Screen' : 'Enter Full Screen'}
           className="p-2 text-white/80 hover:text-white rounded-2xl hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"

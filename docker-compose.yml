@@ -34,7 +34,7 @@ services:
       DATABASE_URL: postgresql://lms:${POSTGRES_PASSWORD:-lms_local_password}@postgres:5432/lms_db?schema=public&connection_limit=20&pool_timeout=10
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in your environment}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:4173}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:4173,http://127.0.0.1:4173}
     ports:
       - "3001:3001"
     depends_on:
@@ -46,6 +46,8 @@ services:
     build:
       context: .
       target: frontend-runtime
+    environment:
+      BACKEND_URL: http://backend:3001
     ports:
       - "4173:4173"
     depends_on:

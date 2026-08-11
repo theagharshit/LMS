@@ -3,6 +3,8 @@ import { useApp } from '@/context/AppContext';
 import { getAvatarUrl } from '@utils/avatarUtils';
 import { StudentLocationTracker } from '../common/StudentLocationTracker';
 import { DayOfWeek, SchedulePeriod } from '@lms/shared';
+import { apiFetch } from '@utils/apiFetch';
+import { toast } from '@utils/toast';
 import {
   Users,
   BookOpen,
@@ -65,14 +67,20 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const handleAiFeedbackDraft = async (studentName: string) => {
     setIsAiGeneratingFeedback(true);
     try {
-      const res = await fetch('/api/ai/teacher-assistant', {
+      const res = await apiFetch('/api/ai/teacher-assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           task: 'grade_feedback',
           context: { studentName, subject: 'Mathematics', score: gradeInput, maxScore: 20 },
         }),
+        feedback: {
+          success: 'A personalized feedback draft is ready.',
+          error: 'AI feedback is unavailable, so a safe fallback draft was used.',
+          successTitle: 'Draft generated',
+        },
       });
+      if (!res.ok) throw new Error('AI feedback request failed.');
       const data = await res.json();
       setFeedbackInput(data.text || `Great job ${studentName}! Clear step-by-step working.`);
     } catch (err) {
@@ -84,6 +92,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   const handleSaveGrade = (subId: string) => {
     gradeSubmission(subId, gradeInput, feedbackInput || 'Good effort! Keep practicing.');
+    toast.success('The grade and feedback were saved for the student.', { title: 'Grade saved' });
     setGradingModalSubmissionId(null);
     setFeedbackInput('');
   };
@@ -610,6 +619,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               <button
                 onClick={() => {
                   updateDaySchedule(editingDay, editablePeriods);
+                  toast.success(`${editingDay}'s timetable was updated.`, {
+                    title: 'Timetable saved',
+                  });
                   setTimetableSaveSuccess(true);
                   setTimeout(() => setTimetableSaveSuccess(false), 3500);
                 }}

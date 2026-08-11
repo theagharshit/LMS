@@ -52,6 +52,10 @@ export const useAcademicState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(classroomData),
+      feedback: {
+        success: `Classroom “${classroomData.name}” was created.`,
+        error: `Could not create classroom “${classroomData.name}”.`,
+      },
     })
       .then((response) => {
         if (!response.ok) setClassrooms((items) => items.filter((item) => item.id !== newId));
@@ -76,6 +80,10 @@ export const useAcademicState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(postData),
+      feedback: {
+        success: 'Announcement published to the classroom stream.',
+        error: 'Could not publish the classroom announcement.',
+      },
     })
       .then((response) => {
         if (!response.ok) setStreamPosts((items) => items.filter((item) => item.id !== newPost.id));
@@ -113,6 +121,7 @@ export const useAcademicState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newComment),
+      feedback: { success: 'Comment posted.', error: 'Could not post your comment.' },
     }).catch((err) => console.error('[AppContext] Failed to persist comment', err));
   };
 
@@ -128,6 +137,10 @@ export const useAcademicState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(asgData),
+      feedback: {
+        success: `Assignment “${asgData.title}” was published.`,
+        error: `Could not publish assignment “${asgData.title}”.`,
+      },
     })
       .then((response) => {
         if (!response.ok) setAssignments((items) => items.filter((item) => item.id !== newAsg.id));
@@ -226,6 +239,12 @@ export const useAcademicState = (currentUser: User) => {
         studentId: currentUser.id,
         notes: responseText,
       }),
+      feedback: {
+        success: isLate
+          ? 'Homework submitted and marked as late.'
+          : 'Homework submitted successfully.',
+        error: 'Your homework could not be submitted. Please try again.',
+      },
     })
       .then((response) => {
         if (!response.ok && response.status !== 202) {
@@ -270,6 +289,13 @@ export const useAcademicState = (currentUser: User) => {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ revealMarksMode }),
+      feedback: {
+        success:
+          revealMarksMode === 'immediate'
+            ? 'Quiz marks will be shown immediately.'
+            : 'Quiz marks will remain hidden until released.',
+        error: 'Could not update the marks visibility setting.',
+      },
     }).catch((err) => console.error('[AppContext] Failed to update quiz marks mode', err));
   };
 
@@ -284,6 +310,10 @@ export const useAcademicState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(quizData),
+      feedback: {
+        success: `Quiz “${quizData.title}” was created.`,
+        error: `Could not create quiz “${quizData.title}”.`,
+      },
     }).catch((err) => console.error('[AppContext] Failed to persist quiz', err));
   };
 
@@ -314,6 +344,10 @@ export const useAcademicState = (currentUser: User) => {
         totalPoints,
         answers,
       }),
+      feedback: {
+        success: 'Quiz answers submitted successfully.',
+        error: 'Your quiz answers could not be submitted.',
+      },
     })
       .then((response) => {
         if (!response.ok && response.status !== 202)

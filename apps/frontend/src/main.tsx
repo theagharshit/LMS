@@ -7,10 +7,10 @@ import { ToastProvider } from './components/common/ToastProvider';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ErrorBoundary>
-      <ToastProvider>
+    <ToastProvider>
+      <ErrorBoundary>
         <App />
-      </ToastProvider>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </ToastProvider>
   </StrictMode>,
 );

@@ -3,6 +3,8 @@ import { useApp } from '../../context/AppContext';
 import { getAvatarUrl } from '../../utils/avatarUtils';
 import { Attachment } from '@lms/shared';
 import { useDebouncedValue } from '../../utils/hooks';
+import { apiFetch } from '@utils/apiFetch';
+import { toast } from '@utils/toast';
 import {
   MessageSquare,
   FileText,
@@ -100,7 +102,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
 
       let fileUrl = '';
       try {
-        const res = await fetch('/api/upload', {
+        const res = await apiFetch('/api/upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -111,6 +113,11 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
             uploadedBy: currentUser.name,
             classroomId: currentClassroom.id,
           }),
+          feedback: {
+            success: `${attachFileName || attachFileObj.name} was uploaded securely.`,
+            error: 'The file could not be uploaded; a local preview will be attached instead.',
+            successTitle: 'File uploaded',
+          },
         });
 
         if (res.ok) {
@@ -121,6 +128,12 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
         }
       } catch (err) {
         fileUrl = URL.createObjectURL(attachFileObj);
+        toast.warning(
+          'The server upload failed; this attachment is available only in this session.',
+          {
+            title: 'Using local preview',
+          },
+        );
       }
 
       attachments.push({
@@ -160,12 +173,30 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
     if (!joinCodeInput.trim()) return;
     const success = joinClassroomByCode(joinCodeInput);
     if (success) {
+      toast.success('You now have access to the classroom.', { title: 'Classroom joined' });
       setJoinCodeInput('');
       setJoinError('');
       setShowJoinModal(false);
     } else {
       setJoinError('Invalid Class Code. Please try code like MATH8A, SCI8A, NEP8A or COMP8A.');
+      toast.error('That classroom code was not recognized. Check it and try again.', {
+        title: 'Invalid class code',
+      });
     }
+  };
+
+  const copyClassCode = (classroomId: string, code: string) => {
+    void navigator.clipboard
+      .writeText(code)
+      .then(() => {
+        setCopiedCode(classroomId);
+        toast.success(`Class code ${code} copied to your clipboard.`, {
+          title: 'Code copied',
+          id: 'class-code-copy',
+        });
+        window.setTimeout(() => setCopiedCode(null), 800);
+      })
+      .catch(() => toast.error('Could not copy the class code. Please copy it manually.'));
   };
 
   // Filter classrooms for landing page
@@ -344,9 +375,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                       {currentUser.role === 'teacher' && (
                         <span
                           onClick={() => {
-                            navigator.clipboard.writeText(cls.code);
-                            setCopiedCode(cls.id);
-                            setTimeout(() => setCopiedCode(null), 500);
+                            copyClassCode(cls.id, cls.code);
                           }}
                           title="Copy class code"
                           className="text-[10px] font-mono bg-black/20 text-[#FDEEDC] px-2 py-0.5 rounded-md border border-white/10 cursor-pointer"
@@ -477,9 +506,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
               {currentUser.role === 'teacher' && (
                 <span
                   onClick={() => {
-                    navigator.clipboard.writeText(currentClassroom.code);
-                    setCopiedCode(currentClassroom.id);
-                    setTimeout(() => setCopiedCode(null), 500);
+                    copyClassCode(currentClassroom.id, currentClassroom.code);
                   }}
                   title="Copy class code"
                   className="text-[10px] font-mono bg-black/20 text-[#FDEEDC] px-2 py-0.5 rounded-md border border-white/10 cursor-pointer"

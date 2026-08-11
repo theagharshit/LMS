@@ -15,6 +15,7 @@ import {
   CalendarCheck,
 } from 'lucide-react';
 import { CalendarEvent } from '@lms/shared';
+import { toast } from '@utils/toast';
 
 export const AcademicCalendarView: React.FC = () => {
   const { calendarEvents } = useApp();
@@ -326,7 +327,9 @@ export const AcademicCalendarView: React.FC = () => {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              alert(`Reminder set for: ${evt.title}`);
+                              toast.success(`We’ll remind you about “${evt.title}”.`, {
+                                title: 'Reminder set',
+                              });
                             }}
                             className="px-3 py-1 rounded-xl bg-[#4A6741] hover:bg-[#3D5535] text-white font-bold text-[10px] flex items-center gap-1 transition-all cursor-pointer"
                           >

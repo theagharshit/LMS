@@ -18,14 +18,15 @@
 | **Domain 8** | Frontend State Sync & Offline Resiliency | Tasks 085 - 094 | Optimistic Rollbacks, IndexedDB caching, UI Error Boundaries |
 | **Domain 9** | Infrastructure, Docker & Production DevOps | Tasks 095 - 104 | Multi-stage Docker, Redis Caching, CI/CD, Prometheus Metrics |
 | **Domain 10** | 1,000+ Unit & Integration Test Suite Scaling | Tasks 105 - 115 | Test Generators, Fuzzers, Performance Benchmarks, Mock Factories |
+| **Domain 11** | Cross-Environment Runtime Reliability | Task 116 | Proxy Routing, CORS Diagnostics, Auth Bootstrap & Session Recovery |
 
 ---
 
 ## ✅ Implementation & Verification Ledger
 
 **Completion date:** 11 August 2026  
-**Roadmap status:** **115 / 115 tasks implemented and wired**  
-**Automated verification:** **1,390 / 1,390 tests passing** (848 backend + 542 frontend)
+**Roadmap status:** **116 / 116 tasks implemented and wired**
+**Automated verification:** **1,402 / 1,402 tests passing** (851 backend + 551 frontend)
 
 | Domain | Completed implementation |
 | :--- | :--- |
@@ -36,22 +37,26 @@
 | **Parent portal** | Session-cached multi-child data, live geofence and bus-location events, blackout login enforcement, encrypted direct messages, AI/fallback progress summaries plus weekly digest scheduling, emergency-contact badges, parent archival, notification preference enforcement, payment ledgers, single-use verification tokens, and absence requests. |
 | **Admin operations** | Transactional CSV onboarding, race-safe roll allocation, paginated audit search, badge validation, role broadcasts, classroom capacity/subject guards, development-only reseeding, typed system configuration, archival workflows, maintenance mode, and unified search. |
 | **API platform** | Zod validation, RFC 7807 errors, gzip compression, strong ETags, Swagger UI, request IDs, response timing, standard pagination, 2MB JSON limits, 405/404 handlers, and graceful fatal-error shutdown. |
-| **Frontend resilience** | Optimistic rollback, IndexedDB offline queue/replay, top-level error boundaries, accessible focus trapping/Escape behavior, expiry warnings, centralized toasts, mobile bottom sheets, dark-mode tokens, debounced search, and dirty-form navigation protection. |
+| **Frontend resilience** | Optimistic rollback, IndexedDB offline queue/replay, top-level error boundaries, accessible focus trapping/Escape behavior, expiry warnings, app-wide action-specific toasts, mobile bottom sheets, dark-mode tokens, debounced search, and dirty-form navigation protection. |
 | **Production infrastructure** | Multi-stage Node 22 container builds with automatic migrations, Compose services for PostgreSQL/Redis/backend/frontend, Redis fallback caching, Prometheus process/HTTP/DB-pool metrics, graceful signal handling, dotenvx secrets loading, 14-day structured log retention, container health checks, bundle reports, and GitHub Actions CI. |
 | **Test expansion** | Reusable factories, 200-case RBAC matrix, 230 service contracts, 460 component cases, 100 fuzz cases, 50 boundaries, 30 JWT cases, concurrency/WebSocket/workflow suites, and full workspace build/type/format validation. |
+| **Runtime reliability** | Environment-aware Vite API proxying for local preview and Docker, exact localhost/loopback production CORS defaults, traced RFC 7807 CORS failures, fixed frontend ports, auth-gated startup data loading, single-flight refresh rotation, stale cookie/token cleanup, and automatic secure session renewal. |
 
 ### Final validation record
 
 - [x] Prisma schema formatted and validated; all 3 migrations applied and database status current.
 - [x] Seed completed with user/profile/classroom/notification-preference parity checks.
 - [x] TypeScript project references compile with zero errors.
-- [x] Backend: 21 files and 848 tests passing.
+- [x] Backend: 22 files and 851 tests passing.
 - [x] Backend tests use a single worker-thread pool and exit cleanly without dangling-process warnings.
-- [x] Frontend: 31 files and 542 tests passing.
+- [x] Frontend: 33 files and 551 tests passing.
+- [x] App-wide toast coverage verified for success, warning, error, info, deduplication, dismissal, API feedback, offline queueing, and reconnection sync.
 - [x] Production backend and frontend bundles build successfully.
 - [x] Live health, database integrity, search, Swagger, security headers, refresh rotation, Prometheus DB pool gauges, and frontend HTTP checks pass.
 - [x] Successful automatic logins no longer consume the five-failure brute-force allowance.
 - [x] Docker Compose configuration validates with production secrets supplied.
+- [x] Local production preview resolves the backend through `127.0.0.1`; Docker preview resolves the Compose `backend` service without configuration leakage.
+- [x] Parallel HTTP 401 responses share one refresh rotation, failed refreshes clear both browser tokens, and startup API reads wait for the correct user session.
 
 > Docker image configuration is fully defined and Compose-valid. A local image build additionally requires Docker Desktop (or another Docker daemon) to be running.
 
@@ -360,6 +365,10 @@
 
 - [x] **Task 090: Global Toast Notification Dispatcher**
   - Centralize toast notification alerts for success, warning, and error events.
+  - Implemented across all frontend mutations and consequential local actions: admin CRUD and exports, classrooms, attendance, grading, assignments, quizzes, messaging, parental controls, AI generation/fallbacks, authentication/session renewal, reminders, clipboard operations, file uploads, offline queueing, and reconnect sync.
+  - Toasts include accessible live-region semantics, action-specific titles and messages, success/warning/error/info styling, dark mode, deduplication, a five-item stack limit, timed progress, reduced-motion support, and manual dismissal.
+  - The compact toast stack is positioned in a dedicated lower-left slot beneath the sidebar’s CDC Nepal Standard card, using the sidebar’s `w-56` content width and reserved spacing to prevent overlap; mobile screens receive a safe bottom inset.
+  - Destructive operations intentionally retain confirmation dialogs before the resulting success/error toast; low-value background actions can opt out with `feedback: false`.
 
 - [x] **Task 091: Responsive Mobile Modal Drawer Adaptor**
   - Convert desktop dialog modals into mobile slide-up bottom sheets on screens `< 640px`.
@@ -480,6 +489,18 @@
   │  TOTAL PLANNED AUTOMATED TEST COVERAGE            1,115 TESTS│
   └─────────────────────────────────────────────────────────────┘
   ```
+
+---
+
+## 🔄 Domain 11: Cross-Environment Runtime Reliability (Task 116)
+
+- [x] **Task 116: Proxy, CORS & Secure Session Recovery Hardening**
+  - Route both Vite development and local production preview traffic to the configurable `BACKEND_URL`, defaulting to `http://127.0.0.1:3001`; inject `http://backend:3001` only inside Docker Compose.
+  - Pin development and preview to ports `5173` and `4173` with strict port checks, preventing silent fallback to an origin the backend did not authorize.
+  - Permit both `localhost` and `127.0.0.1` preview origins by default while retaining an exact environment-driven CORS allowlist; return traced HTTP 403 RFC 7807 details for rejected origins.
+  - Gate initial state, notification, and preference reads until the selected user has a valid JWT, and deduplicate React Strict Mode login requests.
+  - Share a single refresh-token rotation across concurrent HTTP 401 responses, never attach stale access tokens to public auth endpoints, clear rejected refresh cookies and local tokens, and automatically bootstrap a clean session.
+  - Cover allowed/rejected origins, request correlation, stale-cookie expiry, concurrent refresh success/failure, storage cleanup, and auth-header isolation with six regression tests.
 
 ---
 

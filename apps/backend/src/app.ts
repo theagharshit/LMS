@@ -24,6 +24,7 @@ import {
 import { metricsMiddleware } from '@middlewares/metricsMiddleware';
 import { openApiDocument } from '@utils/openApi';
 import { platformRoutes } from '@routes/platformRoutes';
+import { HttpError } from '@utils/httpError';
 
 export function createApp() {
   const app = express();
@@ -32,8 +33,13 @@ export function createApp() {
   app.set('etag', 'strong');
   app.set('trust proxy', 1);
 
+  // Trace every request before policy middleware so even rejected requests have a
+  // correlation ID and response timing information.
+  app.use(requestTracing);
+
   const allowedOrigins = (
-    process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173'
+    process.env.ALLOWED_ORIGINS ||
+    'http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173'
   )
     .split(',')
     .map((origin) => origin.trim())
@@ -43,7 +49,14 @@ export function createApp() {
       credentials: true,
       origin(origin, callback) {
         if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-        callback(new Error('Origin is not allowed by CORS policy.'));
+        callback(
+          new HttpError(
+            403,
+            `Origin ${origin} is not allowed by CORS policy.`,
+            'Cross-origin request blocked',
+            'https://sikshya.local/problems/cors',
+          ),
+        );
       },
     }),
   );
@@ -62,7 +75,6 @@ export function createApp() {
   );
   app.use(compression({ threshold: 1024 }));
   app.use(cookieParser());
-  app.use(requestTracing);
   app.use(metricsMiddleware);
 
   // HTTP Request Logging Middleware
