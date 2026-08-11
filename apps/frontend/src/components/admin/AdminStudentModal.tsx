@@ -450,7 +450,7 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
                     onChange={(e) => setGradeLevel(Number(e.target.value))}
                     className="w-full px-3.5 py-2.5 bg-[#F9F7F2] rounded-xl border border-[#E5E1D8] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
                   >
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => (
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((g) => (
                       <option key={g} value={g}>
                         Grade {g}
                       </option>
@@ -460,13 +460,14 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
 
                 <div>
                   <label className="block font-bold text-[#2D2D2A] mb-1">Section</label>
-                  <input
-                    type="text"
+                  <select
                     value={section}
-                    onChange={(e) => setSection(e.target.value.toUpperCase())}
-                    placeholder="e.g. A"
+                    onChange={(e) => setSection(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-[#F9F7F2] rounded-xl border border-[#E5E1D8] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
-                  />
+                  >
+                    <option value="A">Section A</option>
+                    <option value="B">Section B</option>
+                  </select>
                 </div>
 
                 <div>

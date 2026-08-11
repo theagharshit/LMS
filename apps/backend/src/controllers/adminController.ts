@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
+import { normalizeCohortSelection } from '@utils/cohortValidation';
 
 export const assignStudentBadge = async (req: Request, res: Response) => {
   try {
@@ -202,16 +203,12 @@ export const bulkImportStudents = async (req: Request, res: Response) => {
         const row = Object.fromEntries(
           headers.map((header, column) => [header, values[column] || '']),
         );
-        const gradeLevel = Number(row.gradelevel);
-        if (
-          !row.name ||
-          !/^\S+@\S+\.\S+$/.test(row.email) ||
-          gradeLevel < 1 ||
-          gradeLevel > 12 ||
-          !row.section
-        )
+        const { gradeLevel, section } = normalizeCohortSelection(row.gradelevel, row.section);
+        if (!row.name || !/^\S+@\S+\.\S+$/.test(row.email) || !section)
           throw new Error(`Invalid CSV row ${index + 2}.`);
-        return { ...row, gradeLevel } as Record<string, string> & { gradeLevel: number };
+        return { ...row, gradeLevel, section } as unknown as Record<string, string> & {
+          gradeLevel: number;
+        };
       });
     const created = await prisma.$transaction(async (tx) => {
       const result = [];

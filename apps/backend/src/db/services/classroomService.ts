@@ -1,6 +1,7 @@
 import { prisma } from './prismaClient';
 import { Classroom, StreamPost } from '@lms/shared';
 import { withDeadlockRetry } from '@utils/transaction';
+import { normalizeCohortSelection } from '@utils/cohortValidation';
 
 export class ClassroomService {
   public async getClassrooms(): Promise<Classroom[]> {
@@ -30,6 +31,10 @@ export class ClassroomService {
   public async addClassroom(
     classroom: Omit<Classroom, 'id' | 'code' | 'studentCount'>,
   ): Promise<Classroom> {
+    const { gradeLevel, section } = normalizeCohortSelection(
+      classroom.gradeLevel,
+      classroom.section,
+    );
     const code = `CLS${Math.floor(1000 + Math.random() * 9000)}`;
     let validTeacherId = classroom.teacherId;
     if (validTeacherId) {
@@ -63,15 +68,15 @@ export class ClassroomService {
         where: {
           schoolId_gradeLevel_section: {
             schoolId: school.id,
-            gradeLevel: classroom.gradeLevel,
-            section: classroom.section,
+            gradeLevel,
+            section,
           },
         },
         update: {},
         create: {
           schoolId: school.id,
-          gradeLevel: classroom.gradeLevel,
-          section: classroom.section,
+          gradeLevel,
+          section,
         },
       });
       return tx.classroom.create({

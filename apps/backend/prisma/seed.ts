@@ -126,10 +126,14 @@ async function main() {
   });
 
   await prisma.academicCohort.createMany({
-    data: [
-      { id: 'cohort-8-a', schoolId, gradeLevel: 8, section: 'A' },
-      { id: 'cohort-9-b', schoolId, gradeLevel: 9, section: 'B' },
-    ],
+    data: Array.from({ length: 10 }, (_, index) => index + 1).flatMap((gradeLevel) =>
+      ['A', 'B'].map((section) => ({
+        id: `cohort-${gradeLevel}-${section.toLowerCase()}`,
+        schoolId,
+        gradeLevel,
+        section,
+      })),
+    ),
   });
 
   const termNames = ['1st Term', 'Mid Term', '2nd Term'];
