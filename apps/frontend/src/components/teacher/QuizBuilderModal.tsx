@@ -270,13 +270,13 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
                 onClick={() => setRevealMarksMode('immediate')}
                 className={`p-3 rounded-2xl border text-left flex items-start gap-3 transition-all ${
                   revealMarksMode === 'immediate'
-                    ? 'border-purple-600 bg-purple-50 dark:bg-purple-950/60 text-purple-950 dark:text-purple-100 font-bold shadow-xs'
+                    ? 'border-[#4A6741] bg-[#EBF1E8] text-[#2D2D2A] dark:bg-[#214126] dark:text-emerald-50 font-bold shadow-xs'
                     : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                 }`}
               >
-                <Eye className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+                <Eye className="w-5 h-5 text-[#4A6741] shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-extrabold text-xs">Reveal Marks Immediately</p>
+                  <p className="font-extrabold text-xs">Show Results Immediately</p>
                   <p className="text-[10px] text-slate-500 font-normal mt-0.5">
                     Show instant score, percentage grade, and correct answer explanations upon quiz
                     completion.
@@ -295,10 +295,9 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
               >
                 <EyeOff className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-extrabold text-xs">Share Marks Later (Teacher Review)</p>
+                  <p className="font-extrabold text-xs">Hide Until Release by Teacher</p>
                   <p className="text-[10px] text-slate-500 font-normal mt-0.5">
-                    Hide instant score and solutions until you manually review and release results
-                    to students.
+                    Hide instant score and solutions until you release the results to students.
                   </p>
                 </div>
               </button>
@@ -306,13 +305,13 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
           </div>
 
           {/* AI Assistance Banner */}
-          <div className="p-3.5 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 flex items-center justify-between gap-3">
+          <div className="p-3.5 rounded-2xl bg-[#EBF1E8]/50 border border-[#EDEAE2] flex items-center justify-between gap-3">
             <div>
-              <h4 className="font-bold text-purple-900 dark:text-purple-200 text-xs flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-500" />
+              <h4 className="font-bold text-[#4A6741] text-xs flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-[#E88D67]" />
                 Auto-Fill Questions with AI
               </h4>
-              <p className="text-[11px] text-purple-700 dark:text-purple-300">
+              <p className="text-[11px] text-[#7A7A72]">
                 Optionally generate CDC Nepal curriculum standard questions to pre-fill the form
                 below.
               </p>
@@ -322,7 +321,7 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
               type="button"
               onClick={handleGenerateAiQuiz}
               disabled={isAiGenerating}
-              className="px-3.5 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition-colors shadow-sm flex items-center gap-1.5 shrink-0"
+              className="px-3.5 py-2 rounded-xl bg-[#E88D67] text-white font-bold text-xs hover:bg-[#D87B55] transition-colors shadow-sm flex items-center gap-1.5 shrink-0"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>{isAiGenerating ? 'Generating...' : 'Auto-Generate AI Questions'}</span>

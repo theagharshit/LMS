@@ -55,6 +55,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     academicState.setTermProgress,
     academicState.setStudentActivities,
     academicState.setSubjectPerformances,
+    academicState.setResources,
+    academicState.setModules,
   );
 
   const switchUser = (userId: string) => {
@@ -78,6 +80,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return true;
     }
     return false;
+  };
+
+  const updateStudentIdCardPhoto = (studentId: string, idCardPhotoUrl: string) => {
+    authState.updateStudentIdCardPhoto(studentId, idCardPhotoUrl);
+    apiFetch(`/api/db/students/${studentId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idCardPhotoUrl }),
+    }).catch((err) => console.error('[AppContext] Failed to save ID card photo', err));
   };
 
   const assignBadge = async (
@@ -165,13 +176,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     gradeSubmission: academicState.gradeSubmission,
     quizzes: academicState.quizzes,
     addQuiz: academicState.addQuiz,
+    updateQuiz: academicState.updateQuiz,
+    startQuizLive: academicState.startQuizLive,
+    deleteQuiz: academicState.deleteQuiz,
     updateQuizMarksMode: academicState.updateQuizMarksMode,
     quizSubmissions: academicState.quizSubmissions,
     submitQuizAnswers: academicState.submitQuizAnswers,
+    resources: academicState.resources,
+    addResource: academicState.addResource,
+    updateResource: academicState.updateResource,
+    deleteResource: academicState.deleteResource,
+    addModule: academicState.addModule,
+    updateModule: academicState.updateModule,
+    deleteModule: academicState.deleteModule,
     subjectPerformances: academicState.subjectPerformances,
     termProgress: academicState.termProgress,
     studentActivities: academicState.studentActivities,
     studentProfiles: authState.studentProfiles,
+    updateStudentIdCardPhoto,
     badgeDefinitions: academicState.badgeDefinitions,
     assignBadge,
 
@@ -185,7 +207,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     weeklySchedule: trackingState.weeklySchedule,
     updateDaySchedule: trackingState.updateDaySchedule,
     schedule: trackingState.schedule,
-    modules: trackingState.modules,
+    modules: academicState.modules,
     calendarEvents: trackingState.calendarEvents,
 
     // Communication State

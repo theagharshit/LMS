@@ -22,6 +22,8 @@ export const useSyncState = (
   setTermProgress: (progress: any) => void,
   setStudentActivities: (activities: any) => void,
   setSubjectPerformances: (performances: any) => void,
+  setResources: (resources: any) => void,
+  setModules: (modules: any) => void,
 ) => {
   useEffect(() => {
     if (typeof window === 'undefined' || !authReady) return;
@@ -55,6 +57,8 @@ export const useSyncState = (
           if (data.termProgress) setTermProgress(data.termProgress);
           if (data.studentActivities) setStudentActivities(data.studentActivities);
           if (data.subjectPerformances) setSubjectPerformances(data.subjectPerformances);
+          if (data.resources) setResources(data.resources);
+          if (data.modules) setModules(data.modules);
         }
       })
       .catch((err) => {

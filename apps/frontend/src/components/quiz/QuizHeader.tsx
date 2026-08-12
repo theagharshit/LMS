@@ -65,13 +65,13 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
   const isWarning = timeRemainingSeconds <= 120 && timeRemainingSeconds > 0; // Warning under 2 mins
 
   return (
-    <header className="p-4 md:p-5 bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 text-white flex items-center justify-between shadow-md">
+    <header className="p-4 md:p-5 natural-banner text-white flex items-center justify-between shadow-md">
       <div className="space-y-1">
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md border border-white/20">
             {subject}
           </span>
-          <span className="text-xs text-purple-200">{classroomName}</span>
+          <span className="text-xs text-white/80">{classroomName}</span>
         </div>
         <h2 className="font-bold text-base md:text-lg tracking-tight leading-tight">{title}</h2>
       </div>
@@ -88,7 +88,7 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
             {isWarning ? (
               <AlertTriangle className="w-4 h-4 text-amber-300" />
             ) : (
-              <Clock className="w-4 h-4 text-purple-200" />
+              <Clock className="w-4 h-4 text-white/80" />
             )}
             <span>
               {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
@@ -97,7 +97,7 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
         )}
 
         <div className="text-right hidden sm:block">
-          <span className="text-[11px] font-bold text-purple-200 block">Question</span>
+          <span className="text-[11px] font-bold text-white/80 block">Question</span>
           <span className="text-sm font-black">
             {currentQuestionIndex + 1} / {totalQuestions}
           </span>

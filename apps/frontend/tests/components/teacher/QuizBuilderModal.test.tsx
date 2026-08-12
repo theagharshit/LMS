@@ -14,8 +14,8 @@ describe('QuizBuilderModal Component (src/components/teacher/QuizBuilderModal.ts
 
     expect(screen.getByText(/Sikshya AI Quiz Creator for Teachers/i)).toBeInTheDocument();
     expect(screen.getByText(/Score & Results Disclosure Setting:/i)).toBeInTheDocument();
-    expect(screen.getByText(/Reveal Marks Immediately/i)).toBeInTheDocument();
-    expect(screen.getByText(/Share Marks Later \(Teacher Review\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Show Results Immediately/i)).toBeInTheDocument();
+    expect(screen.getByText(/Hide Until Release by Teacher/i)).toBeInTheDocument();
   });
 
   it('allows teacher to add new questions dynamically', () => {

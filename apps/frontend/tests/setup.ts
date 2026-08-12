@@ -161,11 +161,34 @@ const mockApiRouter = async (input: RequestInfo | URL, init?: RequestInit): Prom
     );
   }
 
+  if (url.includes('/api/ai/quiz-generator')) {
+    return new Response(
+      JSON.stringify({
+        quiz: {
+          title: 'Test Quiz',
+          questions: [
+            {
+              id: 'q-1',
+              text: 'Sample question?',
+              type: 'MCQ',
+              options: ['A', 'B', 'C', 'D'],
+              correctAnswer: 'A',
+              explanation: 'Test explanation',
+              points: 5,
+            },
+          ],
+        },
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
   if (url.includes('/api/db/state')) {
     return new Response(
       JSON.stringify({
         status: 'success',
-        state: {},
+        resources: [],
+        modules: [],
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     );

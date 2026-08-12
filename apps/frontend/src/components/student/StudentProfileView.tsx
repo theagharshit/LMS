@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '@context/AppContext';
 import { getAvatarUrl } from '@utils/avatarUtils';
 import { StudentLocationTracker } from '../common/StudentLocationTracker';
@@ -16,6 +16,7 @@ import {
   Calendar,
   Award,
   BookOpen,
+  Upload,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -31,8 +32,16 @@ import {
 } from 'recharts';
 
 export const StudentProfileView: React.FC = () => {
-  const { currentUser, studentProfiles, termProgress, studentActivities, subjectPerformances } =
-    useApp();
+  const {
+    currentUser,
+    studentProfiles,
+    termProgress,
+    studentActivities,
+    subjectPerformances,
+    updateStudentIdCardPhoto,
+  } = useApp();
+
+  const idCardInputRef = useRef<HTMLInputElement>(null);
 
   const studentData = studentProfiles.find((s) => s.id === currentUser.id) || {
     id: currentUser.id || 'user-stu-1',
@@ -55,6 +64,7 @@ export const StudentProfileView: React.FC = () => {
   };
 
   const [isIdCardOpen, setIsIdCardOpen] = useState<boolean>(false);
+  const [isUploadingIdCard, setIsUploadingIdCard] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'progress' | 'attendance' | 'activities' | 'badges'>(
     'progress',
   );
@@ -152,13 +162,35 @@ export const StudentProfileView: React.FC = () => {
           </div>
         </div>
 
-        <button
-          onClick={() => setIsIdCardOpen(true)}
-          className="px-3.5 py-2 rounded-xl bg-[#F9F7F2] hover:bg-[#F0EDE5] border border-[#EDEAE2] text-xs font-bold text-[#2D2D2A] flex items-center gap-2 transition-colors cursor-pointer shrink-0"
-        >
-          <Printer className="w-4 h-4 text-[#7A7A72]" />
-          <span>Print Student ID</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <input
+            ref={idCardInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleIdCardPhotoUpload(file);
+              e.target.value = '';
+            }}
+          />
+          <button
+            onClick={triggerIdCardUpload}
+            disabled={isUploadingIdCard}
+            className="px-3.5 py-2 rounded-xl bg-[#EBF1E8] hover:bg-[#DFE9DA] border border-[#D4E0CF] text-xs font-bold text-[#4A6741] flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-60"
+          >
+            <Upload className="w-4 h-4" />
+            <span>{isUploadingIdCard ? 'Uploading...' : 'Upload ID Card'}</span>
+          </button>
+          <button
+            onClick={() => setIsIdCardOpen(true)}
+            className="px-3.5 py-2 rounded-xl bg-[#F9F7F2] hover:bg-[#F0EDE5] border border-[#EDEAE2] text-xs font-bold text-[#2D2D2A] flex items-center gap-2 transition-colors cursor-pointer"
+          >
+            <Printer className="w-4 h-4 text-[#7A7A72]" />
+            <span>Print Student ID</span>
+          </button>
+        </div>
       </div>
 
       {/* Real-Time Live Location Status Tracker */}
@@ -424,6 +456,10 @@ export const StudentProfileView: React.FC = () => {
         isOpen={isIdCardOpen}
         onClose={() => setIsIdCardOpen(false)}
         studentData={studentData}
+        onUploadClick={() => {
+          setIsIdCardOpen(false);
+          triggerIdCardUpload();
+        }}
       />
     </div>
   );

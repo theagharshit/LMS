@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Question, QuizSessionState, QuizResultSummary } from '../types/quizTypes';
 import { questionTypeRegistry } from '../registry/questionTypeRegistry';
 
@@ -12,6 +12,8 @@ interface UseQuizSessionOptions {
     answers: Record<string, string>,
     score: number,
     totalPoints: number,
+    startedAt?: string,
+    timeSpentSeconds?: number,
   ) => void;
 }
 
@@ -32,20 +34,102 @@ export function useQuizSession({
   const [timeRemainingSeconds, setTimeRemainingSeconds] = useState<number>(
     (durationMinutes || 10) * 60,
   );
+  const [isTimeUp, setIsTimeUp] = useState(false);
   const [status, setStatus] = useState<QuizSessionState['status']>(() =>
     isAlreadySubmitted ? 'completed' : 'landing',
   );
 
+  const answersRef = useRef(answers);
+  const onFinishRef = useRef(onFinishSubmission);
+  const startedAtRef = useRef<string | null>(null);
+  const durationRef = useRef(durationMinutes);
+
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
+  useEffect(() => {
+    onFinishRef.current = onFinishSubmission;
+  }, [onFinishSubmission]);
+
+  useEffect(() => {
+    durationRef.current = durationMinutes;
+  }, [durationMinutes]);
+
   const currentQuestion = questions[currentQuestionIndex] || questions[0];
 
-  // Track visited questions as user navigates
   useEffect(() => {
     if (currentQuestion && status === 'taking') {
       setVisitedQuestions((prev) => new Set(prev).add(currentQuestion.id));
     }
   }, [currentQuestion, status]);
 
-  // Countdown timer when taking quiz
+  const computeResult = useCallback(
+    (answerMap: Record<string, string>): QuizResultSummary => {
+      let score = 0;
+      let totalPoints = 0;
+      let correctCount = 0;
+      let incorrectCount = 0;
+      let unansweredCount = 0;
+
+      questions.forEach((q) => {
+        totalPoints += q.points;
+        const userAns = answerMap[q.id];
+        if (!userAns) {
+          unansweredCount++;
+        } else {
+          const handler = questionTypeRegistry.getHandler(q.type);
+          const pts = handler?.calculateScore
+            ? handler.calculateScore(q, userAns)
+            : userAns === q.correctAnswer
+              ? q.points
+              : 0;
+
+          score += pts;
+          if (pts > 0) {
+            correctCount++;
+          } else {
+            incorrectCount++;
+          }
+        }
+      });
+
+      const percentage = totalPoints > 0 ? Math.round((score / totalPoints) * 100) : 0;
+
+      return {
+        score,
+        totalPoints,
+        percentage,
+        correctCount,
+        incorrectCount,
+        unansweredCount,
+        totalQuestions: questions.length,
+      };
+    },
+    [questions],
+  );
+
+  const handleForceSubmit = useCallback(() => {
+    const result = computeResult(answersRef.current);
+    const endTime = new Date();
+    const startTime = startedAtRef.current ? new Date(startedAtRef.current) : endTime;
+    const timeSpentSeconds = Math.round((endTime.getTime() - startTime.getTime()) / 1000);
+
+    setSubmittedAt(endTime.toISOString());
+    setStatus('completed');
+    setIsTimeUp(true);
+
+    if (onFinishRef.current) {
+      onFinishRef.current(
+        answersRef.current,
+        result.score,
+        result.totalPoints,
+        startedAtRef.current || undefined,
+        timeSpentSeconds,
+      );
+    }
+  }, [computeResult]);
+
   useEffect(() => {
     if (status !== 'taking') return;
 
@@ -53,7 +137,6 @@ export function useQuizSession({
       setTimeRemainingSeconds((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          // Auto-submit when timer reaches 0
           handleForceSubmit();
           return 0;
         }
@@ -62,11 +145,14 @@ export function useQuizSession({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [status]);
+  }, [status, handleForceSubmit]);
 
   const startQuiz = useCallback(() => {
-    setStartedAt(new Date().toISOString());
+    const now = new Date().toISOString();
+    startedAtRef.current = now;
+    setStartedAt(now);
     setStatus('taking');
+    setTimeRemainingSeconds((durationRef.current || 10) * 60);
     if (questions[0]) {
       setVisitedQuestions(new Set([questions[0].id]));
     }
@@ -116,55 +202,10 @@ export function useQuizSession({
     setStatus('taking');
   }, []);
 
-  const resultSummary: QuizResultSummary = useMemo(() => {
-    let score = 0;
-    let totalPoints = 0;
-    let correctCount = 0;
-    let incorrectCount = 0;
-    let unansweredCount = 0;
-
-    questions.forEach((q) => {
-      totalPoints += q.points;
-      const userAns = answers[q.id];
-      if (!userAns) {
-        unansweredCount++;
-      } else {
-        const handler = questionTypeRegistry.getHandler(q.type);
-        const pts = handler?.calculateScore
-          ? handler.calculateScore(q, userAns)
-          : userAns === q.correctAnswer
-            ? q.points
-            : 0;
-
-        score += pts;
-        if (pts > 0) {
-          correctCount++;
-        } else {
-          incorrectCount++;
-        }
-      }
-    });
-
-    const percentage = totalPoints > 0 ? Math.round((score / totalPoints) * 100) : 0;
-
-    return {
-      score,
-      totalPoints,
-      percentage,
-      correctCount,
-      incorrectCount,
-      unansweredCount,
-      totalQuestions: questions.length,
-    };
-  }, [questions, answers]);
-
-  const handleForceSubmit = useCallback(() => {
-    setSubmittedAt(new Date().toISOString());
-    setStatus('completed');
-    if (onFinishSubmission) {
-      onFinishSubmission(answers, resultSummary.score, resultSummary.totalPoints);
-    }
-  }, [answers, resultSummary, onFinishSubmission]);
+  const resultSummary: QuizResultSummary = useMemo(
+    () => computeResult(answers),
+    [answers, computeResult],
+  );
 
   const confirmSubmit = useCallback(() => {
     handleForceSubmit();
@@ -189,6 +230,7 @@ export function useQuizSession({
       submittedAt,
       timeRemainingSeconds,
       status,
+      isTimeUp,
     },
     currentQuestion,
     resultSummary,

@@ -1,88 +1,53 @@
 import React, { useState } from 'react';
 import { apiFetch } from '@utils/apiFetch';
 import { useApp } from '../../context/AppContext';
-import { QuizQuestion } from '@lms/shared';
+import { Quiz, getQuizStatus } from '@lms/shared';
+import { QuizBuilderWizard } from './QuizBuilderWizard';
 import {
   BookOpen,
   Plus,
-  Trash2,
-  Sparkles,
   CheckCircle,
   CheckCircle2,
   Clock,
   Send,
   Eye,
   UserCheck,
-  Award,
-  Layers,
   FileCheck,
-  Zap,
+  Edit3,
+  Trash2,
+  Play,
+  Hourglass,
 } from 'lucide-react';
 
 export const TeacherQuizHubView: React.FC = () => {
-  const { classrooms, addQuiz, quizzes, quizSubmissions, studentProfiles, updateQuizMarksMode } =
-    useApp();
+  const {
+    classrooms,
+    quizzes,
+    quizSubmissions,
+    studentProfiles,
+    updateQuizMarksMode,
+    startQuizLive,
+    deleteQuiz,
+  } = useApp();
 
-  // Active Tab: 'creator' | 'evaluation'
   const [activeTab, setActiveTab] = useState<'creator' | 'evaluation'>('creator');
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
 
-  // --- QUIZ CREATOR STATE ---
-  const [selectedClassroomId, setSelectedClassroomId] = useState<string>(
-    classrooms[0]?.id || 'cls-math-8a',
-  );
-  const [subject, setSubject] = useState('Mathematics');
-  const [topic, setTopic] = useState('Algebra & Factorization');
-  const [durationMinutes, setDurationMinutes] = useState(10);
-  const [revealMarksMode, setRevealMarksMode] = useState<'immediate' | 'later'>('immediate');
-  const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const [createSuccessMsg, setCreateSuccessMsg] = useState<string | null>(null);
-
-  const [questions, setQuestions] = useState<QuizQuestion[]>([
-    {
-      id: 'q-1',
-      text: 'What is the correct expansion of (a + b)²?',
-      type: 'MCQ',
-      options: ['a² + b²', 'a² + 2ab + b²', 'a² - 2ab + b²', '2a + 2b'],
-      correctAnswer: 'a² + 2ab + b²',
-      explanation: 'Using the algebraic identity, (a + b)² = (a + b)(a + b) = a² + 2ab + b².',
-      points: 5,
-    },
-    {
-      id: 'q-2',
-      text: 'Factorize: x² - 9',
-      type: 'MCQ',
-      options: ['(x - 3)(x - 3)', '(x + 3)(x - 3)', '(x + 9)(x - 1)', '(x - 9)(x + 1)'],
-      correctAnswer: '(x + 3)(x - 3)',
-      explanation: 'Difference of squares formula: a² - b² = (a + b)(a - b). Here b = 3.',
-      points: 5,
-    },
-  ]);
-
-  // --- QUIZ EVALUATION STATE ---
   const [selectedEvalQuizId, setSelectedEvalQuizId] = useState<string | null>(
     quizzes[0]?.id || null,
   );
   const [inspectStudentId, setInspectStudentId] = useState<string | null>(null);
   const [publishSuccessMsg, setPublishSuccessMsg] = useState<string | null>(null);
 
-  // --- CREATOR HANDLERS ---
-  const handleAddQuestion = () => {
-    const nextNum = questions.length + 1;
-    const newQ: QuizQuestion = {
-      id: `q-${Date.now()}`,
-      text: `New question #${nextNum} prompt text`,
-      type: 'MCQ',
-      options: ['Option A', 'Option B', 'Option C', 'Option D'],
-      correctAnswer: 'Option A',
-      explanation: 'Explanation for correct answer',
-      points: 5,
-    };
-    setQuestions((prev) => [...prev, newQ]);
+  const openCreateWizard = () => {
+    setEditingQuiz(null);
+    setIsWizardOpen(true);
   };
 
-  const handleRemoveQuestion = (index: number) => {
-    if (questions.length <= 1) return;
-    setQuestions((prev) => prev.filter((_, i) => i !== index));
+  const openEditWizard = (quiz: Quiz) => {
+    setEditingQuiz(quiz);
+    setIsWizardOpen(true);
   };
 
   const handleUpdateQuestionText = (index: number, text: string) => {
@@ -208,6 +173,12 @@ export const TeacherQuizHubView: React.FC = () => {
     return studentProfiles.find((s) => s.id === studentId);
   };
 
+  const handleStartTest = (quizId: string) => {
+    startQuizLive(quizId);
+    setPublishSuccessMsg('Test is now live! Students can begin the assessment.');
+    setTimeout(() => setPublishSuccessMsg(null), 4000);
+  };
+
   const getGrade = (score: number, totalPoints: number) => {
     if (totalPoints === 0) return 'N/A';
     const pct = Math.round((score / totalPoints) * 100);
@@ -264,14 +235,6 @@ export const TeacherQuizHubView: React.FC = () => {
         </div>
       </div>
 
-      {/* Toast Notifications */}
-      {createSuccessMsg && (
-        <div className="p-4 rounded-2xl bg-emerald-600 text-white font-bold text-xs flex items-center gap-2 shadow-md animate-in slide-in-from-top duration-200">
-          <CheckCircle className="w-5 h-5 shrink-0" />
-          <span>{createSuccessMsg}</span>
-        </div>
-      )}
-
       {publishSuccessMsg && (
         <div className="p-4 rounded-2xl bg-purple-600 text-white font-bold text-xs flex items-center gap-2 shadow-md animate-in slide-in-from-top duration-200">
           <Send className="w-5 h-5 shrink-0" />
@@ -279,266 +242,98 @@ export const TeacherQuizHubView: React.FC = () => {
         </div>
       )}
 
-      {/* Main Tab Content */}
       {activeTab === 'creator' ? (
-        /* ================= TAB 1: QUIZ CREATOR ================= */
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-[#EDEAE2] dark:border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-6">
           <div className="flex items-center justify-between border-b border-[#EDEAE2] dark:border-slate-800 pb-4">
             <div>
               <h2 className="text-lg font-black text-[#2D2D2A] dark:text-white font-serif">
-                Create & Configure Assessment
+                Quiz & Test Manager
               </h2>
               <p className="text-xs text-[#7A7A72] dark:text-slate-400">
-                Specify class target, question prompts, option choices, points, and score disclosure
-                mode
+                Create timed assessments from your uploaded study materials
               </p>
             </div>
-
             <button
-              onClick={handleAiAutoGenerate}
-              disabled={isAiGenerating}
-              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-2"
+              onClick={openCreateWizard}
+              className="px-5 py-2.5 rounded-2xl bg-[#4A6741] text-white font-extrabold text-xs flex items-center gap-2 cursor-pointer"
             >
-              <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
-              <span>{isAiGenerating ? 'AI Generating...' : '✨ Auto-Generate Questions'}</span>
+              <Plus className="w-4 h-4" />
+              Create New Quiz
             </button>
           </div>
 
-          {/* Configuration Form Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
-            <div>
-              <label className="block font-bold mb-1 text-[#2D2D2A] dark:text-slate-300">
-                Target Classroom:
-              </label>
-              <select
-                value={selectedClassroomId}
-                onChange={(e) => setSelectedClassroomId(e.target.value)}
-                className="w-full p-3 rounded-2xl bg-[#F9F7F2] dark:bg-slate-800 border border-[#EDEAE2] dark:border-slate-700 font-semibold text-[#2D2D2A] dark:text-slate-200"
-              >
-                {classrooms.map((cls) => (
-                  <option key={cls.id} value={cls.id}>
-                    {cls.name} ({cls.subject})
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="space-y-3">
+            {quizzes.length === 0 ? (
+              <div className="text-center py-12 text-[#7A7A72] text-xs">
+                No quizzes yet. Click &quot;Create New Quiz&quot; to get started.
+              </div>
+            ) : (
+              quizzes.map((q) => {
+                const subs = getQuizSubmissionCount(q.id);
+                const totalMarks = q.questions.reduce((a, qt) => a + qt.points, 0);
+                const quizStatus = getQuizStatus(q);
 
-            <div>
-              <label className="block font-bold mb-1 text-[#2D2D2A] dark:text-slate-300">
-                Subject Name:
-              </label>
-              <input
-                type="text"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                className="w-full p-3 rounded-2xl bg-[#F9F7F2] dark:bg-slate-800 border border-[#EDEAE2] dark:border-slate-700 font-semibold text-[#2D2D2A] dark:text-slate-200"
-              />
-            </div>
-
-            <div>
-              <label className="block font-bold mb-1 text-[#2D2D2A] dark:text-slate-300">
-                Quiz Topic / Title:
-              </label>
-              <input
-                type="text"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                className="w-full p-3 rounded-2xl bg-[#F9F7F2] dark:bg-slate-800 border border-[#EDEAE2] dark:border-slate-700 font-semibold text-[#2D2D2A] dark:text-slate-200"
-              />
-            </div>
-
-            <div>
-              <label className="block font-bold mb-1 text-[#2D2D2A] dark:text-slate-300">
-                Duration (Minutes):
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={durationMinutes}
-                onChange={(e) => setDurationMinutes(parseInt(e.target.value, 10) || 10)}
-                className="w-full p-3 rounded-2xl bg-[#F9F7F2] dark:bg-slate-800 border border-[#EDEAE2] dark:border-slate-700 font-semibold text-[#2D2D2A] dark:text-slate-200"
-              />
-            </div>
-          </div>
-
-          {/* Reveal Marks Setting Card */}
-          <div className="p-4 rounded-2xl bg-[#F9F7F2] dark:bg-slate-800/80 border border-[#EDEAE2] dark:border-slate-700 space-y-2 text-xs">
-            <label className="block font-extrabold text-[#2D2D2A] dark:text-slate-200">
-              Score & Results Disclosure Setting:
-            </label>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setRevealMarksMode('immediate')}
-                className={`p-3 rounded-2xl border text-left transition-all flex items-start gap-3 ${
-                  revealMarksMode === 'immediate'
-                    ? 'bg-[#EBF1E8] border-[#88A070] text-[#2D2D2A] shadow-xs'
-                    : 'bg-white dark:bg-slate-900 border-[#EDEAE2] dark:border-slate-700 text-[#7A7A72]'
-                }`}
-              >
-                <Zap className="w-5 h-5 text-[#4A6741] shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-extrabold block text-xs">Reveal Marks Immediately</span>
-                  <span className="text-[11px] opacity-80 leading-tight block">
-                    Students see instant scores, percentages, and solution explanations upon
-                    submission.
-                  </span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setRevealMarksMode('later')}
-                className={`p-3 rounded-2xl border text-left transition-all flex items-start gap-3 ${
-                  revealMarksMode === 'later'
-                    ? 'bg-amber-50 border-amber-300 text-amber-900 shadow-xs'
-                    : 'bg-white dark:bg-slate-900 border-[#EDEAE2] dark:border-slate-700 text-[#7A7A72]'
-                }`}
-              >
-                <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-extrabold block text-xs">
-                    Share Marks Later (Teacher Review)
-                  </span>
-                  <span className="text-[11px] opacity-80 leading-tight block">
-                    Scores and solutions are withheld until released by the teacher via the
-                    Evaluation Desk.
-                  </span>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Manage Questions List */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-xs text-[#2D2D2A] dark:text-slate-200 uppercase tracking-wider">
-                Manage Quiz Questions ({questions.length}):
-              </h3>
-
-              <button
-                onClick={handleAddQuestion}
-                className="px-3.5 py-1.5 rounded-xl bg-[#4A6741] text-white font-bold text-xs hover:bg-[#3D5535] transition-colors shadow-sm flex items-center gap-1.5"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Question</span>
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {questions.map((q, qIndex) => (
-                <div
-                  key={q.id}
-                  className="p-5 rounded-3xl bg-[#F9F7F2] dark:bg-slate-800/80 border border-[#EDEAE2] dark:border-slate-700 space-y-4 shadow-xs"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="font-black text-xs text-[#4A6741] dark:text-emerald-400 uppercase tracking-wider">
-                      Question #{qIndex + 1}
-                    </span>
-
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-bold text-[#7A7A72]">Marks:</span>
-                        <input
-                          type="number"
-                          min="1"
-                          value={q.points}
-                          onChange={(e) =>
-                            handleUpdateQuestionPoints(qIndex, parseInt(e.target.value, 10) || 1)
-                          }
-                          className="w-14 p-1.5 rounded-xl bg-white dark:bg-slate-900 border border-[#EDEAE2] dark:border-slate-700 font-bold text-center text-xs"
-                        />
-                      </div>
-
-                      {questions.length > 1 && (
-                        <button
-                          onClick={() => handleRemoveQuestion(qIndex)}
-                          className="p-1.5 text-rose-500 hover:text-rose-700 rounded-xl hover:bg-rose-50 transition-colors"
+                return (
+                  <div
+                    key={q.id}
+                    className="p-4 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-bold text-sm text-[#2D2D2A]">{q.title}</h4>
+                        <span
+                          className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
+                            quizStatus === 'draft'
+                              ? 'bg-amber-100 text-amber-800'
+                              : quizStatus === 'published'
+                                ? 'bg-sky-100 text-sky-800'
+                                : 'bg-emerald-100 text-emerald-800'
+                          }`}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          {quizStatus === 'draft'
+                            ? 'Draft'
+                            : quizStatus === 'published'
+                              ? 'Published • Waiting to Start'
+                              : 'Live'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#7A7A72]">
+                        {q.classroomName} • {q.questions.length} questions • {totalMarks} marks •{' '}
+                        {q.durationMinutes} min timer
+                      </p>
+                      <p className="text-[10px] text-[#7A7A72]">{subs} student attempt(s)</p>
+                    </div>
+                    <div className="flex gap-2 shrink-0 flex-wrap">
+                      {quizStatus === 'published' && (
+                        <button
+                          onClick={() => handleStartTest(q.id)}
+                          className="px-3 py-2 rounded-xl bg-[#E88D67] text-white text-xs font-bold flex items-center gap-1 cursor-pointer"
+                        >
+                          <Play className="w-3.5 h-3.5" />
+                          Start Test
+                        </button>
+                      )}
+                      <button
+                        onClick={() => openEditWizard(q)}
+                        className="px-3 py-2 rounded-xl bg-white border border-[#EDEAE2] text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        {subs > 0 ? 'View' : 'Edit'}
+                      </button>
+                      {subs === 0 && (
+                        <button
+                          onClick={() => deleteQuiz(q.id)}
+                          className="px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Delete
                         </button>
                       )}
                     </div>
                   </div>
-
-                  {/* Question Text */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#7A7A72] mb-1">
-                      Question Prompt:
-                    </label>
-                    <input
-                      type="text"
-                      value={q.text}
-                      onChange={(e) => handleUpdateQuestionText(qIndex, e.target.value)}
-                      className="w-full p-3 rounded-2xl bg-white dark:bg-slate-900 border border-[#EDEAE2] dark:border-slate-700 font-bold text-xs text-[#2D2D2A] dark:text-slate-200"
-                    />
-                  </div>
-
-                  {/* 4 Options Grid */}
-                  <div className="space-y-2">
-                    <label className="block text-[11px] font-bold text-[#7A7A72]">
-                      Options & Correct Answer Selector:
-                    </label>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {(q.options || []).map((optText, optIdx) => {
-                        const isCorrect = q.correctAnswer === optText;
-
-                        return (
-                          <div
-                            key={optIdx}
-                            className={`p-2.5 rounded-2xl border flex items-center gap-2 transition-colors ${
-                              isCorrect
-                                ? 'bg-[#EBF1E8] border-[#88A070]'
-                                : 'bg-white dark:bg-slate-900 border-[#EDEAE2] dark:border-slate-700'
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name={`correct-radio-${qIndex}`}
-                              checked={isCorrect}
-                              onChange={() => handleSelectCorrectOption(qIndex, optText)}
-                              className="w-4 h-4 text-[#4A6741] cursor-pointer"
-                            />
-                            <input
-                              type="text"
-                              value={optText}
-                              onChange={(e) => handleUpdateOption(qIndex, optIdx, e.target.value)}
-                              className="w-full bg-transparent font-bold text-xs text-[#2D2D2A] dark:text-slate-200 focus:outline-none"
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Explanation */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#7A7A72] mb-1">
-                      Concept Solution & Answer Explanation:
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={q.explanation || ''}
-                      onChange={(e) => handleUpdateQuestionExplanation(qIndex, e.target.value)}
-                      className="w-full p-3 rounded-2xl bg-white dark:bg-slate-900 border border-[#EDEAE2] dark:border-slate-700 text-xs text-[#2D2D2A] dark:text-slate-200"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Submit Action */}
-          <div className="pt-4 border-t border-[#EDEAE2] dark:border-slate-800 flex justify-end">
-            <button
-              onClick={handlePublishNewQuiz}
-              className="px-6 py-3 rounded-2xl bg-[#4A6741] text-white font-extrabold text-xs hover:bg-[#3D5535] transition-colors shadow-md flex items-center gap-2"
-            >
-              <Send className="w-4 h-4" />
-              <span>Publish Quiz Assessment to Classroom</span>
-            </button>
+                );
+              })
+            )}
           </div>
         </div>
       ) : (
@@ -655,6 +450,24 @@ export const TeacherQuizHubView: React.FC = () => {
                         </div>
                       )}
                     </div>
+                    {getQuizStatus(activeEvalQuiz) === 'published' && (
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-2xl bg-sky-50 border border-sky-200">
+                        <div className="flex items-center gap-2 text-xs text-sky-900">
+                          <Hourglass className="w-4 h-4 shrink-0" />
+                          <span>
+                            This quiz is assigned but not started. Students see it but cannot begin
+                            until you start the test.
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleStartTest(activeEvalQuiz.id)}
+                          className="px-4 py-2 rounded-xl bg-[#E88D67] text-white font-extrabold text-xs flex items-center gap-1.5 shrink-0 cursor-pointer"
+                        >
+                          <Play className="w-4 h-4" />
+                          Start Test Now
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Submissions Section */}
@@ -809,6 +622,16 @@ export const TeacherQuizHubView: React.FC = () => {
           </div>
         </div>
       )}
+
+      <QuizBuilderWizard
+        isOpen={isWizardOpen}
+        onClose={() => {
+          setIsWizardOpen(false);
+          setEditingQuiz(null);
+        }}
+        editingQuiz={editingQuiz}
+        hasSubmissions={editingQuiz ? getQuizSubmissionCount(editingQuiz.id) > 0 : false}
+      />
     </div>
   );
 };

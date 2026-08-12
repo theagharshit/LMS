@@ -5,11 +5,22 @@ import {
   addPostComment,
   addAssignment,
   addQuiz,
+  updateQuiz,
+  deleteQuiz,
+  startQuizLive,
   updateQuizMarksMode,
   markAttendance,
   updateStudentLocation,
   generateQuizAi,
   askTeacherAssistantAi,
+  getResources,
+  addResource,
+  updateResource,
+  deleteResource,
+  getModules,
+  addModule,
+  updateModule,
+  deleteModule,
 } from '@controllers/teacherController';
 import { requireRolesWhenStrict } from '@middlewares/authMiddleware';
 

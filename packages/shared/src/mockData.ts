@@ -651,6 +651,8 @@ export const MOCK_QUIZZES: Quiz[] = [
     dueDate: '2026-08-01',
     totalQuestions: 4,
     published: true,
+    status: 'live',
+    liveStartedAt: '2026-07-28T09:00:00.000Z',
     questions: [
       {
         id: 'q1',
@@ -701,6 +703,8 @@ export const MOCK_QUIZZES: Quiz[] = [
     dueDate: '2026-08-03',
     totalQuestions: 3,
     published: true,
+    status: 'live',
+    liveStartedAt: '2026-07-28T09:00:00.000Z',
     questions: [
       {
         id: 'sq1',

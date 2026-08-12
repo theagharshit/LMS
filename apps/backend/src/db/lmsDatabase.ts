@@ -31,6 +31,8 @@ import {
   locationService,
   parentService,
   notificationService,
+  resourceService,
+  moduleService,
 } from './services';
 
 /**
@@ -156,6 +158,18 @@ export class LMSDatabaseService {
     return quizService.addQuiz(quiz);
   }
 
+  public updateQuiz(id: string, quiz: Partial<Omit<Quiz, 'id' | 'createdAt'>>): Promise<Quiz | null> {
+    return quizService.updateQuiz(id, quiz);
+  }
+
+  public startQuizLive(id: string): Promise<Quiz | null> {
+    return quizService.startQuizLive(id);
+  }
+
+  public deleteQuiz(id: string): Promise<boolean> {
+    return quizService.deleteQuiz(id);
+  }
+
   public updateQuizMarksMode(
     id: string,
     revealMarksMode: 'immediate' | 'later',
@@ -171,6 +185,53 @@ export class LMSDatabaseService {
     submission: Omit<QuizSubmission, 'id' | 'completedAt'>,
   ): Promise<QuizSubmission> {
     return quizService.submitQuiz(submission);
+  }
+
+  // --- RESOURCE SERVICE DELEGATES ---
+  public getResources(): Promise<StudyResource[]> {
+    return resourceService.getAllResources();
+  }
+
+  public getResourcesByClassroom(classroomId: string): Promise<StudyResource[]> {
+    return resourceService.getResourcesByClassroom(classroomId);
+  }
+
+  public getResourcesByTeacher(teacherId: string): Promise<StudyResource[]> {
+    return resourceService.getResourcesByTeacher(teacherId);
+  }
+
+  public addResource(data: Omit<StudyResource, 'id' | 'createdAt'>): Promise<StudyResource> {
+    return resourceService.addResource(data);
+  }
+
+  public updateResource(
+    id: string,
+    data: Partial<Omit<StudyResource, 'id' | 'createdAt'>>,
+  ): Promise<StudyResource | null> {
+    return resourceService.updateResource(id, data);
+  }
+
+  public deleteResource(id: string): Promise<boolean> {
+    return resourceService.deleteResource(id);
+  }
+
+  // --- MODULE SERVICE DELEGATES ---
+  public getModules(): Promise<ModuleItem[]> {
+    return moduleService.getModules();
+  }
+
+  public addModule(
+    data: Omit<ModuleItem, 'id' | 'completedByStudentIds'> & { completedByStudentIds?: string[] },
+  ): Promise<ModuleItem> {
+    return moduleService.addModule(data);
+  }
+
+  public updateModule(id: string, data: Partial<Omit<ModuleItem, 'id'>>): Promise<ModuleItem | null> {
+    return moduleService.updateModule(id, data);
+  }
+
+  public deleteModule(id: string): Promise<boolean> {
+    return moduleService.deleteModule(id);
   }
 
   // --- BADGE SERVICE DELEGATES ---

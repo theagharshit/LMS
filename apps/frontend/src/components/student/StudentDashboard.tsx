@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { DayOfWeek, SchedulePeriod } from '@lms/shared';
+import { DayOfWeek, SchedulePeriod, isQuizTakeable, isQuizVisibleToStudents } from '@lms/shared';
 import {
   Sparkles,
   Flame,
@@ -18,6 +18,7 @@ import {
   User,
   CalendarDays,
   Award,
+  Hourglass,
 } from 'lucide-react';
 
 interface StudentDashboardProps {
@@ -135,10 +136,12 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     return !sub || sub.status === 'pending';
   });
 
+  const visibleQuizzes = quizzes.filter(isQuizVisibleToStudents);
+
   // Quiz status calculation
-  const availableQuizzes = quizzes.filter((q) => {
+  const availableQuizzes = visibleQuizzes.filter((q) => {
     const sub = quizSubmissions.find((qs) => qs.quizId === q.id && qs.studentId === currentUser.id);
-    return !sub;
+    return !sub && isQuizTakeable(q);
   });
 
   const recentGrades = submissions.filter(
@@ -513,14 +516,14 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 </div>
               )}
 
-              {quizzes.length === 0 ? (
+              {visibleQuizzes.length === 0 ? (
                 <div className="text-center py-6 text-[#7A7A72] text-xs">
                   <CheckCircle className="w-8 h-8 text-[#E88D67] mx-auto mb-2" />
                   <p className="font-bold text-[#2D2D2A]">No Quizzes Available!</p>
                   <p className="text-[11px]">Check back later for new online tests.</p>
                 </div>
               ) : (
-                quizzes.map((quiz) => {
+                visibleQuizzes.map((quiz) => {
                   const sub = quizSubmissions.find(
                     (s) => s.quizId === quiz.id && s.studentId === currentUser.id,
                   );
@@ -575,7 +578,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                 : `Completed • ${sub?.score}/${totalPoints} Marks`}
                             </span>
                           </button>
-                        ) : (
+                        ) : isQuizTakeable(quiz) ? (
                           <button
                             onClick={() => onOpenQuizModal(quiz.id)}
                             className="px-3.5 py-1.5 rounded-xl bg-[#E88D67] text-white font-bold text-xs hover:bg-[#D87B55] transition-colors shadow-sm flex items-center gap-1.5"
@@ -583,6 +586,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                             <PlayCircle className="w-3.5 h-3.5" />
                             <span>Start Quiz</span>
                           </button>
+                        ) : (
+                          <span className="px-3.5 py-1.5 rounded-xl bg-sky-50 text-sky-800 border border-sky-200 font-bold text-xs flex items-center gap-1.5">
+                            <Hourglass className="w-3.5 h-3.5" />
+                            Waiting to start
+                          </span>
                         )}
                       </div>
                     </div>

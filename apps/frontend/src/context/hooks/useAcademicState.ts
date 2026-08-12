@@ -11,6 +11,8 @@ import {
   TermProgress,
   StudentActivity,
   BadgeDefinition,
+  StudyResource,
+  ModuleItem,
   MOCK_BADGE_DEFINITIONS,
   MOCK_CLASSROOMS,
   MOCK_STREAM_POSTS,
@@ -19,6 +21,7 @@ import {
   MOCK_QUIZZES,
   MOCK_QUIZ_SUBMISSIONS,
   MOCK_SUBJECT_PERFORMANCE,
+  MOCK_MODULES,
 } from '@lms/shared';
 import { apiFetch } from '../../utils/apiFetch';
 
@@ -36,6 +39,8 @@ export const useAcademicState = (currentUser: User) => {
     useState<SubjectPerformance[]>(MOCK_SUBJECT_PERFORMANCE);
   const [termProgress, setTermProgress] = useState<TermProgress[]>([]);
   const [studentActivities, setStudentActivities] = useState<StudentActivity[]>([]);
+  const [resources, setResources] = useState<StudyResource[]>([]);
+  const [modules, setModules] = useState<ModuleItem[]>(MOCK_MODULES);
 
   const addClassroom = (classroomData: Omit<Classroom, 'id' | 'code' | 'studentCount'>) => {
     const newId = `cls-${Date.now()}`;
@@ -303,6 +308,7 @@ export const useAcademicState = (currentUser: User) => {
     const newQuiz: Quiz = {
       ...quizData,
       id: `quiz-${Date.now()}`,
+      status: quizData.status || (quizData.published ? 'published' : 'draft'),
     };
     setQuizzes((prev) => [newQuiz, ...prev]);
 
@@ -315,6 +321,114 @@ export const useAcademicState = (currentUser: User) => {
         error: `Could not create quiz “${quizData.title}”.`,
       },
     }).catch((err) => console.error('[AppContext] Failed to persist quiz', err));
+
+    return newQuiz;
+  };
+
+  const updateQuiz = (quizId: string, updates: Partial<Omit<Quiz, 'id'>>) => {
+    setQuizzes((prev) =>
+      prev.map((q) => (q.id === quizId ? { ...q, ...updates } : q)),
+    );
+
+    apiFetch(`/api/db/quizzes/${quizId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    }).catch((err) => console.error('[AppContext] Failed to update quiz', err));
+  };
+
+  const startQuizLive = (quizId: string) => {
+    setQuizzes((prev) =>
+      prev.map((q) =>
+        q.id === quizId
+          ? { ...q, status: 'live' as const, published: true, liveStartedAt: new Date().toISOString() }
+          : q,
+      ),
+    );
+
+    apiFetch(`/api/db/quizzes/${quizId}/start`, {
+      method: 'POST',
+    }).catch((err) => console.error('[AppContext] Failed to start quiz', err));
+  };
+
+  const deleteQuiz = (quizId: string) => {
+    setQuizzes((prev) => prev.filter((q) => q.id !== quizId));
+
+    apiFetch(`/api/db/quizzes/${quizId}`, {
+      method: 'DELETE',
+    }).catch((err) => console.error('[AppContext] Failed to delete quiz', err));
+  };
+
+  const addResource = (data: Omit<StudyResource, 'id' | 'createdAt'>) => {
+    const newResource: StudyResource = {
+      ...data,
+      id: `res-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    setResources((prev) => [newResource, ...prev]);
+
+    apiFetch('/api/db/resources', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).catch((err) => console.error('[AppContext] Failed to persist resource', err));
+
+    return newResource;
+  };
+
+  const updateResource = (id: string, updates: Partial<Omit<StudyResource, 'id' | 'createdAt'>>) => {
+    setResources((prev) => prev.map((r) => (r.id === id ? { ...r, ...updates } : r)));
+
+    apiFetch(`/api/db/resources/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    }).catch((err) => console.error('[AppContext] Failed to update resource', err));
+  };
+
+  const deleteResource = (id: string) => {
+    setResources((prev) => prev.filter((r) => r.id !== id));
+
+    apiFetch(`/api/db/resources/${id}`, {
+      method: 'DELETE',
+    }).catch((err) => console.error('[AppContext] Failed to delete resource', err));
+  };
+
+  const addModule = (
+    data: Omit<ModuleItem, 'id' | 'completedByStudentIds'> & { completedByStudentIds?: string[] },
+  ) => {
+    const newModule: ModuleItem = {
+      ...data,
+      id: `mod-${Date.now()}`,
+      completedByStudentIds: data.completedByStudentIds || [],
+    };
+    setModules((prev) => [newModule, ...prev]);
+
+    apiFetch('/api/db/modules', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).catch((err) => console.error('[AppContext] Failed to persist module', err));
+
+    return newModule;
+  };
+
+  const updateModule = (id: string, updates: Partial<Omit<ModuleItem, 'id'>>) => {
+    setModules((prev) => prev.map((m) => (m.id === id ? { ...m, ...updates } : m)));
+
+    apiFetch(`/api/db/modules/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    }).catch((err) => console.error('[AppContext] Failed to update module', err));
+  };
+
+  const deleteModule = (id: string) => {
+    setModules((prev) => prev.filter((m) => m.id !== id));
+
+    apiFetch(`/api/db/modules/${id}`, {
+      method: 'DELETE',
+    }).catch((err) => console.error('[AppContext] Failed to delete module', err));
   };
 
   const submitQuizAnswers = (
@@ -322,7 +436,14 @@ export const useAcademicState = (currentUser: User) => {
     answers: Record<string, string>,
     score: number,
     totalPoints: number,
+    startedAt?: string,
+    timeSpentSeconds?: number,
   ) => {
+    const existing = quizSubmissions.find(
+      (s) => s.quizId === quizId && s.studentId === currentUser.id,
+    );
+    if (existing) return;
+
     const newSub: QuizSubmission = {
       id: `qs-${Date.now()}`,
       quizId,
@@ -330,6 +451,8 @@ export const useAcademicState = (currentUser: User) => {
       score,
       totalPoints,
       completedAt: new Date().toISOString(),
+      startedAt,
+      timeSpentSeconds,
       answers,
     };
     setQuizSubmissions((prev) => [newSub, ...prev]);
@@ -343,6 +466,8 @@ export const useAcademicState = (currentUser: User) => {
         score,
         totalPoints,
         answers,
+        startedAt,
+        timeSpentSeconds,
       }),
       feedback: {
         success: 'Quiz answers submitted successfully.',
@@ -379,10 +504,23 @@ export const useAcademicState = (currentUser: User) => {
     quizzes,
     setQuizzes,
     addQuiz,
+    updateQuiz,
+    startQuizLive,
+    deleteQuiz,
     updateQuizMarksMode,
     quizSubmissions,
     setQuizSubmissions,
     submitQuizAnswers,
+    resources,
+    setResources,
+    addResource,
+    updateResource,
+    deleteResource,
+    modules,
+    setModules,
+    addModule,
+    updateModule,
+    deleteModule,
     subjectPerformances,
     setSubjectPerformances,
     termProgress,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { getAvatarUrl } from '../../utils/avatarUtils';
 import { Attachment } from '@lms/shared';
@@ -21,9 +21,11 @@ import {
   Sparkles,
   ChevronRight,
   GraduationCap,
-  Building,
   CheckCircle2,
-  Tag,
+  Hourglass,
+  ClipboardList,
+  LayoutGrid,
+  Bell,
 } from 'lucide-react';
 
 interface ClassroomViewProps {
@@ -43,6 +45,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
     addStreamPost,
     addPostComment,
     assignments,
+    submissions,
     quizzes,
     quizSubmissions,
     setIsCompletedQuizzesOpen,
@@ -69,6 +72,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
   const [showAttachModal, setShowAttachModal] = useState(false);
   const [attachFileName, setAttachFileName] = useState('');
   const [attachFileObj, setAttachFileObj] = useState<File | null>(null);
+  const [classmateSearch, setClassmateSearch] = useState('');
 
   // If a classroom is selected, find it
   const currentClassroom = classrooms.find((c) => c.id === selectedClassroomId);
@@ -290,13 +294,30 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
               Enrolled Subjects & Classrooms
             </h1>
             <p className="text-xs md:text-sm text-[#F9F7F2]/90 max-w-2xl">
-              Browse all your enrolled subject classrooms. Click on any subject below to access its
-              stream announcements, textbook modules, downloadable notes, homework assignments, and
-              teacher contacts.
+              Browse your enrolled subject classrooms, track pending work, and jump into stream
+              updates, notes, homework, and quizzes.
             </p>
           </div>
 
-          <div className="relative z-10 flex flex-col sm:flex-row items-center gap-3 shrink-0">
+          <div className="relative z-10 flex flex-wrap items-center gap-3 shrink-0">
+            <div className="bg-white/15 backdrop-blur-md border border-white/20 px-3.5 py-2.5 rounded-2xl flex items-center gap-2.5">
+              <LayoutGrid className="w-5 h-5 text-[#FDEEDC]" />
+              <div>
+                <p className="text-[10px] text-white/80 font-medium">Enrolled</p>
+                <p className="text-sm font-black text-[#FDEEDC]">{classrooms.length} Subjects</p>
+              </div>
+            </div>
+            {landingStats.pendingTasks > 0 && (
+              <div className="bg-white/15 backdrop-blur-md border border-white/20 px-3.5 py-2.5 rounded-2xl flex items-center gap-2.5">
+                <Bell className="w-5 h-5 text-[#FDEEDC]" />
+                <div>
+                  <p className="text-[10px] text-white/80 font-medium">Pending</p>
+                  <p className="text-sm font-black text-[#FDEEDC]">
+                    {landingStats.pendingTasks} Tasks
+                  </p>
+                </div>
+              </div>
+            )}
             <button
               onClick={() => setShowJoinModal(true)}
               className="px-4 py-3 rounded-2xl bg-[#E88D67] hover:bg-[#D87B55] text-white font-extrabold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
@@ -367,7 +388,6 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
         {/* Search & Subject Category Filter Bar */}
         <div className="bg-white rounded-3xl p-4 border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-3">
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-            {/* Search Input */}
             <div className="relative w-full md:w-80">
               <Search className="w-4 h-4 text-[#7A7A72] absolute left-3.5 top-3" />
               <input
@@ -379,52 +399,92 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
               />
             </div>
 
-            {/* Subject Filters */}
-            <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
-              {[
-                { id: 'all', label: 'All Enrolled Subjects' },
-                { id: 'mathematics', label: 'Mathematics' },
-                { id: 'science', label: 'Science' },
-                { id: 'nepali', label: 'Nepali' },
-                { id: 'computer', label: 'Computer' },
-              ].map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => setSubjectFilter(f.id)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                    subjectFilter === f.id
-                      ? 'bg-[#4A6741] text-white shadow-xs'
-                      : 'bg-[#F9F7F2] text-[#7A7A72] hover:bg-[#EDEAE2] hover:text-[#2D2D2A]'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
+            <p className="text-[11px] font-bold text-[#7A7A72] shrink-0">
+              Showing {filteredClassrooms.length} of {classrooms.length} classrooms
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+            {subjectFilterOptions.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setSubjectFilter(f.id)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                  subjectFilter === f.id
+                    ? 'bg-[#4A6741] text-white shadow-xs'
+                    : 'bg-[#F9F7F2] text-[#7A7A72] hover:bg-[#EDEAE2] hover:text-[#2D2D2A]'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
         </div>
 
+        {/* Quick overview */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: 'Subjects', value: classrooms.length, icon: BookOpen, color: 'text-[#4A6741]' },
+            { label: 'Modules', value: landingStats.totalModules, icon: FileText, color: 'text-[#4A6741]' },
+            { label: 'Homework', value: landingStats.totalAssignments, icon: ClipboardList, color: 'text-[#E88D67]' },
+            { label: 'Live Quizzes', value: landingStats.liveQuizzes, icon: Sparkles, color: 'text-[#E88D67]' },
+          ].map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={stat.label}
+                className="p-4 rounded-2xl bg-white border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex items-center gap-3"
+              >
+                <div className="w-10 h-10 rounded-xl bg-[#F9F7F2] flex items-center justify-center shrink-0">
+                  <Icon className={`w-5 h-5 ${stat.color}`} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-[#7A7A72] uppercase">{stat.label}</p>
+                  <p className="text-lg font-black text-[#2D2D2A]">{stat.value}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
         {/* Enrolled Subject Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {filteredClassrooms.length === 0 ? (
-            <div className="col-span-2 p-12 text-center bg-white rounded-3xl border border-[#EDEAE2] space-y-2">
+            <div className="col-span-2 p-12 text-center bg-white rounded-3xl border border-dashed border-[#EDEAE2] space-y-4">
               <BookOpen className="w-10 h-10 text-[#7A7A72] mx-auto opacity-50" />
-              <h3 className="font-bold text-sm text-[#2D2D2A]">No subject classroom found</h3>
-              <p className="text-xs text-[#7A7A72]">
-                Try clearing search or join a classroom with a class code.
-              </p>
+              <div className="space-y-1">
+                <h3 className="font-bold text-sm text-[#2D2D2A]">No subject classroom found</h3>
+                <p className="text-xs text-[#7A7A72]">
+                  Try clearing your search or join a classroom with a class code from your teacher.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowJoinModal(true)}
+                className="px-4 py-2.5 rounded-xl bg-[#E88D67] text-white font-bold text-xs hover:bg-[#D87B55] cursor-pointer inline-flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Join with Class Code
+              </button>
             </div>
           ) : (
             filteredClassrooms.map((cls) => {
               const clsPosts = streamPosts.filter((p) => p.classroomId === cls.id);
               const clsAssignments = assignments.filter((a) => a.classroomId === cls.id);
-              const clsQuizzes = quizzes.filter((q) => q.classroomId === cls.id);
+              const clsQuizzes = quizzes.filter(
+                (q) => q.classroomId === cls.id && isQuizVisibleToStudents(q),
+              );
               const clsModules = modules.filter((m) => m.classroomId === cls.id);
+              const pendingTasks = getPendingTaskCount(cls.id);
+              const latestPost = [...clsPosts].sort(
+                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+              )[0];
 
               return (
-                <div
+                <button
                   key={cls.id}
-                  className="bg-white rounded-3xl border border-[#EDEAE2] shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-[#88A070] transition-all overflow-hidden flex flex-col justify-between group"
+                  type="button"
+                  onClick={() => setSelectedClassroomId(cls.id)}
+                  className="group text-left bg-white rounded-[1.75rem] border border-[#EDEAE2] shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_28px_rgba(74,103,65,0.12)] hover:border-[#88A070] transition-all duration-300 overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4A6741] focus-visible:ring-offset-2"
                 >
                   {/* Card Top Header Banner */}
                   <div
@@ -444,69 +504,77 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                         >
                           {copiedCode === cls.id ? 'Copied!' : `Code: ${cls.code}`}
                         </span>
-                      )}
+                        {pendingTasks > 0 && (
+                          <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-[#E88D67] text-white shadow-sm">
+                            {pendingTasks} to do
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="space-y-1">
+                        <h2 className="text-lg font-bold font-serif text-white tracking-tight leading-snug line-clamp-2">
+                          {cls.name}
+                        </h2>
+                        <p className="text-[11px] text-white/80">
+                          Grade {cls.gradeLevel}-{cls.section} · {cls.roomNumber}
+                        </p>
+                      </div>
                     </div>
-
-                    <h2 className="text-lg font-bold font-serif mt-3 tracking-tight group-hover:underline">
-                      {cls.name}
-                    </h2>
-
-                    <p className="text-xs text-[#F9F7F2]/90 flex items-center gap-2 mt-1">
-                      <span>{cls.teacherName}</span>
-                      <span>•</span>
-                      <span>{cls.roomNumber}</span>
-                    </p>
                   </div>
 
-                  {/* Card Body & Resource Counts */}
-                  <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
-                    {/* Quick Stats Pills */}
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="p-2.5 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] flex items-center gap-2">
-                        <BookOpen className="w-4 h-4 text-[#4A6741]" />
-                        <div>
-                          <p className="text-[10px] text-[#7A7A72] font-medium">Notes & Modules</p>
-                          <p className="font-bold text-[#2D2D2A]">{clsModules.length} Modules</p>
-                        </div>
-                      </div>
-
-                      <div className="p-2.5 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-[#E88D67]" />
-                        <div>
-                          <p className="text-[10px] text-[#7A7A72] font-medium">Homework Due</p>
-                          <p className="font-bold text-[#2D2D2A]">
-                            {clsAssignments.length} Assignments
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="p-2.5 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-purple-600" />
-                        <div>
-                          <p className="text-[10px] text-[#7A7A72] font-medium">Online Quizzes</p>
-                          <p className="font-bold text-[#2D2D2A]">{clsQuizzes.length} Quizzes</p>
-                        </div>
-                      </div>
-
-                      <div className="p-2.5 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4 text-blue-600" />
-                        <div>
-                          <p className="text-[10px] text-[#7A7A72] font-medium">Stream Posts</p>
-                          <p className="font-bold text-[#2D2D2A]">{clsPosts.length} Updates</p>
-                        </div>
+                  {/* Card body */}
+                  <div className="p-4 space-y-4 flex-1 flex flex-col">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={getAvatarUrl(cls.teacherAvatar, cls.teacherName)}
+                        alt={cls.teacherName}
+                        onError={(e) => {
+                          e.currentTarget.src = getAvatarUrl(undefined, cls.teacherName);
+                        }}
+                        className="w-9 h-9 rounded-full object-cover border-2 border-[#EBF1E8] shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-[#2D2D2A] truncate">{cls.teacherName}</p>
+                        <p className="text-[10px] text-[#7A7A72]">
+                          {cls.studentCount} students enrolled
+                        </p>
                       </div>
                     </div>
 
-                    {/* Enter Subject CTA Button */}
-                    <button
-                      onClick={() => setSelectedClassroomId(cls.id)}
-                      className="w-full py-3 rounded-2xl bg-[#4A6741] text-white font-extrabold text-xs hover:bg-[#3D5535] transition-all flex items-center justify-center gap-2 shadow-xs group-hover:scale-[1.01] cursor-pointer"
-                    >
-                      <span>Enter Subject & Notes</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
+                    {latestPost && (
+                      <p className="text-[11px] text-[#7A7A72] line-clamp-2 leading-relaxed">
+                        <span className="font-bold text-[#4A6741]">Latest: </span>
+                        {latestPost.content}
+                      </p>
+                    )}
+
+                    <div className="mt-auto pt-3 border-t border-[#EDEAE2] flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 text-[11px] text-[#7A7A72]">
+                        <span className="inline-flex items-center gap-1" title="Modules">
+                          <BookOpen className="w-3.5 h-3.5 text-[#4A6741]" />
+                          <span className="font-bold text-[#2D2D2A]">{clsModules.length}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1" title="Homework">
+                          <FileText className="w-3.5 h-3.5 text-[#E88D67]" />
+                          <span className="font-bold text-[#2D2D2A]">{clsAssignments.length}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1" title="Quizzes">
+                          <Sparkles className="w-3.5 h-3.5 text-[#E88D67]" />
+                          <span className="font-bold text-[#2D2D2A]">{clsQuizzes.length}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1" title="Stream updates">
+                          <MessageSquare className="w-3.5 h-3.5 text-[#4A6741]" />
+                          <span className="font-bold text-[#2D2D2A]">{clsPosts.length}</span>
+                        </span>
+                      </div>
+
+                      <span className="inline-flex items-center gap-1 text-xs font-extrabold text-[#4A6741] group-hover:gap-1.5 transition-all">
+                        Open
+                        <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                      </span>
+                    </div>
                   </div>
-                </div>
+                </button>
               );
             })
           )}
@@ -519,12 +587,34 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
   // SCENARIO 2: SPECIFIC ENROLLED CLASSROOM VIEW (Stream, Classwork, People)
   // =========================================================================
   const classPosts = streamPosts.filter((p) => p.classroomId === currentClassroom.id);
+  const sortedClassPosts = [...classPosts].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
   const classAssignments = assignments.filter((a) => a.classroomId === currentClassroom.id);
-  const classQuizzes = quizzes.filter((q) => q.classroomId === currentClassroom.id);
+  const classQuizzes = quizzes.filter(
+    (q) => q.classroomId === currentClassroom.id && isQuizVisibleToStudents(q),
+  );
   const classModules = modules.filter((m) => m.classroomId === currentClassroom.id);
   const classStudents = studentProfiles.filter((s) =>
     currentClassroom.enrolledStudentIds?.includes(s.id),
   );
+  const filteredClassStudents = classStudents.filter((s) =>
+    s.name.toLowerCase().includes(classmateSearch.toLowerCase()),
+  );
+  const classroomPendingTasks = getPendingTaskCount(currentClassroom.id);
+
+  const classroomTabs = [
+    { id: 'stream' as const, label: 'Stream', icon: MessageSquare, count: classPosts.length },
+    {
+      id: 'classwork' as const,
+      label: 'Classwork',
+      icon: FileText,
+      count: classAssignments.length + classQuizzes.length + classModules.length,
+    },
+    { id: 'people' as const, label: 'People', icon: Users, count: classStudents.length },
+  ];
 
   return (
     <div className="space-y-6 pb-16 animate-in fade-in duration-200">
@@ -560,13 +650,15 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
       {/* Classroom Banner Header */}
       <div className="relative rounded-3xl overflow-hidden natural-banner text-white shadow-md p-6 md:p-8 flex flex-col justify-between min-h-[160px]">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[#FDEEDC]">
-                {currentClassroom.subject}
+                {currentClassroom.subject} • Grade {currentClassroom.gradeLevel}-
+                {currentClassroom.section}
               </span>
               {currentUser.role === 'teacher' && (
-                <span
+                <button
+                  type="button"
                   onClick={() => {
                     copyClassCode(currentClassroom.id, currentClassroom.code);
                   }}
@@ -576,48 +668,85 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                   {copiedCode === currentClassroom.id
                     ? 'Copied!'
                     : `Code: ${currentClassroom.code}`}
+                </button>
+              )}
+              {classroomPendingTasks > 0 && (
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-[#E88D67] text-white">
+                  {classroomPendingTasks} pending tasks
                 </span>
               )}
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight font-serif">
               {currentClassroom.name}
             </h1>
-            <p className="text-xs md:text-sm text-[#F9F7F2]/90 flex items-center gap-2">
-              <span>Teacher: {currentClassroom.teacherName}</span>
-              <span>•</span>
-              <span>{currentClassroom.roomNumber}</span>
-              <span>•</span>
-              <span>{currentClassroom.studentCount} Enrolled Students</span>
-            </p>
+            <div className="flex items-center gap-2">
+              <img
+                src={getAvatarUrl(currentClassroom.teacherAvatar, currentClassroom.teacherName)}
+                alt={currentClassroom.teacherName}
+                onError={(e) => {
+                  e.currentTarget.src = getAvatarUrl(undefined, currentClassroom.teacherName);
+                }}
+                className="w-8 h-8 rounded-full object-cover border border-white/30"
+              />
+              <p className="text-xs md:text-sm text-[#F9F7F2]/90">
+                {currentClassroom.teacherName} • {currentClassroom.roomNumber} •{' '}
+                {currentClassroom.studentCount} students
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Classroom Navigation Tabs */}
-      <div className="border-b border-[#EDEAE2] flex gap-6 text-xs font-bold text-[#7A7A72]">
+      {/* Classroom quick stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { id: 'stream', label: 'Stream & Discussion', icon: MessageSquare },
-          {
-            id: 'classwork',
-            label: 'Classwork, Notes & Modules',
-            icon: FileText,
-          },
-          { id: 'people', label: 'Teacher & Classmates', icon: Users },
-        ].map((tab) => {
+          { label: 'Modules', value: classModules.length, icon: BookOpen },
+          { label: 'Homework', value: classAssignments.length, icon: FileText },
+          { label: 'Quizzes', value: classQuizzes.length, icon: Sparkles },
+          { label: 'Classmates', value: classStudents.length, icon: Users },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <div
+              key={item.label}
+              className="p-3 rounded-2xl bg-white border border-[#EDEAE2] flex items-center gap-2.5"
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#F9F7F2] flex items-center justify-center">
+                <Icon className="w-4 h-4 text-[#4A6741]" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-[#7A7A72] uppercase">{item.label}</p>
+                <p className="text-sm font-black text-[#2D2D2A]">{item.value}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Classroom Navigation Tabs */}
+      <div className="bg-white rounded-2xl border border-[#EDEAE2] p-1.5 flex gap-1 overflow-x-auto">
+        {classroomTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`pb-3 flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                 isActive
-                  ? 'border-[#4A6741] text-[#4A6741] font-extrabold'
-                  : 'border-transparent hover:text-[#2D2D2A]'
+                  ? 'bg-[#4A6741] text-white shadow-xs'
+                  : 'text-[#7A7A72] hover:bg-[#F9F7F2] hover:text-[#2D2D2A]'
               }`}
             >
               <Icon className="w-4 h-4" />
               <span>{tab.label}</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                  isActive ? 'bg-white/20 text-white' : 'bg-[#EBF1E8] text-[#4A6741]'
+                }`}
+              >
+                {tab.count}
+              </span>
             </button>
           );
         })}
@@ -636,17 +765,39 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
               {classAssignments.length === 0 ? (
                 <p className="text-xs text-[#7A7A72]">No upcoming homework for this subject!</p>
               ) : (
-                classAssignments.map((asg) => (
-                  <div
-                    key={asg.id}
-                    className="text-xs space-y-1 pb-2 border-b border-[#EDEAE2] last:border-0"
-                  >
-                    <p className="font-semibold text-[#2D2D2A]">{asg.title}</p>
-                    <p className="text-[10px] text-[#E88D67] font-bold">
-                      Due {asg.dueDate} at {asg.dueTime}
-                    </p>
-                  </div>
-                ))
+                [...classAssignments]
+                  .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+                  .slice(0, 4)
+                  .map((asg) => {
+                    const due = new Date(`${asg.dueDate}T23:59:59`);
+                    const daysLeft = Math.ceil(
+                      (due.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+                    );
+                    const isUrgent = daysLeft <= 2;
+
+                    return (
+                      <button
+                        key={asg.id}
+                        type="button"
+                        onClick={() => onOpenAssignmentModal(asg.id)}
+                        className={`w-full text-left text-xs space-y-1 pb-2 border-b border-[#EDEAE2] last:border-0 rounded-xl p-2 -mx-2 hover:bg-[#F9F7F2] transition-colors cursor-pointer ${
+                          isUrgent ? 'bg-[#FDEEDC]/40' : ''
+                        }`}
+                      >
+                        <p className="font-semibold text-[#2D2D2A] line-clamp-1">{asg.title}</p>
+                        <p
+                          className={`text-[10px] font-bold ${
+                            isUrgent ? 'text-rose-600' : 'text-[#E88D67]'
+                          }`}
+                        >
+                          Due {asg.dueDate}
+                          {daysLeft >= 0
+                            ? ` • ${daysLeft === 0 ? 'Today' : `${daysLeft} day(s) left`}`
+                            : ' • Overdue'}
+                        </p>
+                      </button>
+                    );
+                  })
               )}
             </div>
           </div>
@@ -715,7 +866,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
 
             {/* Stream Posts */}
             <div className="space-y-4">
-              {classPosts.length === 0 ? (
+              {sortedClassPosts.length === 0 ? (
                 <div className="p-8 text-center bg-white rounded-3xl border border-[#EDEAE2] text-[#7A7A72] space-y-1">
                   <MessageSquare className="w-8 h-8 text-[#7A7A72] mx-auto opacity-50" />
                   <p className="font-bold text-xs">No stream announcements yet</p>
@@ -724,7 +875,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                   </p>
                 </div>
               ) : (
-                classPosts.map((post) => (
+                sortedClassPosts.map((post) => (
                   <div
                     key={post.id}
                     className="bg-white rounded-3xl p-5 border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-4"
@@ -847,6 +998,10 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
       {/* TAB 2: CLASSWORK, NOTES & MODULES */}
       {activeTab === 'classwork' && (
         <div className="space-y-6">
+          {currentUser.role === 'teacher' && (
+            <TeacherMaterialsPanel classroom={currentClassroom} />
+          )}
+
           {/* Modules & PDF Notes Section */}
           <div className="space-y-4">
             <h2 className="font-bold text-sm text-[#2D2D2A] font-serif flex items-center gap-2">
@@ -986,13 +1141,18 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                               : `Completed • ${sub?.score}/${totalPoints} Marks`}
                           </span>
                         </button>
-                      ) : (
+                      ) : isQuizTakeable(quiz) ? (
                         <button
                           onClick={() => onOpenQuizModal(quiz.id)}
                           className="w-full mt-2 py-2 rounded-xl bg-[#E88D67] text-white font-bold text-xs hover:bg-[#D87B55] transition-colors cursor-pointer"
                         >
                           Start Online Quiz
                         </button>
+                      ) : (
+                        <div className="w-full mt-2 py-2 rounded-xl bg-sky-50 text-sky-800 border border-sky-200 font-bold text-xs flex items-center justify-center gap-1.5">
+                          <Hourglass className="w-3.5 h-3.5" />
+                          Waiting for teacher to start
+                        </div>
                       )}
                     </div>
                   );
@@ -1010,17 +1170,17 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
             <h3 className="font-bold text-sm text-[#4A6741] font-serif uppercase tracking-wider border-b border-[#EDEAE2] pb-2 mb-4">
               Subject Instructor
             </h3>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2]">
               <img
                 src={getAvatarUrl(currentClassroom.teacherAvatar, currentClassroom.teacherName)}
                 alt={currentClassroom.teacherName}
                 onError={(e) => {
                   e.currentTarget.src = getAvatarUrl(undefined, currentClassroom.teacherName);
                 }}
-                className="w-10 h-10 rounded-full object-cover border-2 border-[#4A6741]"
+                className="w-12 h-12 rounded-full object-cover border-2 border-[#4A6741]"
               />
               <div>
-                <h4 className="font-bold text-xs text-[#2D2D2A]">{currentClassroom.teacherName}</h4>
+                <h4 className="font-bold text-sm text-[#2D2D2A]">{currentClassroom.teacherName}</h4>
                 <p className="text-[11px] text-[#7A7A72]">
                   Faculty • {currentClassroom.subject} ({currentClassroom.roomNumber})
                 </p>
@@ -1029,36 +1189,54 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
           </div>
 
           <div>
-            <h3 className="font-bold text-sm text-[#4A6741] font-serif uppercase tracking-wider border-b border-[#EDEAE2] pb-2 mb-4">
-              Classmates Enrolled ({classStudents.length})
-            </h3>
-            <div className="space-y-3">
-              {classStudents.map((s) => (
-                <div
-                  key={s.id}
-                  className="flex items-center justify-between p-2 rounded-2xl hover:bg-[#F9F7F2] transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={getAvatarUrl(s.avatar, s.name)}
-                      alt={s.name}
-                      onError={(e) => {
-                        e.currentTarget.src = getAvatarUrl(undefined, s.name);
-                      }}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                    <div>
-                      <h4 className="font-bold text-xs text-[#2D2D2A]">{s.name}</h4>
-                      <p className="text-[10px] text-[#7A7A72]">
-                        Roll No. {s.rollNumber} • Section {s.section}
-                      </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EDEAE2] pb-3 mb-4">
+              <h3 className="font-bold text-sm text-[#4A6741] font-serif uppercase tracking-wider">
+                Classmates ({filteredClassStudents.length})
+              </h3>
+              <div className="relative w-full sm:w-56">
+                <Search className="w-3.5 h-3.5 text-[#7A7A72] absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  value={classmateSearch}
+                  onChange={(e) => setClassmateSearch(e.target.value)}
+                  placeholder="Search classmates..."
+                  className="w-full text-xs pl-9 pr-3 py-2 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2] focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              {filteredClassStudents.length === 0 ? (
+                <p className="text-xs text-[#7A7A72] text-center py-6">
+                  No classmates match your search.
+                </p>
+              ) : (
+                filteredClassStudents.map((s) => (
+                  <div
+                    key={s.id}
+                    className="flex items-center justify-between p-3 rounded-2xl hover:bg-[#F9F7F2] border border-transparent hover:border-[#EDEAE2] transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={getAvatarUrl(s.avatar, s.name)}
+                        alt={s.name}
+                        onError={(e) => {
+                          e.currentTarget.src = getAvatarUrl(undefined, s.name);
+                        }}
+                        className="w-9 h-9 rounded-full object-cover"
+                      />
+                      <div>
+                        <h4 className="font-bold text-xs text-[#2D2D2A]">{s.name}</h4>
+                        <p className="text-[10px] text-[#7A7A72]">
+                          Roll No. {s.rollNumber} • Section {s.section}
+                        </p>
+                      </div>
                     </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EBF1E8] text-[#4A6741]">
+                      Student
+                    </span>
                   </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EBF1E8] text-[#4A6741]">
-                    Enrolled Student
-                  </span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>

@@ -45,7 +45,7 @@ export const QuizResultView: React.FC<QuizResultViewProps> = ({
     if (percentage >= 60)
       return {
         label: 'C (Good)',
-        color: 'text-purple-600 bg-purple-50 dark:bg-purple-950/60 border-purple-300',
+        color: 'text-[#4A6741] bg-[#EBF1E8] dark:bg-[#214126] border-[#88A070]',
       };
     return {
       label: 'D (Needs Practice)',
@@ -58,7 +58,7 @@ export const QuizResultView: React.FC<QuizResultViewProps> = ({
   if (revealMarksMode === 'later') {
     return (
       <div className="py-8 px-6 max-w-xl mx-auto space-y-6 text-center text-slate-800 dark:text-slate-200">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center mx-auto text-3xl shadow-lg shadow-purple-500/20">
+        <div className="w-20 h-20 rounded-full bg-[#EBF1E8] text-[#4A6741] flex items-center justify-center mx-auto text-3xl shadow-md shadow-[#4A6741]/20">
           <ShieldCheck className="w-10 h-10" />
         </div>
 
@@ -66,7 +66,7 @@ export const QuizResultView: React.FC<QuizResultViewProps> = ({
           <h2 className="text-2xl font-black text-slate-900 dark:text-white">Attempt Submitted!</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
             Your responses for <strong>{title}</strong> have been recorded in the database. Your
-            teacher will review and release grades & solutions later.
+            teacher will release the grades & solutions later (auto-graded using the quiz answer key you filled in).
           </p>
         </div>
 
@@ -83,7 +83,7 @@ export const QuizResultView: React.FC<QuizResultViewProps> = ({
 
         <button
           onClick={onClose}
-          className="w-full py-3.5 rounded-2xl bg-purple-600 text-white font-extrabold text-xs hover:bg-purple-700 transition-colors shadow-md flex items-center justify-center gap-1.5"
+          className="w-full py-3.5 rounded-2xl bg-[#4A6741] text-white font-extrabold text-xs hover:bg-[#3D5535] transition-colors shadow-md flex items-center justify-center gap-1.5 shadow-[#4A6741]/20"
         >
           <X className="w-4 h-4" />
           Close & Back to Dashboard
@@ -111,7 +111,7 @@ export const QuizResultView: React.FC<QuizResultViewProps> = ({
           Your Score
         </p>
         <div className="flex items-baseline justify-center gap-2">
-          <span className="text-4xl font-black text-purple-600 dark:text-purple-400">
+          <span className="text-4xl font-black text-[#4A6741] dark:text-emerald-400">
             {result.score}
           </span>
           <span className="text-lg font-bold text-slate-400">/ {result.totalPoints} Marks</span>
@@ -163,7 +163,7 @@ export const QuizResultView: React.FC<QuizResultViewProps> = ({
       <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
         <button
           onClick={onReview}
-          className="py-3 rounded-2xl border border-purple-600 text-purple-600 dark:text-purple-400 font-extrabold text-xs hover:bg-purple-50 dark:hover:bg-purple-950/50 transition-colors flex items-center justify-center gap-1.5"
+          className="py-3 rounded-2xl border border-[#4A6741] text-[#4A6741] dark:text-emerald-400 font-extrabold text-xs hover:bg-[#EBF1E8] dark:hover:bg-[#214126] transition-colors flex items-center justify-center gap-1.5"
         >
           <Eye className="w-4 h-4" />
           Review Answers & Solutions
@@ -171,7 +171,7 @@ export const QuizResultView: React.FC<QuizResultViewProps> = ({
 
         <button
           onClick={onClose}
-          className="py-3 rounded-2xl bg-purple-600 text-white font-extrabold text-xs hover:bg-purple-700 transition-colors shadow-md flex items-center justify-center gap-1.5"
+          className="py-3 rounded-2xl bg-[#4A6741] text-white font-extrabold text-xs hover:bg-[#3D5535] transition-colors shadow-md flex items-center justify-center gap-1.5 shadow-[#4A6741]/20"
         >
           <X className="w-4 h-4" />
           Close & Back to Course
