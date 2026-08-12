@@ -35,6 +35,7 @@ import {
   notificationService,
   resourceService,
   moduleService,
+  teacherAssignmentService,
 } from './services';
 
 /**
@@ -94,6 +95,19 @@ export class LMSDatabaseService {
 
   public deleteParentProfile(id: string) {
     return userService.deleteParentProfile(id);
+  }
+
+  // --- TEACHER ASSIGNMENT & SUBSTITUTE SERVICE DELEGATES ---
+  public getTeacherAbsenceRequests(teacherId?: string) {
+    return teacherAssignmentService.getTeacherAbsenceRequests(teacherId);
+  }
+
+  public getSubstituteRequests(teacherId?: string) {
+    return teacherAssignmentService.getSubstituteRequests(teacherId);
+  }
+
+  public getAssignmentAuditLogs(targetTeacherId?: string) {
+    return teacherAssignmentService.getAssignmentAuditLogs(targetTeacherId);
   }
 
   // --- CLASSROOM SERVICE DELEGATES ---

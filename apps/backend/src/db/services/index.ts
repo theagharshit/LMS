@@ -11,3 +11,4 @@ export * from './parentService';
 export * from './notificationService';
 export * from './resourceService';
 export * from './moduleService';
+export * from './teacherAssignmentService';

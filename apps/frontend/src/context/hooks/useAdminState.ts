@@ -6,8 +6,16 @@ import {
   AdminAuditLog,
   SchoolAnnouncement,
   Classroom,
+  SubstituteRequest,
+  SubstituteRequestStatus,
+  TeacherAbsenceRequest,
+  EligibleSubstituteTeacher,
+  TeacherAssignmentAuditLog,
   MOCK_ADMIN_AUDIT_LOGS,
   MOCK_ANNOUNCEMENTS,
+  MOCK_SUBSTITUTE_REQUESTS,
+  MOCK_TEACHER_ABSENCE_REQUESTS,
+  MOCK_TEACHER_ASSIGNMENT_AUDIT_LOGS,
 } from '@lms/shared';
 import { apiFetch } from '../../utils/apiFetch';
 import { logger } from '../../utils/logger';
@@ -27,6 +35,15 @@ export const useAdminState = (
   const [adminAuditLogs, setAdminAuditLogs] = useState<AdminAuditLog[]>(MOCK_ADMIN_AUDIT_LOGS);
   const [schoolAnnouncements, setSchoolAnnouncements] =
     useState<SchoolAnnouncement[]>(MOCK_ANNOUNCEMENTS);
+
+  const [substituteRequests, setSubstituteRequests] =
+    useState<SubstituteRequest[]>(MOCK_SUBSTITUTE_REQUESTS);
+  const [teacherAbsenceRequests, setTeacherAbsenceRequests] = useState<TeacherAbsenceRequest[]>(
+    MOCK_TEACHER_ABSENCE_REQUESTS,
+  );
+  const [teacherAssignmentAuditLogs, setTeacherAssignmentAuditLogs] = useState<
+    TeacherAssignmentAuditLog[]
+  >(MOCK_TEACHER_ASSIGNMENT_AUDIT_LOGS);
 
   const addAuditLog = (action: string, category: AdminAuditLog['category'], details: string) => {
     const newLog: AdminAuditLog = {
@@ -339,11 +356,345 @@ export const useAdminState = (
     addAuditLog('Removed School Notice', 'broadcast', `Removed announcement ID ${id}.`);
   };
 
+  const assignSubjectToTeacher = async (
+    teacherId: string,
+    subjectId: string,
+    classroomId?: string,
+    reason?: string,
+  ) => {
+    const teacher = allUsers.find((u) => u.id === teacherId);
+    const cls = classrooms.find((c) => c.id === classroomId);
+
+    const res = await apiFetch('/api/db/teachers/assign-subject', {
+      method: 'POST',
+      body: JSON.stringify({ teacherId, subjectId, classroomId, reason }),
+      feedback: {
+        success: `Subject assigned to ${teacher?.name || 'Teacher'}.`,
+        error: `Could not assign subject to ${teacher?.name || 'Teacher'}.`,
+      },
+    });
+
+    if (res.ok) {
+      if (classroomId && teacher) {
+        setClassrooms((prev) =>
+          prev.map((c) => (c.id === classroomId ? { ...c, teacherId, teacherName: teacher.name, teacherAvatar: teacher.avatar } : c)),
+        );
+      }
+      setAllUsers((prev) =>
+        prev.map((u) =>
+          u.id === teacherId
+            ? { ...u, subjectsTaught: Array.from(new Set([...(u.subjectsTaught || []), subjectId])) }
+            : u,
+        ),
+      );
+      const newAudit: TeacherAssignmentAuditLog = {
+        id: `ta-log-${Date.now()}`,
+        actorId: currentUser.id,
+        actorName: currentUser.name,
+        actorRole: currentUser.role,
+        targetTeacherId: teacherId,
+        targetTeacherName: teacher?.name || 'Teacher',
+        action: 'ASSIGN_SUBJECT',
+        subjectId,
+        classroomId,
+        classroomName: cls?.name,
+        details: `Assigned subject ${subjectId}${cls ? ` for ${cls.name}` : ''} to ${teacher?.name}.`,
+        reason,
+        createdAt: new Date().toISOString(),
+      };
+      setTeacherAssignmentAuditLogs((prev) => [newAudit, ...prev]);
+    }
+  };
+
+  const deassignSubjectFromTeacher = async (
+    teacherId: string,
+    subjectId: string,
+    classroomId?: string,
+    reason?: string,
+  ) => {
+    const teacher = allUsers.find((u) => u.id === teacherId);
+    const res = await apiFetch('/api/db/teachers/deassign-subject', {
+      method: 'POST',
+      body: JSON.stringify({ teacherId, subjectId, classroomId, reason }),
+      feedback: {
+        success: `Subject de-assigned from ${teacher?.name || 'Teacher'}.`,
+        error: `Could not de-assign subject.`,
+      },
+    });
+
+    if (res.ok) {
+      setAllUsers((prev) =>
+        prev.map((u) =>
+          u.id === teacherId
+            ? { ...u, subjectsTaught: (u.subjectsTaught || []).filter((s) => s !== subjectId) }
+            : u,
+        ),
+      );
+      const newAudit: TeacherAssignmentAuditLog = {
+        id: `ta-log-${Date.now()}`,
+        actorId: currentUser.id,
+        actorName: currentUser.name,
+        actorRole: currentUser.role,
+        targetTeacherId: teacherId,
+        targetTeacherName: teacher?.name || 'Teacher',
+        action: 'DEASSIGN_SUBJECT',
+        subjectId,
+        classroomId,
+        details: `De-assigned subject ${subjectId} from ${teacher?.name}.`,
+        reason,
+        createdAt: new Date().toISOString(),
+      };
+      setTeacherAssignmentAuditLogs((prev) => [newAudit, ...prev]);
+    }
+  };
+
+  const reassignSubject = async (
+    subjectId: string,
+    classroomId: string,
+    fromTeacherId: string,
+    toTeacherId: string,
+    reason?: string,
+  ) => {
+    const fromTeacher = allUsers.find((u) => u.id === fromTeacherId);
+    const toTeacher = allUsers.find((u) => u.id === toTeacherId);
+    const cls = classrooms.find((c) => c.id === classroomId);
+
+    const res = await apiFetch('/api/db/teachers/reassign-subject', {
+      method: 'POST',
+      body: JSON.stringify({ subjectId, classroomId, fromTeacherId, toTeacherId, reason }),
+      feedback: {
+        success: `Classroom ${cls?.name || ''} reassigned to ${toTeacher?.name || 'Teacher'}.`,
+        error: `Could not reassign classroom.`,
+      },
+    });
+
+    if (res.ok && toTeacher) {
+      setClassrooms((prev) =>
+        prev.map((c) =>
+          c.id === classroomId
+            ? { ...c, teacherId: toTeacherId, teacherName: toTeacher.name, teacherAvatar: toTeacher.avatar }
+            : c,
+        ),
+      );
+      const newAudit: TeacherAssignmentAuditLog = {
+        id: `ta-log-${Date.now()}`,
+        actorId: currentUser.id,
+        actorName: currentUser.name,
+        actorRole: currentUser.role,
+        targetTeacherId: toTeacherId,
+        targetTeacherName: toTeacher.name,
+        action: 'REASSIGN_SUBJECT',
+        subjectId,
+        classroomId,
+        classroomName: cls?.name,
+        details: `Reassigned ${cls?.name || 'Classroom'} from ${fromTeacher?.name} to ${toTeacher.name}.`,
+        reason,
+        createdAt: new Date().toISOString(),
+      };
+      setTeacherAssignmentAuditLogs((prev) => [newAudit, ...prev]);
+    }
+  };
+
+  const fetchEligibleSubstitutes = async (
+    classroomId: string,
+    subjectId: string,
+    date: string,
+    timeSlot: string,
+  ): Promise<EligibleSubstituteTeacher[]> => {
+    try {
+      const res = await apiFetch(
+        `/api/db/teachers/substitutes/eligible?classroomId=${classroomId}&subjectId=${subjectId}&date=${date}&timeSlot=${encodeURIComponent(timeSlot)}`,
+      );
+      if (!res.ok) throw new Error('Failed to fetch eligible substitutes');
+      const data = await res.json();
+      return data.candidates || [];
+    } catch (err) {
+      console.error('Failed to fetch eligible substitutes:', err);
+      // Fallback evaluate local candidates
+      return allUsers
+        .filter((u) => u.role === 'teacher' && !u.isArchived)
+        .map((t) => ({
+          teacherId: t.id,
+          teacherName: t.name,
+          teacherAvatar: t.avatar,
+          isQualified: (t.subjectsTaught || []).some((s) => s.toLowerCase().includes(subjectId.toLowerCase())),
+          isAvailable: true,
+          currentWorkload: classrooms.filter((c) => c.teacherId === t.id).length,
+        }));
+    }
+  };
+
+  const createSubstituteRequest = async (data: {
+    classroomId: string;
+    subjectId: string;
+    date: string;
+    timeSlot: string;
+    originalTeacherId: string;
+    suggestedSubstituteId?: string;
+    reason: string;
+    teacherAbsenceRequestId?: string;
+  }) => {
+    const cls = classrooms.find((c) => c.id === data.classroomId);
+    const origTeacher = allUsers.find((u) => u.id === data.originalTeacherId);
+    const sugSub = allUsers.find((u) => u.id === data.suggestedSubstituteId);
+
+    const res = await apiFetch('/api/db/teachers/substitutes/request', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      feedback: {
+        success: 'Substitute teacher request created successfully.',
+        error: 'Could not create substitute request.',
+      },
+    });
+
+    const newReq: SubstituteRequest = {
+      id: `sub-req-${Date.now()}`,
+      teacherAbsenceRequestId: data.teacherAbsenceRequestId,
+      classroomId: data.classroomId,
+      classroomName: cls?.name || 'Classroom',
+      subjectId: data.subjectId,
+      subjectName: cls?.subject || 'Subject',
+      date: data.date,
+      timeSlot: data.timeSlot,
+      originalTeacherId: data.originalTeacherId,
+      originalTeacherName: origTeacher?.name || 'Original Teacher',
+      suggestedSubstituteId: data.suggestedSubstituteId,
+      suggestedSubstituteName: sugSub?.name,
+      assignedSubstituteId: data.suggestedSubstituteId,
+      assignedSubstituteName: sugSub?.name,
+      reason: data.reason,
+      status: 'PENDING',
+      createdByAdminId: currentUser.id,
+      createdByAdminName: currentUser.name,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (res.ok) {
+      try {
+        const resData = await res.json();
+        if (resData.substituteRequest) {
+          setSubstituteRequests((prev) => [resData.substituteRequest, ...prev]);
+          return;
+        }
+      } catch (e) {
+        // Fallthrough to local update
+      }
+    }
+
+    setSubstituteRequests((prev) => [newReq, ...prev]);
+  };
+
+  const updateSubstituteStatus = async (
+    requestId: string,
+    status: SubstituteRequestStatus,
+    responseNotes?: string,
+    assignedSubstituteId?: string,
+  ) => {
+    const subTeacher = allUsers.find((u) => u.id === assignedSubstituteId);
+    setSubstituteRequests((prev) =>
+      prev.map((req) =>
+        req.id === requestId
+          ? {
+              ...req,
+              status,
+              responseNotes: responseNotes || req.responseNotes,
+              assignedSubstituteId: assignedSubstituteId || req.assignedSubstituteId,
+              assignedSubstituteName: subTeacher?.name || req.assignedSubstituteName,
+            }
+          : req,
+      ),
+    );
+
+    apiFetch(`/api/db/teachers/substitutes/${requestId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, responseNotes, assignedSubstituteId }),
+      feedback: {
+        success: `Substitute request status updated to ${status}.`,
+        error: 'Could not update substitute request status.',
+      },
+    }).catch((err) => console.error('Failed to update substitute status via API:', err));
+  };
+
+  const submitTeacherAbsenceRequest = async (startDate: string, endDate: string, reason: string) => {
+    const res = await apiFetch('/api/db/teachers/absence-requests', {
+      method: 'POST',
+      body: JSON.stringify({ teacherId: currentUser.id, startDate, endDate, reason }),
+      feedback: {
+        success: 'Teacher leave request submitted successfully.',
+        error: 'Could not submit leave request.',
+      },
+    });
+
+    const newAbs: TeacherAbsenceRequest = {
+      id: `tar-${Date.now()}`,
+      teacherId: currentUser.id,
+      teacherName: currentUser.name,
+      teacherAvatar: currentUser.avatar,
+      startDate,
+      endDate,
+      reason,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+
+    if (res.ok) {
+      try {
+        const resData = await res.json();
+        if (resData.absenceRequest) {
+          setTeacherAbsenceRequests((prev) => [resData.absenceRequest, ...prev]);
+          return;
+        }
+      } catch (e) {
+        // Fallthrough to local update
+      }
+    }
+
+    setTeacherAbsenceRequests((prev) => [newAbs, ...prev]);
+  };
+
+  const reviewTeacherAbsenceRequest = async (requestId: string, status: 'approved' | 'rejected') => {
+    const req = teacherAbsenceRequests.find((r) => r.id === requestId);
+    setTeacherAbsenceRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, status, reviewedByAdminId: currentUser.id, reviewedByAdminName: currentUser.name } : r)),
+    );
+
+    apiFetch(`/api/db/teachers/absence-requests/${requestId}/review`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+      feedback: {
+        success: `Teacher leave request ${status}.`,
+        error: 'Could not update leave request status.',
+      },
+    }).catch((err) => console.error('Failed to review teacher absence request via API:', err));
+
+    // If approved, automatically prompt or suggest substitute requests for classrooms taught by this teacher
+    if (status === 'approved' && req) {
+      const teacherClassrooms = classrooms.filter((c) => c.teacherId === req.teacherId);
+      for (const cls of teacherClassrooms) {
+        createSubstituteRequest({
+          classroomId: cls.id,
+          subjectId: cls.subject,
+          date: req.startDate,
+          timeSlot: '10:00 AM - 10:45 AM',
+          originalTeacherId: req.teacherId,
+          reason: `Teacher on approved leave: ${req.reason}`,
+          teacherAbsenceRequestId: req.id,
+        });
+      }
+    }
+  };
+
   return {
     adminAuditLogs,
     setAdminAuditLogs,
     schoolAnnouncements,
     setSchoolAnnouncements,
+    substituteRequests,
+    setSubstituteRequests,
+    teacherAbsenceRequests,
+    setTeacherAbsenceRequests,
+    teacherAssignmentAuditLogs,
+    setTeacherAssignmentAuditLogs,
     addAuditLog,
     addStudentProfile,
     updateStudentProfile,
@@ -359,5 +710,13 @@ export const useAdminState = (
     deleteClassroom,
     addAnnouncement,
     deleteAnnouncement,
+    assignSubjectToTeacher,
+    deassignSubjectFromTeacher,
+    reassignSubject,
+    fetchEligibleSubstitutes,
+    createSubstituteRequest,
+    updateSubstituteStatus,
+    submitTeacherAbsenceRequest,
+    reviewTeacherAbsenceRequest,
   };
 };

@@ -48,7 +48,16 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     setActiveView,
     weeklySchedule,
     updateDaySchedule,
+    substituteRequests,
+    teacherAbsenceRequests,
+    submitTeacherAbsenceRequest,
+    updateSubstituteStatus,
   } = useApp();
+
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const [leaveStartDate, setLeaveStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [leaveEndDate, setLeaveEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [leaveReason, setLeaveReason] = useState('');
 
   const [gradingModalSubmissionId, setGradingModalSubmissionId] = useState<string | null>(null);
   const [gradeInput, setGradeInput] = useState<number>(18);
@@ -147,7 +156,98 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               <UserCheck className="w-4 h-4" />
               <span>Mark Attendance</span>
             </button>
+            <button
+              onClick={() => setIsLeaveModalOpen(true)}
+              className="px-4 py-3 rounded-2xl bg-[#E88D67] text-white font-extrabold text-xs flex items-center gap-2 shadow-sm hover:bg-[#D87B55] transition-all cursor-pointer"
+            >
+              <Calendar className="w-4 h-4 text-white" />
+              <span>Request Leave / Absence</span>
+            </button>
           </div>
+        </div>
+      </div>
+
+      {/* Teacher Substitute Duties & Leave Requests Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Substitute Duties Assigned */}
+        <div className="bg-white rounded-3xl p-6 border border-[#EDEAE2] shadow-xs space-y-4">
+          <h3 className="font-bold text-sm text-[#2D2D2A] font-serif flex items-center gap-2">
+            <UserCheck className="w-4 h-4 text-[#E88D67]" />
+            <span>Assigned Substitute Duties</span>
+          </h3>
+
+          {substituteRequests.filter((r) => r.assignedSubstituteId === currentUser.id || r.suggestedSubstituteId === currentUser.id).length === 0 ? (
+            <p className="text-xs text-[#7A7A72]">You have no upcoming substitute teaching duties.</p>
+          ) : (
+            <div className="space-y-3 text-xs">
+              {substituteRequests
+                .filter((r) => r.assignedSubstituteId === currentUser.id || r.suggestedSubstituteId === currentUser.id)
+                .map((req) => (
+                  <div key={req.id} className="p-3.5 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#2D2D2A]">{req.classroomName}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${req.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                        {req.status}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#7A7A72]">Date & Time: <strong>{req.date} ({req.timeSlot})</strong></p>
+                    <p className="text-[11px] text-[#7A7A72]">Replacing Teacher: <strong>{req.originalTeacherName}</strong></p>
+                    {req.status === 'PENDING' && (
+                      <div className="flex justify-end gap-2 pt-2 border-t border-[#EDEAE2]">
+                        <button
+                          onClick={() => updateSubstituteStatus(req.id, 'REJECTED', 'Teacher unavailable', currentUser.id)}
+                          className="px-3 py-1 rounded-xl bg-white border border-rose-200 text-rose-700 font-bold text-[10px]"
+                        >
+                          Decline
+                        </button>
+                        <button
+                          onClick={() => updateSubstituteStatus(req.id, 'APPROVED', 'Teacher accepted duty', currentUser.id)}
+                          className="px-3 py-1 rounded-xl bg-emerald-600 text-white font-bold text-[10px] shadow-xs"
+                        >
+                          Accept Substitute Duty
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+
+        {/* My Leave Requests */}
+        <div className="bg-white rounded-3xl p-6 border border-[#EDEAE2] shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-sm text-[#2D2D2A] font-serif flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-[#4A6741]" />
+              <span>My Leave & Absence Requests</span>
+            </h3>
+            <button
+              onClick={() => setIsLeaveModalOpen(true)}
+              className="text-xs font-bold text-[#E88D67] hover:underline"
+            >
+              + Submit Request
+            </button>
+          </div>
+
+          {teacherAbsenceRequests.filter((r) => r.teacherId === currentUser.id).length === 0 ? (
+            <p className="text-xs text-[#7A7A72]">You have not submitted any leave requests.</p>
+          ) : (
+            <div className="space-y-3 text-xs">
+              {teacherAbsenceRequests
+                .filter((r) => r.teacherId === currentUser.id)
+                .map((req) => (
+                  <div key={req.id} className="p-3.5 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#2D2D2A]">{req.startDate} to {req.endDate}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${req.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : req.status === 'rejected' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}`}>
+                        {req.status}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#7A7A72]">Reason: {req.reason}</p>
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -622,6 +722,76 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               >
                 <Save className="w-4 h-4" />
                 <span>Save Timetable for {editingDay}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Teacher Leave Request Modal */}
+      {isLeaveModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-[#EDEAE2] shadow-2xl space-y-4">
+            <h3 className="font-bold text-base text-[#2D2D2A] font-serif flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-[#E88D67]" />
+              Submit Faculty Leave Request
+            </h3>
+            <p className="text-xs text-[#7A7A72]">
+              Submit your absence dates. Once approved by administration, substitute requests will be initialized for your classes.
+            </p>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-[#2D2D2A] mb-1">Start Date *</label>
+                <input
+                  type="date"
+                  value={leaveStartDate}
+                  onChange={(e) => setLeaveStartDate(e.target.value)}
+                  className="w-full p-2.5 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#2D2D2A] mb-1">End Date *</label>
+                <input
+                  type="date"
+                  value={leaveEndDate}
+                  onChange={(e) => setLeaveEndDate(e.target.value)}
+                  className="w-full p-2.5 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#2D2D2A] mb-1">Reason for Leave *</label>
+                <textarea
+                  rows={3}
+                  value={leaveReason}
+                  onChange={(e) => setLeaveReason(e.target.value)}
+                  placeholder="e.g., Medical treatment, personal emergency, university exam..."
+                  className="w-full p-2.5 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2]"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-[#EDEAE2]">
+              <button
+                onClick={() => setIsLeaveModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-[#7A7A72]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!leaveStartDate || !leaveEndDate || !leaveReason.trim()) {
+                    toast.warning('Please provide Start Date, End Date, and Reason.');
+                    return;
+                  }
+                  await submitTeacherAbsenceRequest(leaveStartDate, leaveEndDate, leaveReason.trim());
+                  setIsLeaveModalOpen(false);
+                  setLeaveReason('');
+                }}
+                className="px-4 py-2 rounded-xl bg-[#E88D67] text-white font-bold text-xs"
+              >
+                Submit Leave Request
               </button>
             </div>
           </div>

@@ -23,6 +23,9 @@ import {
   QuizSubmission,
   AdminAuditLog,
   SchoolAnnouncement,
+  TeacherAbsenceRequest,
+  SubstituteRequest,
+  TeacherAssignmentAuditLog,
 } from './types';
 
 export const MOCK_BADGE_DEFINITIONS: BadgeDefinition[] = [
@@ -1507,10 +1510,88 @@ export const MOCK_ANNOUNCEMENTS: SchoolAnnouncement[] = [
   {
     id: 'ann-2',
     title: 'Grade 8 Science Lab Safety Protocol Reminder',
-    content: 'Students must bring lab safety goggles for all Friday chemistry practical sessions.',
-    priority: 'normal',
-    author: 'Admin Office',
-    createdAt: '2026-08-06T10:00:00Z',
+    content:
+      'All Science & Technology students must wear lab aprons and closed-toe footwear during experiments.',
+    priority: 'high',
+    author: 'Mrs. Sabina Karki',
+    createdAt: '2026-08-09T10:15:00Z',
     targetAudience: 'students',
+  },
+];
+
+export const MOCK_TEACHER_ABSENCE_REQUESTS: TeacherAbsenceRequest[] = [
+  {
+    id: 'tar-1',
+    teacherId: 'user-teach-1',
+    teacherName: 'Mr. Ramesh Thapa',
+    teacherAvatar:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    startDate: '2026-08-16',
+    endDate: '2026-08-16',
+    reason: 'Medical / Specialist Consultation',
+    status: 'approved',
+    reviewedByAdminId: 'user-admin-1',
+    reviewedByAdminName: 'Dr. K.P. Bhattarai',
+    createdAt: '2026-08-10T09:00:00Z',
+  },
+];
+
+export const MOCK_SUBSTITUTE_REQUESTS: SubstituteRequest[] = [
+  {
+    id: 'sub-req-1',
+    teacherAbsenceRequestId: 'tar-1',
+    classroomId: 'cls-math-8a',
+    classroomName: 'Grade 8 Mathematics - Sec A',
+    subjectId: 'subject-mathematics',
+    subjectName: 'Mathematics',
+    date: '2026-08-16',
+    timeSlot: '10:00 AM - 10:45 AM',
+    originalTeacherId: 'user-teach-1',
+    originalTeacherName: 'Mr. Ramesh Thapa',
+    suggestedSubstituteId: 'user-teach-2',
+    suggestedSubstituteName: 'Mrs. Sabina Karki',
+    assignedSubstituteId: 'user-teach-2',
+    assignedSubstituteName: 'Mrs. Sabina Karki',
+    reason: 'Teacher on approved medical leave',
+    status: 'APPROVED',
+    responseNotes: 'Confirmed available for 1st period',
+    createdByAdminId: 'user-admin-1',
+    createdByAdminName: 'Dr. K.P. Bhattarai',
+    createdAt: '2026-08-10T10:00:00Z',
+  },
+];
+
+export const MOCK_TEACHER_ASSIGNMENT_AUDIT_LOGS: TeacherAssignmentAuditLog[] = [
+  {
+    id: 'ta-log-1',
+    actorId: 'user-admin-1',
+    actorName: 'Dr. K.P. Bhattarai',
+    actorRole: 'admin',
+    targetTeacherId: 'user-teach-1',
+    targetTeacherName: 'Mr. Ramesh Thapa',
+    action: 'ASSIGN_SUBJECT',
+    subjectId: 'subject-mathematics',
+    subjectName: 'Mathematics',
+    classroomId: 'cls-math-8a',
+    classroomName: 'Grade 8 Mathematics - Sec A',
+    details: 'Assigned Mathematics to Mr. Ramesh Thapa for Grade 8 Sec A.',
+    reason: 'Academic term initialization',
+    createdAt: '2026-08-01T08:00:00Z',
+  },
+  {
+    id: 'ta-log-2',
+    actorId: 'user-admin-1',
+    actorName: 'Dr. K.P. Bhattarai',
+    actorRole: 'admin',
+    targetTeacherId: 'user-teach-1',
+    targetTeacherName: 'Mr. Ramesh Thapa',
+    action: 'APPROVE_SUBSTITUTE',
+    subjectId: 'subject-mathematics',
+    subjectName: 'Mathematics',
+    classroomId: 'cls-math-8a',
+    classroomName: 'Grade 8 Mathematics - Sec A',
+    details: 'Approved substitute assignment (Mrs. Sabina Karki) for Grade 8 Mathematics - Sec A on 2026-08-16.',
+    reason: 'Teacher approved leave',
+    createdAt: '2026-08-10T10:05:00Z',
   },
 ];

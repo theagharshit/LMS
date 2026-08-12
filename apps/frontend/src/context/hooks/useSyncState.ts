@@ -24,6 +24,9 @@ export const useSyncState = (
   setSubjectPerformances: (performances: any) => void,
   setResources: (resources: any) => void,
   setModules: (modules: any) => void,
+  setTeacherAbsenceRequests?: (reqs: any) => void,
+  setSubstituteRequests?: (reqs: any) => void,
+  setTeacherAssignmentAuditLogs?: (logs: any) => void,
 ) => {
   useEffect(() => {
     if (typeof window === 'undefined' || !authReady) return;
@@ -59,11 +62,20 @@ export const useSyncState = (
           if (data.subjectPerformances) setSubjectPerformances(data.subjectPerformances);
           if (data.resources) setResources(data.resources);
           if (data.modules) setModules(data.modules);
+          if (data.teacherAbsenceRequests && setTeacherAbsenceRequests) {
+            setTeacherAbsenceRequests(data.teacherAbsenceRequests);
+          }
+          if (data.substituteRequests && setSubstituteRequests) {
+            setSubstituteRequests(data.substituteRequests);
+          }
+          if (data.teacherAssignmentAuditLogs && setTeacherAssignmentAuditLogs) {
+            setTeacherAssignmentAuditLogs(data.teacherAssignmentAuditLogs);
+          }
         }
       })
       .catch((err) => {
         console.error('[AppContext] Failed to load DB state:', err);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authReady]);
+  }, [authReady, currentUser?.id]);
 };

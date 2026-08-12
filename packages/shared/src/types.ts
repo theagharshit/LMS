@@ -412,3 +412,83 @@ export interface NotificationPreference {
   enableCommunication: boolean;
   enableReminders: boolean;
 }
+
+export type TeacherAbsenceStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+
+export interface TeacherAbsenceRequest {
+  id: string;
+  teacherId: string;
+  teacherName: string;
+  teacherAvatar?: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  status: TeacherAbsenceStatus;
+  reviewedByAdminId?: string;
+  reviewedByAdminName?: string;
+  createdAt: string;
+}
+
+export type SubstituteRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+
+export interface SubstituteRequest {
+  id: string;
+  teacherAbsenceRequestId?: string;
+  classroomId: string;
+  classroomName: string;
+  subjectId: string;
+  subjectName: string;
+  date: string;
+  timeSlot: string;
+  originalTeacherId: string;
+  originalTeacherName: string;
+  suggestedSubstituteId?: string;
+  suggestedSubstituteName?: string;
+  assignedSubstituteId?: string;
+  assignedSubstituteName?: string;
+  reason: string;
+  status: SubstituteRequestStatus;
+  responseNotes?: string;
+  createdByAdminId: string;
+  createdByAdminName: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface EligibleSubstituteTeacher {
+  teacherId: string;
+  teacherName: string;
+  teacherAvatar: string;
+  isQualified: boolean;
+  isAvailable: boolean;
+  currentWorkload: number;
+  rejectionReason?: string;
+}
+
+export type AssignmentAuditLogAction =
+  | 'ASSIGN_SUBJECT'
+  | 'DEASSIGN_SUBJECT'
+  | 'REASSIGN_SUBJECT'
+  | 'TEACHER_ABSENCE_REQUEST'
+  | 'APPROVE_TEACHER_ABSENCE'
+  | 'REJECT_TEACHER_ABSENCE'
+  | 'REQUEST_SUBSTITUTE'
+  | 'APPROVE_SUBSTITUTE'
+  | 'REJECT_SUBSTITUTE';
+
+export interface TeacherAssignmentAuditLog {
+  id: string;
+  actorId: string;
+  actorName: string;
+  actorRole: string;
+  targetTeacherId: string;
+  targetTeacherName: string;
+  action: AssignmentAuditLogAction;
+  subjectId?: string;
+  subjectName?: string;
+  classroomId?: string;
+  classroomName?: string;
+  details: string;
+  reason?: string;
+  createdAt: string;
+}

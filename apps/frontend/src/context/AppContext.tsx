@@ -57,6 +57,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     academicState.setSubjectPerformances,
     academicState.setResources,
     academicState.setModules,
+    adminState.setTeacherAbsenceRequests,
+    adminState.setSubstituteRequests,
+    adminState.setTeacherAssignmentAuditLogs,
   );
 
   const switchUser = (userId: string) => {
@@ -241,6 +244,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addAnnouncement: adminState.addAnnouncement,
     deleteAnnouncement: adminState.deleteAnnouncement,
     addAuditLog: adminState.addAuditLog,
+
+    // Teacher Subject Assignments, Substitutes, Absence Requests & Audit Logs
+    substituteRequests: adminState.substituteRequests,
+    teacherAbsenceRequests: adminState.teacherAbsenceRequests,
+    teacherAssignmentAuditLogs: adminState.teacherAssignmentAuditLogs,
+    assignSubjectToTeacher: adminState.assignSubjectToTeacher,
+    deassignSubjectFromTeacher: adminState.deassignSubjectFromTeacher,
+    reassignSubject: adminState.reassignSubject,
+    fetchEligibleSubstitutes: adminState.fetchEligibleSubstitutes,
+    createSubstituteRequest: adminState.createSubstituteRequest,
+    updateSubstituteStatus: adminState.updateSubstituteStatus,
+    submitTeacherAbsenceRequest: adminState.submitTeacherAbsenceRequest,
+    reviewTeacherAbsenceRequest: adminState.reviewTeacherAbsenceRequest,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

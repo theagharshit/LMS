@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { lmsDB } from '@db/lmsDatabase';
 import { logger } from '@utils/logger';
 import { prisma } from '@db/services/prismaClient';
+import { teacherAssignmentService } from '@db/services/teacherAssignmentService';
 import { randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -346,5 +347,221 @@ export const deleteClassroom = async (req: Request, res: Response) => {
   } catch (err) {
     logger.error('Failed to delete classroom:', err);
     res.status(500).json({ status: 'error', message: 'Failed to delete classroom' });
+  }
+};
+
+// --- TEACHER SUBJECT ASSIGNMENTS & REASSIGNMENTS CONTROLLERS ---
+export const assignSubjectToTeacher = async (req: Request, res: Response) => {
+  try {
+    const actorId = req.user?.id || 'user-admin-1';
+    const { teacherId, subjectId, classroomId, reason } = req.body;
+    if (!teacherId || !subjectId) {
+      return res.status(400).json({ status: 'error', message: 'teacherId and subjectId are required.' });
+    }
+    const result = await teacherAssignmentService.assignSubjectToTeacher(
+      teacherId,
+      subjectId,
+      classroomId,
+      actorId,
+      reason,
+    );
+    res.status(201).json({ status: 'success', result });
+  } catch (err) {
+    logger.error('Failed to assign subject to teacher:', err);
+    res.status(400).json({ status: 'error', message: (err as Error).message });
+  }
+};
+
+export const deassignSubjectFromTeacher = async (req: Request, res: Response) => {
+  try {
+    const actorId = req.user?.id || 'user-admin-1';
+    const { teacherId, subjectId, classroomId, reason } = req.body;
+    if (!teacherId || !subjectId) {
+      return res.status(400).json({ status: 'error', message: 'teacherId and subjectId are required.' });
+    }
+    const result = await teacherAssignmentService.deassignSubjectFromTeacher(
+      teacherId,
+      subjectId,
+      classroomId,
+      actorId,
+      reason,
+    );
+    res.json({ status: 'success', result });
+  } catch (err) {
+    logger.error('Failed to deassign subject from teacher:', err);
+    res.status(400).json({ status: 'error', message: (err as Error).message });
+  }
+};
+
+export const reassignSubject = async (req: Request, res: Response) => {
+  try {
+    const actorId = req.user?.id || 'user-admin-1';
+    const { subjectId, classroomId, fromTeacherId, toTeacherId, reason } = req.body;
+    if (!classroomId || !fromTeacherId || !toTeacherId) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'classroomId, fromTeacherId, and toTeacherId are required for reassignment.',
+      });
+    }
+    const result = await teacherAssignmentService.reassignSubject(
+      subjectId,
+      classroomId,
+      fromTeacherId,
+      toTeacherId,
+      actorId,
+      reason,
+    );
+    res.json({ status: 'success', result });
+  } catch (err) {
+    logger.error('Failed to reassign subject:', err);
+    res.status(400).json({ status: 'error', message: (err as Error).message });
+  }
+};
+
+// --- SUBSTITUTE REQUEST & QUALIFICATION FILTER CONTROLLERS ---
+export const getEligibleSubstitutes = async (req: Request, res: Response) => {
+  try {
+    const classroomId = String(req.query.classroomId || '');
+    const subjectId = String(req.query.subjectId || '');
+    const date = String(req.query.date || new Date().toISOString().split('T')[0]);
+    const timeSlot = String(req.query.timeSlot || '10:00 AM - 10:45 AM');
+    if (!classroomId) {
+      return res.status(400).json({ status: 'error', message: 'classroomId query parameter is required.' });
+    }
+    const candidates = await teacherAssignmentService.getEligibleSubstitutes(
+      classroomId,
+      subjectId,
+      date,
+      timeSlot,
+    );
+    res.json({ status: 'success', candidates });
+  } catch (err) {
+    logger.error('Failed to fetch eligible substitutes:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch eligible substitutes.' });
+  }
+};
+
+export const createSubstituteRequest = async (req: Request, res: Response) => {
+  try {
+    const actorId = (req.user && req.user.role === 'admin') ? req.user.id : (req.body.createdByAdminId || 'user-admin-1');
+    const { classroomId, subjectId, date, timeSlot, originalTeacherId, suggestedSubstituteId, reason, teacherAbsenceRequestId } = req.body;
+    if (!classroomId || !date || !timeSlot || !originalTeacherId || !reason) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'classroomId, date, timeSlot, originalTeacherId, and reason are required.',
+      });
+    }
+    const substituteRequest = await teacherAssignmentService.createSubstituteRequest({
+      classroomId,
+      subjectId,
+      date,
+      timeSlot,
+      originalTeacherId,
+      suggestedSubstituteId,
+      reason,
+      teacherAbsenceRequestId,
+      createdByAdminId: actorId,
+    });
+    res.status(201).json({ status: 'success', substituteRequest });
+  } catch (err) {
+    logger.error('Failed to create substitute request:', err);
+    res.status(400).json({ status: 'error', message: (err as Error).message });
+  }
+};
+
+export const updateSubstituteRequestStatus = async (req: Request, res: Response) => {
+  try {
+    const actorId = (req.user && req.user.role === 'admin') ? req.user.id : (req.body.adminId || 'user-admin-1');
+    const { id } = req.params;
+    const { status, responseNotes, assignedSubstituteId } = req.body;
+    if (!status || !['APPROVED', 'REJECTED', 'CANCELLED'].includes(status)) {
+      return res.status(400).json({ status: 'error', message: 'Valid status (APPROVED, REJECTED, CANCELLED) is required.' });
+    }
+    const substituteRequest = await teacherAssignmentService.updateSubstituteRequestStatus(
+      id,
+      status,
+      responseNotes,
+      assignedSubstituteId,
+      actorId,
+    );
+    res.json({ status: 'success', substituteRequest });
+  } catch (err) {
+    logger.error('Failed to update substitute request status:', err);
+    res.status(400).json({ status: 'error', message: (err as Error).message });
+  }
+};
+
+export const getSubstituteRequests = async (req: Request, res: Response) => {
+  try {
+    const teacherId = req.query.teacherId ? String(req.query.teacherId) : undefined;
+    const requests = await teacherAssignmentService.getSubstituteRequests(teacherId);
+    res.json({ status: 'success', substituteRequests: requests });
+  } catch (err) {
+    logger.error('Failed to fetch substitute requests:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch substitute requests.' });
+  }
+};
+
+// --- TEACHER ABSENCE REQUEST CONTROLLERS ---
+export const submitTeacherAbsenceRequest = async (req: Request, res: Response) => {
+  try {
+    const teacherId = req.body.teacherId || (req.user && req.user.role === 'teacher' ? req.user.id : undefined);
+    const { startDate, endDate, reason } = req.body;
+    if (!teacherId || !startDate || !endDate || !reason) {
+      return res.status(400).json({ status: 'error', message: 'teacherId, startDate, endDate, and reason are required.' });
+    }
+    const absenceRequest = await teacherAssignmentService.submitTeacherAbsenceRequest(
+      teacherId,
+      startDate,
+      endDate,
+      reason,
+    );
+    res.status(201).json({ status: 'success', absenceRequest });
+  } catch (err) {
+    logger.error('Failed to submit teacher absence request:', err);
+    res.status(400).json({ status: 'error', message: (err as Error).message });
+  }
+};
+
+export const reviewTeacherAbsenceRequest = async (req: Request, res: Response) => {
+  try {
+    const actorId = (req.user && req.user.role === 'admin') ? req.user.id : (req.body.adminId || 'user-admin-1');
+    const { id } = req.params;
+    const { status } = req.body;
+    if (!status || !['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ status: 'error', message: 'Status must be approved or rejected.' });
+    }
+    const absenceRequest = await teacherAssignmentService.reviewTeacherAbsenceRequest(
+      id,
+      status,
+      actorId,
+    );
+    res.json({ status: 'success', absenceRequest });
+  } catch (err) {
+    logger.error('Failed to review teacher absence request:', err);
+    res.status(400).json({ status: 'error', message: (err as Error).message });
+  }
+};
+
+export const getTeacherAbsenceRequests = async (req: Request, res: Response) => {
+  try {
+    const teacherId = req.query.teacherId ? String(req.query.teacherId) : undefined;
+    const absenceRequests = await teacherAssignmentService.getTeacherAbsenceRequests(teacherId);
+    res.json({ status: 'success', absenceRequests });
+  } catch (err) {
+    logger.error('Failed to fetch teacher absence requests:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch teacher absence requests.' });
+  }
+};
+
+// --- ASSIGNMENT AUDIT LOG CONTROLLER ---
+export const getAssignmentAuditLogs = async (req: Request, res: Response) => {
+  try {
+    const targetTeacherId = req.query.targetTeacherId ? String(req.query.targetTeacherId) : undefined;
+    const logs = await teacherAssignmentService.getAssignmentAuditLogs(targetTeacherId);
+    res.json({ status: 'success', auditLogs: logs });
+  } catch (err) {
+    logger.error('Failed to fetch assignment audit logs:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch assignment audit logs.' });
   }
 };

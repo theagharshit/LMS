@@ -4,6 +4,7 @@ import { StudentProfile, User, BadgeDefinition } from '@lms/shared';
 import { AdminStudentModal } from './AdminStudentModal';
 import { AdminTeacherModal } from './AdminTeacherModal';
 import { AdminParentLinkModal } from './AdminParentLinkModal';
+import { SubstituteRequestModal } from './SubstituteRequestModal';
 import { toast } from '@utils/toast';
 import {
   ShieldAlert,
@@ -29,6 +30,11 @@ import {
   PlusCircle,
   BarChart2,
   FileSpreadsheet,
+  UserCheck,
+  ArrowRightLeft,
+  CalendarDays,
+  FileText,
+  AlertCircle,
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
@@ -56,11 +62,47 @@ export const AdminDashboard: React.FC = () => {
     deleteClassroom,
     addAnnouncement,
     deleteAnnouncement,
+    substituteRequests,
+    teacherAbsenceRequests,
+    teacherAssignmentAuditLogs,
+    assignSubjectToTeacher,
+    deassignSubjectFromTeacher,
+    reassignSubject,
+    createSubstituteRequest,
+    updateSubstituteStatus,
+    reviewTeacherAbsenceRequest,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'students' | 'parents' | 'teachers' | 'classrooms' | 'badges' | 'broadcast'
+    | 'overview'
+    | 'students'
+    | 'parents'
+    | 'teachers'
+    | 'assignments'
+    | 'substitutes'
+    | 'assignment-history'
+    | 'classrooms'
+    | 'badges'
+    | 'broadcast'
   >('overview');
+
+  // Substitute & Assignment Modals
+  const [isSubModalOpen, setIsSubModalOpen] = useState(false);
+  const [subClassroomId, setSubClassroomId] = useState<string | undefined>(undefined);
+  const [subAbsenceReqId, setSubAbsenceReqId] = useState<string | undefined>(undefined);
+
+  const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
+  const [reassignClassroomId, setReassignClassroomId] = useState<string>('');
+  const [reassignSubjectId, setReassignSubjectId] = useState<string>('');
+  const [reassignFromTeacherId, setReassignFromTeacherId] = useState<string>('');
+  const [reassignToTeacherId, setReassignToTeacherId] = useState<string>('');
+  const [reassignReason, setReassignReason] = useState<string>('');
+
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [assignTeacherId, setAssignTeacherId] = useState<string>('');
+  const [assignSubjectId, setAssignSubjectId] = useState<string>('Mathematics');
+  const [assignClassroomId, setAssignClassroomId] = useState<string>('');
+  const [assignReason, setAssignReason] = useState<string>('');
 
   // Modals state
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
@@ -335,7 +377,48 @@ export const AdminDashboard: React.FC = () => {
           }`}
         >
           <Briefcase className="w-4 h-4" />
-          <span>Faculty Staff ({teacherUsers.length})</span>
+          <span>Faculty Staff & Leave ({teacherUsers.length})</span>
+          {teacherAbsenceRequests.filter((r) => r.status === 'pending').length > 0 && (
+            <span className="px-2 py-0.5 rounded-full bg-[#E88D67] text-white text-[10px] font-extrabold animate-pulse">
+              {teacherAbsenceRequests.filter((r) => r.status === 'pending').length} Leave
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('assignments')}
+          className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'assignments'
+              ? 'bg-[#4A6741] text-white shadow-sm'
+              : 'text-[#7A7A72] hover:bg-[#F9F7F2]'
+          }`}
+        >
+          <BookOpen className="w-4 h-4" />
+          <span>Subject Assignments</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('substitutes')}
+          className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'substitutes'
+              ? 'bg-[#E88D67] text-white shadow-sm'
+              : 'text-[#7A7A72] hover:bg-[#F9F7F2]'
+          }`}
+        >
+          <UserCheck className="w-4 h-4" />
+          <span>Substitute Requests ({substituteRequests.filter((r) => r.status === 'PENDING').length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('assignment-history')}
+          className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'assignment-history'
+              ? 'bg-[#4A6741] text-white shadow-sm'
+              : 'text-[#7A7A72] hover:bg-[#F9F7F2]'
+          }`}
+        >
+          <History className="w-4 h-4" />
+          <span>Assignment History</span>
         </button>
 
         <button
@@ -378,8 +461,31 @@ export const AdminDashboard: React.FC = () => {
       {/* TAB 1: OVERVIEW & STATS */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
+          {/* Pending Leave Banner */}
+          {teacherAbsenceRequests.filter((r) => r.status === 'pending').length > 0 && (
+            <div className="p-4 rounded-3xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-700 shrink-0" />
+                <div>
+                  <h4 className="font-bold text-sm text-amber-900 font-serif">
+                    {teacherAbsenceRequests.filter((r) => r.status === 'pending').length} Pending Faculty Leave Request(s)
+                  </h4>
+                  <p className="text-xs text-amber-800">
+                    Faculty instructors have requested leave. Review and approve requests to auto-assign substitute teachers.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveTab('teachers')}
+                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 cursor-pointer transition-all shadow-xs"
+              >
+                Review Leave Requests →
+              </button>
+            </div>
+          )}
+
           {/* Key Metrics Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
             <div className="p-4 rounded-3xl bg-white border border-[#EDEAE2] shadow-xs flex items-center gap-3">
               <div className="p-3 rounded-2xl bg-[#EBF1E8] text-[#4A6741]">
                 <GraduationCap className="w-6 h-6" />
@@ -400,6 +506,26 @@ export const AdminDashboard: React.FC = () => {
                 <p className="text-[11px] text-[#7A7A72] font-semibold">Faculty Members</p>
                 <h3 className="text-xl font-bold text-[#2D2D2A] font-serif">
                   {teacherUsers.length}
+                </h3>
+              </div>
+            </div>
+
+            <div
+              onClick={() => setActiveTab('teachers')}
+              className="p-4 rounded-3xl bg-white border border-[#EDEAE2] hover:border-[#E88D67] transition-all shadow-xs flex items-center gap-3 cursor-pointer"
+            >
+              <div className="p-3 rounded-2xl bg-amber-100 text-amber-800">
+                <CalendarDays className="w-6 h-6 text-[#E88D67]" />
+              </div>
+              <div>
+                <p className="text-[11px] text-[#7A7A72] font-semibold">Faculty Leave</p>
+                <h3 className="text-xl font-bold text-[#2D2D2A] font-serif flex items-center gap-1">
+                  {teacherAbsenceRequests.length}
+                  {teacherAbsenceRequests.filter((r) => r.status === 'pending').length > 0 && (
+                    <span className="text-[10px] font-sans px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-extrabold animate-pulse">
+                      {teacherAbsenceRequests.filter((r) => r.status === 'pending').length} New
+                    </span>
+                  )}
                 </h3>
               </div>
             </div>
@@ -997,6 +1123,398 @@ export const AdminDashboard: React.FC = () => {
               );
             })}
           </div>
+
+          {/* Teacher Leave Requests Panel */}
+          <div className="pt-6 border-t border-[#EDEAE2] space-y-4">
+            <h4 className="font-bold text-sm text-[#2D2D2A] font-serif flex items-center gap-2">
+              <CalendarDays className="w-4 h-4 text-[#E88D67]" />
+              <span>Teacher Leave & Absence Requests ({teacherAbsenceRequests.filter((r) => r.status === 'pending').length} Pending)</span>
+            </h4>
+
+            {teacherAbsenceRequests.length === 0 ? (
+              <p className="text-xs text-[#7A7A72]">No teacher leave requests recorded.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                {teacherAbsenceRequests.map((req) => (
+                  <div
+                    key={req.id}
+                    className="p-4 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={req.teacherAvatar}
+                          alt={req.teacherName}
+                          className="w-7 h-7 rounded-full object-cover"
+                        />
+                        <span className="font-bold text-[#2D2D2A]">{req.teacherName}</span>
+                      </div>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                          req.status === 'approved'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : req.status === 'rejected'
+                              ? 'bg-rose-100 text-rose-800'
+                              : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {req.status}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-[#7A7A72]">
+                      <strong>Dates:</strong> {req.startDate} to {req.endDate}
+                    </p>
+                    <p className="text-[11px] text-[#2D2D2A]">
+                      <strong>Reason:</strong> {req.reason}
+                    </p>
+
+                    {req.status === 'pending' && (
+                      <div className="pt-2 flex justify-end gap-2 border-t border-[#EDEAE2]">
+                        <button
+                          onClick={() => reviewTeacherAbsenceRequest(req.id, 'rejected')}
+                          className="px-3 py-1 rounded-xl bg-white border border-rose-200 text-rose-700 font-bold text-[10px] hover:bg-rose-50"
+                        >
+                          Reject
+                        </button>
+                        <button
+                          onClick={() => {
+                            reviewTeacherAbsenceRequest(req.id, 'approved');
+                            setSubAbsenceReqId(req.id);
+                            setIsSubModalOpen(true);
+                          }}
+                          className="px-3 py-1 rounded-xl bg-emerald-600 text-white font-bold text-[10px] hover:bg-emerald-700 shadow-xs"
+                        >
+                          Approve & Assign Substitute
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB: SUBJECT ASSIGNMENTS & REASSIGNMENTS */}
+      {activeTab === 'assignments' && (
+        <div className="bg-white rounded-3xl p-6 border border-[#EDEAE2] shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="font-bold text-base text-[#2D2D2A] font-serif flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-[#4A6741]" />
+                Subject & Classroom Assignments
+              </h3>
+              <p className="text-xs text-[#7A7A72]">
+                Assign, de-assign, or reassign subjects and classrooms to teachers with conflict validation.
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsAssignModalOpen(true)}
+                className="px-4 py-2 rounded-2xl bg-[#4A6741] text-white font-bold text-xs hover:bg-[#3D5535] transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Assign Subject</span>
+              </button>
+              <button
+                onClick={() => setIsReassignModalOpen(true)}
+                className="px-4 py-2 rounded-2xl bg-[#E88D67] text-white font-bold text-xs hover:bg-[#D87B55] transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+              >
+                <ArrowRightLeft className="w-4 h-4" />
+                <span>Reassign Classroom</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+            {classrooms.map((cls) => {
+              const teacher = teacherUsers.find((t) => t.id === cls.teacherId);
+
+              return (
+                <div key={cls.id} className="p-4 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#EBF1E8] text-[#4A6741] text-[10px] font-extrabold">
+                      {cls.code}
+                    </span>
+                    <span className="text-[11px] text-[#7A7A72] font-semibold">Grade {cls.gradeLevel}-{cls.section}</span>
+                  </div>
+
+                  <div>
+                    <h4 className="font-bold text-[#2D2D2A] text-sm font-serif">{cls.name}</h4>
+                    <p className="text-[11px] text-[#7A7A72]">Subject: <strong className="text-[#2D2D2A]">{cls.subject}</strong></p>
+                  </div>
+
+                  <div className="p-3 bg-white rounded-xl border border-[#EDEAE2] flex items-center gap-3">
+                    <img
+                      src={teacher?.avatar || cls.teacherAvatar}
+                      alt={teacher?.name || cls.teacherName}
+                      className="w-8 h-8 rounded-full object-cover shrink-0"
+                    />
+                    <div>
+                      <p className="text-[10px] text-[#7A7A72] font-semibold uppercase">Assigned Teacher:</p>
+                      <p className="font-bold text-xs text-[#2D2D2A]">{teacher?.name || cls.teacherName}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-[#EDEAE2] flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => {
+                        setReassignClassroomId(cls.id);
+                        setReassignSubjectId(cls.subject);
+                        setReassignFromTeacherId(cls.teacherId);
+                        setIsReassignModalOpen(true);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-white border border-[#EDEAE2] hover:bg-[#EDEAE2] text-[#2D2D2A] font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                    >
+                      <ArrowRightLeft className="w-3.5 h-3.5 text-[#E88D67]" />
+                      <span>Reassign</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (confirm(`Remove subject assignment from ${cls.teacherName} for ${cls.name}?`)) {
+                          deassignSubjectFromTeacher(cls.teacherId, cls.subject, cls.id, 'Admin removal');
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-white border border-rose-200 text-rose-700 font-bold text-[11px] hover:bg-rose-50 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Remove</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* TAB: SUBSTITUTE REQUESTS */}
+      {activeTab === 'substitutes' && (
+        <div className="bg-white rounded-3xl p-6 border border-[#EDEAE2] shadow-xs space-y-6">
+          {/* Teacher Leave Requests Review Box */}
+          <div className="p-5 rounded-2xl border border-amber-200 bg-amber-50/50 space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="font-bold text-sm text-[#2D2D2A] font-serif flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-[#E88D67]" />
+                <span>Faculty Leave & Absence Requests ({teacherAbsenceRequests.filter((r) => r.status === 'pending').length} Pending)</span>
+              </h4>
+              <span className="text-xs font-bold text-[#7A7A72]">
+                Total Requests: {teacherAbsenceRequests.length}
+              </span>
+            </div>
+
+            {teacherAbsenceRequests.length === 0 ? (
+              <p className="text-xs text-[#7A7A72]">No faculty leave requests recorded.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                {teacherAbsenceRequests.map((req) => (
+                  <div
+                    key={req.id}
+                    className="p-4 rounded-2xl border border-[#EDEAE2] bg-white space-y-2 shadow-xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={req.teacherAvatar}
+                          alt={req.teacherName}
+                          className="w-7 h-7 rounded-full object-cover"
+                        />
+                        <span className="font-bold text-[#2D2D2A]">{req.teacherName}</span>
+                      </div>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                          req.status === 'approved'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : req.status === 'rejected'
+                              ? 'bg-rose-100 text-rose-800'
+                              : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {req.status}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-[#7A7A72]">
+                      <strong>Dates:</strong> {req.startDate} to {req.endDate}
+                    </p>
+                    <p className="text-[11px] text-[#2D2D2A]">
+                      <strong>Reason:</strong> {req.reason}
+                    </p>
+
+                    {req.status === 'pending' && (
+                      <div className="pt-2 flex justify-end gap-2 border-t border-[#EDEAE2]">
+                        <button
+                          onClick={() => reviewTeacherAbsenceRequest(req.id, 'rejected')}
+                          className="px-3 py-1 rounded-xl bg-white border border-rose-200 text-rose-700 font-bold text-[10px] hover:bg-rose-50 cursor-pointer"
+                        >
+                          Reject
+                        </button>
+                        <button
+                          onClick={() => reviewTeacherAbsenceRequest(req.id, 'approved')}
+                          className="px-3 py-1 rounded-xl bg-emerald-600 text-white font-bold text-[10px] hover:bg-emerald-700 shadow-xs cursor-pointer"
+                        >
+                          Approve Leave & Auto-Assign Substitutes
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-[#EDEAE2]">
+            <div>
+              <h3 className="font-bold text-base text-[#2D2D2A] font-serif flex items-center gap-2">
+                <UserCheck className="w-5 h-5 text-[#E88D67]" />
+                Substitute Teacher Duties
+              </h3>
+              <p className="text-xs text-[#7A7A72]">
+                Create and manage substitute teacher duties with qualification and workload filtering.
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                setSubClassroomId(undefined);
+                setSubAbsenceReqId(undefined);
+                setIsSubModalOpen(true);
+              }}
+              className="px-4 py-2 rounded-2xl bg-[#E88D67] text-white font-bold text-xs hover:bg-[#D87B55] transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Request Substitute</span>
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {substituteRequests.length === 0 ? (
+              <div className="p-8 text-center text-xs text-[#7A7A72] bg-[#F9F7F2] rounded-3xl border border-[#EDEAE2]">
+                No active or past substitute teacher requests.
+              </div>
+            ) : (
+              substituteRequests.map((req) => (
+                <div
+                  key={req.id}
+                  className="p-5 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-3"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EDEAE2] pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-[#2D2D2A] font-serif">{req.classroomName}</span>
+                      <span className="px-2 py-0.5 rounded-full bg-[#EBF1E8] text-[#4A6741] text-[10px] font-bold">
+                        {req.subjectName}
+                      </span>
+                    </div>
+
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase ${
+                        req.status === 'APPROVED'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : req.status === 'REJECTED'
+                            ? 'bg-rose-100 text-rose-800'
+                            : 'bg-amber-100 text-amber-800'
+                      }`}
+                    >
+                      {req.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <p className="text-[10px] text-[#7A7A72] font-semibold">Duty Date & Time Slot:</p>
+                      <p className="font-bold text-[#2D2D2A]">{req.date} ({req.timeSlot})</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-[#7A7A72] font-semibold">Original Teacher:</p>
+                      <p className="font-bold text-[#2D2D2A]">{req.originalTeacherName}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-[#7A7A72] font-semibold">Assigned Substitute:</p>
+                      <p className="font-bold text-[#4A6741]">{req.assignedSubstituteName || req.suggestedSubstituteName || 'Unassigned'}</p>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-[#7A7A72] bg-white p-2.5 rounded-xl border border-[#EDEAE2]">
+                    <strong>Reason:</strong> {req.reason}
+                  </p>
+
+                  {req.status === 'PENDING' && (
+                    <div className="pt-2 flex justify-end gap-2 border-t border-[#EDEAE2]">
+                      <button
+                        onClick={() => updateSubstituteStatus(req.id, 'REJECTED', 'Admin decline')}
+                        className="px-3.5 py-1.5 rounded-xl bg-white border border-rose-200 text-rose-700 font-bold text-xs hover:bg-rose-50 cursor-pointer"
+                      >
+                        Reject
+                      </button>
+                      <button
+                        onClick={() => updateSubstituteStatus(req.id, 'APPROVED', 'Confirmed by Admin')}
+                        className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 shadow-xs cursor-pointer"
+                      >
+                        Approve & Confirm Substitute
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB: ASSIGNMENT HISTORY & AUDIT LOGS */}
+      {activeTab === 'assignment-history' && (
+        <div className="bg-white rounded-3xl p-6 border border-[#EDEAE2] shadow-xs space-y-6">
+          <div>
+            <h3 className="font-bold text-base text-[#2D2D2A] font-serif flex items-center gap-2">
+              <History className="w-5 h-5 text-[#4A6741]" />
+              Teacher Assignment Audit Logs
+            </h3>
+            <p className="text-xs text-[#7A7A72]">
+              Complete history of subject assignments, reassignments, substitute requests, and leave reviews.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-[#EDEAE2] text-[#7A7A72] uppercase font-bold text-[10px]">
+                  <th className="py-3 px-3">Timestamp</th>
+                  <th className="py-3 px-3">Actor</th>
+                  <th className="py-3 px-3">Action</th>
+                  <th className="py-3 px-3">Target Teacher</th>
+                  <th className="py-3 px-3">Details</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#EDEAE2]">
+                {teacherAssignmentAuditLogs.map((log) => (
+                  <tr key={log.id} className="hover:bg-[#F9F7F2]">
+                    <td className="py-3 px-3 text-[#7A7A72] whitespace-nowrap">
+                      {new Date(log.createdAt).toLocaleString()}
+                    </td>
+                    <td className="py-3 px-3 font-bold text-[#2D2D2A]">
+                      {log.actorName} ({log.actorRole})
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className="px-2 py-0.5 rounded-full bg-[#EBF1E8] text-[#4A6741] font-bold text-[10px]">
+                        {log.action}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 font-bold text-[#2D2D2A]">
+                      {log.targetTeacherName}
+                    </td>
+                    <td className="py-3 px-3 text-[#7A7A72]">
+                      {log.details}
+                      {log.reason && <span className="block text-[10px] italic text-gray-500">Reason: {log.reason}</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -1472,6 +1990,179 @@ export const AdminDashboard: React.FC = () => {
           updateParentChildren(parentId, childrenIds);
         }}
       />
+
+      <SubstituteRequestModal
+        isOpen={isSubModalOpen}
+        onClose={() => setIsSubModalOpen(false)}
+        initialClassroomId={subClassroomId}
+        initialTeacherAbsenceRequestId={subAbsenceReqId}
+      />
+
+      {/* Assign Subject Modal */}
+      {isAssignModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-[#EDEAE2] shadow-2xl space-y-4">
+            <h3 className="font-bold text-base text-[#2D2D2A] font-serif">Assign Subject to Teacher</h3>
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-[#2D2D2A] mb-1">Select Teacher *</label>
+                <select
+                  value={assignTeacherId}
+                  onChange={(e) => setAssignTeacherId(e.target.value)}
+                  className="w-full p-2.5 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2]"
+                >
+                  <option value="">-- Choose Faculty Teacher --</option>
+                  {teacherUsers.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name} ({t.email})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#2D2D2A] mb-1">Subject Name *</label>
+                <input
+                  type="text"
+                  value={assignSubjectId}
+                  onChange={(e) => setAssignSubjectId(e.target.value)}
+                  placeholder="e.g. Mathematics, Science, English..."
+                  className="w-full p-2.5 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#2D2D2A] mb-1">Classroom (Optional)</label>
+                <select
+                  value={assignClassroomId}
+                  onChange={(e) => setAssignClassroomId(e.target.value)}
+                  className="w-full p-2.5 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2]"
+                >
+                  <option value="">None (Subject Qualification Only)</option>
+                  {classrooms.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#2D2D2A] mb-1">Assignment Reason</label>
+                <input
+                  type="text"
+                  value={assignReason}
+                  onChange={(e) => setAssignReason(e.target.value)}
+                  placeholder="e.g. Academic term allocation"
+                  className="w-full p-2.5 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2]"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-[#EDEAE2]">
+              <button
+                onClick={() => setIsAssignModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-[#7A7A72]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!assignTeacherId || !assignSubjectId) {
+                    toast.warning('Teacher and Subject Name are required.');
+                    return;
+                  }
+                  await assignSubjectToTeacher(assignTeacherId, assignSubjectId, assignClassroomId || undefined, assignReason);
+                  setIsAssignModalOpen(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-[#4A6741] text-white font-bold text-xs"
+              >
+                Confirm Assignment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reassign Classroom Modal */}
+      {isReassignModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-[#EDEAE2] shadow-2xl space-y-4">
+            <h3 className="font-bold text-base text-[#2D2D2A] font-serif">Reassign Classroom Teacher</h3>
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-[#2D2D2A] mb-1">Target Classroom *</label>
+                <select
+                  value={reassignClassroomId}
+                  onChange={(e) => {
+                    setReassignClassroomId(e.target.value);
+                    const cls = classrooms.find((c) => c.id === e.target.value);
+                    if (cls) {
+                      setReassignSubjectId(cls.subject);
+                      setReassignFromTeacherId(cls.teacherId);
+                    }
+                  }}
+                  className="w-full p-2.5 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2]"
+                >
+                  <option value="">-- Choose Classroom --</option>
+                  {classrooms.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name} ({c.teacherName})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#2D2D2A] mb-1">New Lead Teacher *</label>
+                <select
+                  value={reassignToTeacherId}
+                  onChange={(e) => setReassignToTeacherId(e.target.value)}
+                  className="w-full p-2.5 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2]"
+                >
+                  <option value="">-- Choose New Lead Teacher --</option>
+                  {teacherUsers.filter((t) => t.id !== reassignFromTeacherId).map((t) => (
+                    <option key={t.id} value={t.id}>{t.name} ({t.email})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#2D2D2A] mb-1">Reassignment Reason</label>
+                <input
+                  type="text"
+                  value={reassignReason}
+                  onChange={(e) => setReassignReason(e.target.value)}
+                  placeholder="e.g. Schedule balancing, teacher leave cover..."
+                  className="w-full p-2.5 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2]"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-[#EDEAE2]">
+              <button
+                onClick={() => setIsReassignModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-[#7A7A72]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!reassignClassroomId || !reassignToTeacherId) {
+                    toast.warning('Classroom and New Teacher are required.');
+                    return;
+                  }
+                  await reassignSubject(
+                    reassignSubjectId,
+                    reassignClassroomId,
+                    reassignFromTeacherId,
+                    reassignToTeacherId,
+                    reassignReason,
+                  );
+                  setIsReassignModalOpen(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-[#E88D67] text-white font-bold text-xs"
+              >
+                Confirm Reassignment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

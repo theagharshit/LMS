@@ -138,6 +138,8 @@ model Subject {
   classrooms         Classroom[]
   performances       SubjectPerformance[]
   calendarEvents     CalendarEvent[]
+  substituteRequests SubstituteRequest[]
+  assignmentAuditLogs TeacherAssignmentAuditLog[]
 
   @@unique([schoolId, name])
   @@index([schoolId])
@@ -228,6 +230,14 @@ model User {
   markedAttendanceRecords  AttendanceRecord[]        @relation("AttendanceMarker")
   auditChanges             AuditTrail[]              @relation("AuditActor")
   teachingResources        StudyResource[]           @relation("TeacherResources")
+  teacherAbsencesSubmitted TeacherAbsenceRequest[]   @relation("TeacherAbsencesSubmitted")
+  reviewedTeacherAbsences  TeacherAbsenceRequest[]   @relation("AdminReviewedTeacherAbsences")
+  originalSubstitutes      SubstituteRequest[]       @relation("OriginalTeacherSubstitutes")
+  suggestedSubstitutes     SubstituteRequest[]       @relation("SuggestedTeacherSubstitutes")
+  assignedSubstitutes      SubstituteRequest[]       @relation("AssignedTeacherSubstitutes")
+  createdSubstitutes       SubstituteRequest[]       @relation("CreatedSubstituteRequests")
+  actorAssignmentLogs      TeacherAssignmentAuditLog[] @relation("AuditActorAssignments")
+  targetAssignmentLogs     TeacherAssignmentAuditLog[] @relation("AuditTargetTeachers")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -334,6 +344,8 @@ model Classroom {
   storedFiles StoredFileRecord[]
   substitutes ClassroomSubstitute[]
   resources   StudyResource[]
+  substituteRequests SubstituteRequest[]
+  assignmentAuditLogs TeacherAssignmentAuditLog[]
 
   @@index([schoolId, cohortId])
   @@index([teacherId])
@@ -889,4 +901,81 @@ model ApiKey {
   lastUsedAt DateTime?
   expiresAt  DateTime?
   createdAt  DateTime  @default(now())
+}
+
+model TeacherAbsenceRequest {
+  id                String        @id @default(cuid())
+  teacherId         String
+  teacher           User          @relation("TeacherAbsencesSubmitted", fields: [teacherId], references: [id], onDelete: Cascade)
+  startDate         DateTime
+  endDate           DateTime
+  reason            String
+  status            AbsenceStatus @default(pending)
+  reviewedByAdminId String?
+  reviewedByAdmin   User?         @relation("AdminReviewedTeacherAbsences", fields: [reviewedByAdminId], references: [id], onDelete: SetNull)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  substituteRequests SubstituteRequest[]
+
+  @@index([teacherId, status])
+  @@index([reviewedByAdminId])
+}
+
+enum SubstituteRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model SubstituteRequest {
+  id                      String                  @id @default(cuid())
+  teacherAbsenceRequestId String?
+  teacherAbsenceRequest   TeacherAbsenceRequest?  @relation(fields: [teacherAbsenceRequestId], references: [id], onDelete: SetNull)
+  classroomId             String
+  classroom               Classroom               @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  subjectId               String
+  subject                 Subject                 @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  date                    String
+  timeSlot                String
+  originalTeacherId       String
+  originalTeacher         User                    @relation("OriginalTeacherSubstitutes", fields: [originalTeacherId], references: [id], onDelete: Cascade)
+  suggestedSubstituteId   String?
+  suggestedSubstitute     User?                   @relation("SuggestedTeacherSubstitutes", fields: [suggestedSubstituteId], references: [id], onDelete: SetNull)
+  assignedSubstituteId    String?
+  assignedSubstitute      User?                   @relation("AssignedTeacherSubstitutes", fields: [assignedSubstituteId], references: [id], onDelete: SetNull)
+  reason                  String
+  status                  SubstituteRequestStatus @default(PENDING)
+  responseNotes           String?
+  createdByAdminId        String
+  createdByAdmin          User                    @relation("CreatedSubstituteRequests", fields: [createdByAdminId], references: [id], onDelete: Cascade)
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([classroomId, date])
+  @@index([originalTeacherId, status])
+  @@index([assignedSubstituteId, status])
+}
+
+model TeacherAssignmentAuditLog {
+  id                String    @id @default(cuid())
+  actorId           String
+  actor             User      @relation("AuditActorAssignments", fields: [actorId], references: [id], onDelete: Cascade)
+  actorName         String
+  actorRole         String
+  targetTeacherId   String
+  targetTeacher     User      @relation("AuditTargetTeachers", fields: [targetTeacherId], references: [id], onDelete: Cascade)
+  targetTeacherName String
+  action            String
+  subjectId         String?
+  subject           Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  classroomId       String?
+  classroom         Classroom? @relation(fields: [classroomId], references: [id], onDelete: SetNull)
+  details           String
+  reason            String?
+  createdAt         DateTime  @default(now())
+
+  @@index([targetTeacherId, createdAt])
+  @@index([actorId, createdAt])
 }
