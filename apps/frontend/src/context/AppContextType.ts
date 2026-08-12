@@ -155,6 +155,7 @@ export interface AppContextType {
   setIsCompletedQuizzesOpen: (open: boolean) => void;
 
   notifications: NotificationItem[];
+  addRealtimeNotification: (notification: NotificationItem) => void;
   notificationPreferences: NotificationPreference;
   updateNotificationPreferences: (prefs: Partial<Omit<NotificationPreference, 'userId'>>) => void;
   markNotificationRead: (id: string) => void;

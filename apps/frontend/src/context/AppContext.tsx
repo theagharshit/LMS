@@ -2,7 +2,7 @@
  * Sikshya LMS Nepal - Main Application Context State (Modularized Orchestrator)
  */
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { apiFetch } from '../utils/apiFetch';
 import { AppContextType } from './AppContextType';
 
@@ -61,6 +61,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     adminState.setSubstituteRequests,
     adminState.setTeacherAssignmentAuditLogs,
   );
+
+  useEffect(() => {
+    if (!authState.currentUser?.id || !authState.authReady || !authState.jwtToken) return;
+
+    const token = authState.jwtToken;
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws?token=${token}`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'notification' && data.payload) {
+          communicationState.addRealtimeNotification(data.payload);
+        }
+      } catch (err) {
+        console.error('[Realtime] Failed to parse WebSocket message', err);
+      }
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [
+    authState.currentUser?.id,
+    authState.authReady,
+    authState.jwtToken,
+    communicationState.addRealtimeNotification,
+  ]);
 
   const switchUser = (userId: string) => {
     const target = authState.allUsers.find((u) => u.id === userId);
@@ -247,6 +276,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     messages: communicationState.messages,
     sendMessage: communicationState.sendMessage,
     notifications: communicationState.notifications,
+    addRealtimeNotification: communicationState.addRealtimeNotification,
     notificationPreferences: communicationState.notificationPreferences,
     updateNotificationPreferences: communicationState.updateNotificationPreferences,
     markNotificationRead: communicationState.markNotificationRead,

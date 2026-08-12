@@ -8,6 +8,7 @@ import {
   NotificationSeverity,
   NotificationType,
 } from '@lms/shared';
+import { sendToUser } from '@utils/realtime';
 import { logger } from '@utils/logger';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -155,12 +156,16 @@ export class NotificationService {
       `[NotificationEngine] Dispatched [${category}] notification "${data.title}" to ${data.recipientId}`,
     );
 
-    return {
+    const notificationItem = {
       ...created,
       category: created.category as NotificationCategory,
       severity: created.severity as NotificationSeverity,
       type: created.type as NotificationType,
     };
+
+    sendToUser(data.recipientId, 'notification', notificationItem);
+
+    return notificationItem;
   }
 
   public async dispatchBroadcastNotification(data: {

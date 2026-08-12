@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User, DirectMessage, NotificationItem, NotificationPreference } from '@lms/shared';
 import { apiFetch } from '../../utils/apiFetch';
 
@@ -227,6 +227,13 @@ export const useCommunicationState = (currentUser: User, authReady = true) => {
     );
   };
 
+  const addRealtimeNotification = useCallback((notification: NotificationItem) => {
+    setNotifications((prev) => {
+      if (prev.some((n) => n.id === notification.id)) return prev;
+      return [notification, ...prev];
+    });
+  }, []);
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return {
@@ -235,6 +242,7 @@ export const useCommunicationState = (currentUser: User, authReady = true) => {
     sendMessage,
     notifications,
     setNotifications,
+    addRealtimeNotification,
     notificationPreferences,
     updateNotificationPreferences,
     markNotificationRead,

@@ -15,8 +15,15 @@ export function initializeRealtime(server: HttpServer) {
       const user = verifyToken(token);
       if (user.tokenType !== 'access') throw new Error('Invalid token type');
       (socket as WebSocket & { userId?: string }).userId = user.id;
+
+      logger.info(`[WebSocket] Client connected: ${user.id}`, { userId: user.id });
       socket.send(JSON.stringify({ type: 'connected', userId: user.id }));
-    } catch {
+
+      socket.on('close', () => {
+        logger.info(`[WebSocket] Client disconnected: ${user.id}`, { userId: user.id });
+      });
+    } catch (err: any) {
+      logger.warn(`[WebSocket] Authentication failed`, { error: err.message || err });
       socket.close(1008, 'Authentication required');
     }
   });
@@ -46,6 +53,27 @@ function broadcastEvent(type: 'announcement' | 'location', payload: unknown) {
       delivered += 1;
     }
   });
+  logger.info(`[WebSocket] Broadcasted [${type}] to ${delivered} client(s)`);
+  return delivered;
+}
+
+export function sendToUser(userId: string, type: string, payload: unknown) {
+  if (!socketServer) return false;
+  const message = JSON.stringify({
+    type,
+    payload,
+    timestamp: new Date().toISOString(),
+  });
+  let delivered = false;
+  socketServer.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN && (client as any).userId === userId) {
+      client.send(message);
+      delivered = true;
+    }
+  });
+  if (delivered) {
+    logger.info(`[WebSocket] Sent [${type}] to ${userId}`);
+  }
   return delivered;
 }
 
