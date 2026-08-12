@@ -182,20 +182,25 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
     setCommentInputs((prev) => ({ ...prev, [postId]: '' }));
   };
 
-  const handleJoinClassroom = (e: React.FormEvent) => {
+  const [isJoining, setIsJoining] = useState(false);
+
+  const handleJoinClassroom = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!joinCodeInput.trim()) return;
-    const success = joinClassroomByCode(joinCodeInput);
-    if (success) {
-      toast.success('You now have access to the classroom.', { title: 'Classroom joined' });
-      setJoinCodeInput('');
-      setJoinError('');
-      setShowJoinModal(false);
-    } else {
-      setJoinError('Invalid Class Code. Please try code like MATH8A, SCI8A, NEP8A or COMP8A.');
-      toast.error('That classroom code was not recognized. Check it and try again.', {
-        title: 'Invalid class code',
-      });
+    if (!joinCodeInput.trim() || isJoining) return;
+    setIsJoining(true);
+    try {
+      const success = await joinClassroomByCode(joinCodeInput);
+      if (success) {
+        toast.success('You are now enrolled and can access this classroom!', { title: 'Classroom joined' });
+        setJoinCodeInput('');
+        setJoinError('');
+        setShowJoinModal(false);
+      } else {
+        setJoinError('Invalid class code or the classroom is at capacity. Please double-check with your teacher.');
+        toast.error('Class code not recognised or classroom is full.', { title: 'Could not join' });
+      }
+    } finally {
+      setIsJoining(false);
     }
   };
 
@@ -262,10 +267,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
     if (currentUser.role === 'admin') return true;
     if (currentUser.role === 'teacher') return cls.teacherId === currentUser.id;
     if (currentUser.role === 'student') {
-      if (cls.enrolledStudentIds && cls.enrolledStudentIds.length > 0) {
-        return cls.enrolledStudentIds.includes(currentUser.id);
-      }
-      return currentUser.gradeLevel ? cls.gradeLevel === currentUser.gradeLevel : true;
+      return cls.enrolledStudentIds?.includes(currentUser.id) ?? false;
     }
     return true;
   };
@@ -284,49 +286,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
     return matchesSearch && matchesSubject;
   });
 
-  // Guard against unauthorized classroom access when a specific classroom is selected
-  if (selectedClassroomId && currentClassroom && !isUserAllowed(currentClassroom)) {
-    return (
-      <div className="p-8 max-w-2xl mx-auto my-12 text-center space-y-5 bg-white rounded-3xl border border-rose-200 shadow-lg animate-in fade-in">
-        <div className="w-16 h-16 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto text-2xl font-bold shadow-xs">
-          🔒
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-xl font-extrabold text-[#2D2D2A] font-serif">
-            Classroom Access Restricted
-          </h2>
-          <p className="text-xs md:text-sm text-[#7A7A72] max-w-md mx-auto">
-            {currentUser.role === 'student'
-              ? 'This classroom will remain hidden until a valid class code is provided. Please ask your subject teacher for the code to unlock access.'
-              : 'This classroom is not assigned to your teacher account.'}
-          </p>
-        </div>
-        <div className="pt-2 flex flex-wrap justify-center gap-3">
-          <button
-            onClick={() => setSelectedClassroomId(null)}
-            className="px-5 py-2.5 rounded-xl bg-[#2D2D2A] text-white text-xs font-extrabold hover:bg-black transition-all cursor-pointer shadow-xs"
-          >
-            ← Back to My Classrooms
-          </button>
-          {currentUser.role === 'student' && (
-            <button
-              onClick={() => {
-                setSelectedClassroomId(null);
-                setShowJoinModal(true);
-              }}
-              className="px-5 py-2.5 rounded-xl bg-[#E88D67] text-white text-xs font-extrabold hover:bg-[#D87B55] transition-all cursor-pointer shadow-xs"
-            >
-              + Join via Class Code
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
 
-  // =========================================================================
-  // SCENARIO 1: LANDING PAGE - ALL ENROLLED SUBJECTS OVERVIEW
-  // =========================================================================
   if (!selectedClassroomId || !currentClassroom) {
     return (
       <div className="space-y-6 pb-16 animate-in fade-in duration-200">
@@ -422,9 +382,10 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded-xl bg-[#4A6741] text-white font-bold text-xs hover:bg-[#3D5535]"
+                    disabled={isJoining}
+                    className="px-4 py-2 rounded-xl bg-[#4A6741] text-white font-bold text-xs hover:bg-[#3D5535] disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Join Classroom
+                    {isJoining ? 'Joining...' : 'Join Classroom'}
                   </button>
                 </div>
               </form>
@@ -445,10 +406,6 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                 className="w-full text-xs pl-10 pr-4 py-2.5 bg-[#F9F7F2] rounded-2xl border border-[#EDEAE2] focus:outline-none focus:ring-1 focus:ring-[#4A6741] text-[#2D2D2A]"
               />
             </div>
-
-            <p className="text-[11px] font-bold text-[#7A7A72] shrink-0">
-              Showing {filteredClassrooms.length} of {classrooms.length} classrooms
-            </p>
           </div>
 
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1">

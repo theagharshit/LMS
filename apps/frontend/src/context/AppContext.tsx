@@ -73,16 +73,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const joinClassroomByCode = (code: string): boolean => {
-    const found = academicState.classrooms.find(
-      (c) => c.code.toUpperCase() === code.trim().toUpperCase(),
+  const joinClassroomByCode = async (code: string): Promise<boolean> => {
+    // First check if already enrolled (classroom already in state for this student)
+    const alreadyIn = academicState.classrooms.find(
+      (c) =>
+        c.code.toUpperCase() === code.trim().toUpperCase() &&
+        (c.enrolledStudentIds?.includes(authState.currentUser.id) ?? false),
     );
-    if (found) {
-      uiState.setSelectedClassroomId(found.id);
+    if (alreadyIn) {
+      uiState.setSelectedClassroomId(alreadyIn.id);
       uiState.setActiveView('classroom');
       return true;
     }
-    return false;
+
+    // Otherwise call the backend to enroll and get the updated classroom
+    const res = await apiFetch('/api/db/classrooms/join', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: code.trim().toUpperCase() }),
+    }).catch(() => null);
+
+    if (!res?.ok) return false;
+
+    const data = await res.json().catch(() => null);
+    const classroom = data?.classroom;
+    if (!classroom) return false;
+
+    // Add or update classroom in local state so it's immediately visible
+    academicState.setClassrooms((prev) => {
+      const idx = prev.findIndex((c) => c.id === classroom.id);
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = classroom;
+        return updated;
+      }
+      return [...prev, classroom];
+    });
+
+    uiState.setSelectedClassroomId(classroom.id);
+    uiState.setActiveView('classroom');
+    return true;
   };
 
   const updateStudentIdCardPhoto = (studentId: string, idCardPhotoUrl: string) => {

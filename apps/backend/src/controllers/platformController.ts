@@ -124,6 +124,13 @@ export const enrollStudent = asyncHandler(async (req, res) => {
   res.status(201).json({ status: 'success', enrollment });
 });
 
+export const joinByCode = asyncHandler(async (req, res) => {
+  const studentId = (req as any).user?.id;
+  if (!studentId) throw new HttpError(401, 'Authentication required.');
+  const classroom = await classroomService.joinByCode(req.body.code, studentId);
+  res.status(200).json({ status: 'success', classroom });
+});
+
 export const setSubstituteTeachers = asyncHandler(async (req, res) => {
   const classroom = await platformService.setSubstituteTeachers(
     req.params.classroomId,

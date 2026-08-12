@@ -136,6 +136,43 @@ export class ClassroomService {
     );
   }
 
+  public async joinByCode(code: string, studentId: string) {
+    return withDeadlockRetry(async () =>
+      prisma.$transaction(async (tx) => {
+        const classroom = await tx.classroom.findFirst({
+          where: { code: code.trim().toUpperCase(), isArchived: false },
+          include: { _count: { select: { enrollments: true } }, subjectRef: true, cohortRef: true, teacher: true, enrollments: true },
+        });
+        if (!classroom) throw new Error('No classroom found with that code.');
+        if (classroom._count.enrollments >= classroom.maxCapacity)
+          throw new Error('This classroom is at full capacity.');
+        await tx.classroomEnrollment.upsert({
+          where: { classroomId_studentId: { classroomId: classroom.id, studentId } },
+          create: { classroomId: classroom.id, studentId },
+          update: {},
+        });
+        const updatedEnrollments = await tx.classroomEnrollment.findMany({ where: { classroomId: classroom.id } });
+        return {
+          id: classroom.id,
+          name: classroom.name,
+          subject: classroom.subjectRef.name,
+          gradeLevel: classroom.cohortRef.gradeLevel,
+          section: classroom.cohortRef.section,
+          teacherId: classroom.teacherId,
+          teacherName: classroom.teacher.name,
+          teacherAvatar: classroom.teacher.avatar,
+          roomNumber: classroom.roomNumber,
+          colorTheme: classroom.colorTheme,
+          bannerImage: classroom.bannerImage,
+          studentCount: updatedEnrollments.length,
+          enrolledStudentIds: updatedEnrollments.map((e) => e.studentId),
+          meetLink: classroom.meetLink || undefined,
+          code: classroom.code,
+        };
+      }),
+    );
+  }
+
   public async getStreamPosts(): Promise<StreamPost[]> {
     const posts = await prisma.streamPost.findMany({
       include: { comments: true, attachments: true },

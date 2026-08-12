@@ -189,7 +189,7 @@ describe('AppContext Badge State Suite (15 Tests)', () => {
     expect(contextValue.currentUser.role).toBe('admin');
   });
 
-  it('14. joinClassroomByCode returns false for non-existent classroom code', () => {
+  it('14. joinClassroomByCode returns false for non-existent classroom code', async () => {
     let contextValue: any = null;
     const CaptureComponent = () => {
       contextValue = useApp();
@@ -201,14 +201,14 @@ describe('AppContext Badge State Suite (15 Tests)', () => {
       </AppProvider>,
     );
 
-    let res = false;
-    act(() => {
-      res = contextValue.joinClassroomByCode('INVALID_CODE_999');
+    let res: boolean = false;
+    await act(async () => {
+      res = await contextValue.joinClassroomByCode('INVALID_CODE_999');
     });
     expect(res).toBe(false);
   });
 
-  it('15. joinClassroomByCode returns true and switches view for matching classroom code', () => {
+  it('15. joinClassroomByCode returns true and switches view for matching classroom code', async () => {
     let contextValue: any = null;
     const CaptureComponent = () => {
       contextValue = useApp();
@@ -221,9 +221,9 @@ describe('AppContext Badge State Suite (15 Tests)', () => {
     );
 
     const validCode = contextValue.classrooms[0]?.code || 'MATH8A';
-    let res = false;
-    act(() => {
-      res = contextValue.joinClassroomByCode(validCode);
+    let res: boolean = false;
+    await act(async () => {
+      res = await contextValue.joinClassroomByCode(validCode);
     });
     expect(res).toBe(true);
   });

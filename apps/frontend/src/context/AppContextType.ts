@@ -52,7 +52,7 @@ export interface AppContextType {
   // Data lists & mutations
   classrooms: Classroom[];
   addClassroom: (classroom: Omit<Classroom, 'id' | 'code' | 'studentCount'>) => void;
-  joinClassroomByCode: (code: string) => boolean;
+  joinClassroomByCode: (code: string) => Promise<boolean>;
 
   streamPosts: StreamPost[];
   addStreamPost: (post: Omit<StreamPost, 'id' | 'createdAt' | 'commentsCount'>) => void;

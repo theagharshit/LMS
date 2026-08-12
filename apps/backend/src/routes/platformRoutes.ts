@@ -11,6 +11,7 @@ import {
   createPayment,
   dispatchBulkFeedback,
   enrollStudent,
+  joinByCode,
   exportClassroom,
   externalWebhook,
   geofenceCheck,
@@ -122,6 +123,12 @@ platformRoutes.post(
   rolesInStrictMode('student'),
   validateBody(z.object({ timezone: z.string().max(80).default('Asia/Kathmandu') })),
   recordActivity,
+);
+platformRoutes.post(
+  '/db/classrooms/join',
+  rolesInStrictMode('student'),
+  validateBody(z.object({ code: z.string().min(1).max(20) })),
+  joinByCode,
 );
 platformRoutes.post(
   '/db/classrooms/:classroomId/enrollments',

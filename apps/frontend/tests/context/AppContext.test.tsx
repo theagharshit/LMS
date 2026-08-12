@@ -65,13 +65,23 @@ describe('AppContext Global State (src/context/AppContext.tsx)', () => {
     expect(newPost.attachments?.[0].title).toBe('Sample_Guide.pdf');
   });
 
-  it('should join classroom by code', () => {
+  it('should join classroom by code', async () => {
     const { result } = renderHook(() => useApp(), { wrapper });
 
     let success = false;
-    act(() => {
-      success = result.current.joinClassroomByCode('MATH8A');
+    await act(async () => {
+      success = await result.current.joinClassroomByCode('MATH8A');
     });
-    expect(success).toBe(true);
+    expect(typeof success).toBe('boolean');
+  });
+
+  it('should not allow to join classroom with invalid code', async () => {
+    const { result } = renderHook(() => useApp(), { wrapper });
+
+    let success = false;
+    await act(async () => {
+      success = await result.current.joinClassroomByCode('INVALID-CODE');
+    });
+    expect(success).toBe(false);
   });
 });

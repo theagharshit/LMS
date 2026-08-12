@@ -141,6 +141,42 @@ const mockApiRouter = async (input: RequestInfo | URL, init?: RequestInit): Prom
     );
   }
 
+  // Specific route for student self-join by code (must be before general classrooms match)
+  if (url.includes('/api/db/classrooms/join')) {
+    const requestedCode = (body?.code || '').toUpperCase();
+    // Only succeed for known test classroom codes (MATH8A, SCI8A, CLS1001 etc.)
+    const knownTestCodes = ['MATH8A', 'SCI8A', 'NEP8A', 'COMP8A', 'CLS1001', 'CLS1002', 'CLS1003', 'CLS1004'];
+    if (knownTestCodes.includes(requestedCode)) {
+      return new Response(
+        JSON.stringify({
+          status: 'success',
+          classroom: {
+            id: `cls-mock-${requestedCode.toLowerCase()}`,
+            name: `Mock Classroom ${requestedCode}`,
+            subject: 'Mathematics',
+            gradeLevel: 8,
+            section: 'A',
+            teacherId: 'user-teach-1',
+            teacherName: 'Dr. Ramesh Thapa',
+            teacherAvatar: '',
+            roomNumber: '101',
+            colorTheme: '#4A6741',
+            bannerImage: '',
+            studentCount: 1,
+            enrolledStudentIds: ['user-stu-1'],
+            code: requestedCode,
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+    // Unknown code — 404
+    return new Response(
+      JSON.stringify({ status: 'error', message: 'No classroom found with that code.' }),
+      { status: 404, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
   if (url.includes('/api/db/classrooms')) {
     return new Response(
       JSON.stringify({

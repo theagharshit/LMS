@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { StudentProfile, User, BadgeDefinition, SubstituteRequest } from '@lms/shared';
 import { AdminStudentModal } from './AdminStudentModal';
@@ -145,7 +145,7 @@ export const AdminDashboard: React.FC = () => {
 
   // New Classroom Form State
   const [clsName, setClsName] = useState('');
-  const [clsSubject, setClsSubject] = useState('Mathematics');
+  const [clsSubject, setClsSubject] = useState('');
   const [clsGrade, setClsGrade] = useState(8);
   const [clsSection, setClsSection] = useState('A');
   const [clsTeacherId, setClsTeacherId] = useState('');
@@ -154,6 +154,23 @@ export const AdminDashboard: React.FC = () => {
   // Categories & Metrics
   const teacherUsers = allUsers.filter((u) => u.role === 'teacher');
   const parentUsers = allUsers.filter((u) => u.role === 'parent');
+
+  // Derive known subjects from existing classrooms + teachers' assigned subjects
+  const knownSubjects = useMemo(() => {
+    const fromClassrooms = classrooms.map((c) => c.subject);
+    const fromTeachers = teacherUsers.flatMap((t) => t.subjectsTaught || []);
+    return Array.from(new Set([...fromClassrooms, ...fromTeachers])).sort();
+  }, [classrooms, teacherUsers]);
+
+  // Teachers who teach the currently selected subject
+  const eligibleTeachersForSubject = useMemo(() => {
+    if (!clsSubject) return [];
+    return teacherUsers.filter((t) =>
+      (t.subjectsTaught || []).some(
+        (s) => s.toLowerCase() === clsSubject.toLowerCase(),
+      ),
+    );
+  }, [teacherUsers, clsSubject]);
 
   const filteredStudents = studentProfiles.filter((s) => {
     const matchesSearch =
@@ -271,10 +288,11 @@ export const AdminDashboard: React.FC = () => {
   const handleCreateClassroomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!clsName.trim()) return;
+    const subjectToUse = clsSubject || knownSubjects[0] || 'Mathematics';
     const teacherObj = teacherUsers.find((t) => t.id === clsTeacherId) || teacherUsers[0];
     addClassroom({
       name: clsName.trim(),
-      subject: clsSubject,
+      subject: subjectToUse,
       gradeLevel: Number(clsGrade),
       section: clsSection.toUpperCase(),
       teacherId: teacherObj ? teacherObj.id : 'user-teach-1',
@@ -1641,23 +1659,49 @@ export const AdminDashboard: React.FC = () => {
 
               <div>
                 <label className="block font-semibold text-[#2D2D2A] mb-1">Subject</label>
-                <input
-                  type="text"
+                <select
                   value={clsSubject}
-                  onChange={(e) => setClsSubject(e.target.value)}
+                  onChange={(e) => {
+                    setClsSubject(e.target.value);
+                    setClsTeacherId(''); // reset teacher when subject changes
+                  }}
                   className="w-full px-3 py-2 bg-white rounded-xl border border-[#EDEAE2] text-xs"
-                />
+                >
+                  <option value="">-- Select Subject --</option>
+                  {knownSubjects.map((sub) => (
+                    <option key={sub} value={sub}>{sub}</option>
+                  ))}
+                </select>
               </div>
 
               <div>
-                <label className="block font-semibold text-[#2D2D2A] mb-1">Assigned Teacher</label>
+                <label className="block font-semibold text-[#2D2D2A] mb-1 flex items-center gap-1.5">
+                  Assigned Teacher
+                  {clsSubject && eligibleTeachersForSubject.length === 0 && (
+                    <span className="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                      No teachers assigned to this subject
+                    </span>
+                  )}
+                  {clsSubject && eligibleTeachersForSubject.length > 0 && (
+                    <span className="text-[10px] text-[#4A6741] font-bold bg-[#EBF1E8] px-2 py-0.5 rounded-full">
+                      {eligibleTeachersForSubject.length} eligible
+                    </span>
+                  )}
+                </label>
                 <select
                   value={clsTeacherId}
                   onChange={(e) => setClsTeacherId(e.target.value)}
-                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#EDEAE2] text-xs"
+                  disabled={!clsSubject}
+                  className={`w-full px-3 py-2 rounded-xl border text-xs transition-all ${
+                    !clsSubject
+                      ? 'bg-[#F9F7F2] border-[#EDEAE2] text-[#7A7A72] cursor-not-allowed opacity-60'
+                      : 'bg-white border-[#EDEAE2]'
+                  }`}
                 >
-                  <option value="">-- Choose Instructor --</option>
-                  {teacherUsers.map((t) => (
+                  <option value="">
+                    {!clsSubject ? '← Select a subject first' : '-- Choose Instructor --'}
+                  </option>
+                  {eligibleTeachersForSubject.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.name}
                     </option>
