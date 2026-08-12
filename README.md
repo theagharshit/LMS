@@ -64,18 +64,111 @@ The application will be accessible at:
 
 ---
 
-## Available NPM Scripts
+| `npm run dev`             | Root      | Start frontend and backend concurrently in development mode                  |
+| `npm run dev:v`           | Root      | Start development server with verbose HTTP payload logging                   |
+| `npm run build`           | Root      | Compile frontend (Vite) and backend (Esbuild) production bundles             |
+| `npm run test`            | Root      | Execute full automated test suite (1,390+ unit, integration, and RBAC tests) |
+| `npm run prod`            | Root      | Build and run production server bundles                                      |
+| `npm run prisma:generate` | Root      | Generate Prisma Client TypeScript types from schema.prisma                   |
+| `npm run prisma:deploy`   | Root      | Apply all pending committed Prisma migrations to database                    |
+| `npm run prisma:status`   | Root      | Check status of database migrations                                          |
+| `npm run seed`            | Backend   | Seed PostgreSQL database with initial test users and classrooms              |
+| `npm run format`          | Root      | Format entire codebase using Prettier                                        |
+| `npm run lint`            | Root      | Run TypeScript type checking across all workspace packages                   |
 
-| Script           | Workspace | Description                                                                  |
-| :--------------- | :-------- | :--------------------------------------------------------------------------- |
-| `npm run dev`    | Root      | Start frontend and backend concurrently in development mode                  |
-| `npm run dev:v`  | Root      | Start development server with verbose HTTP payload logging                   |
-| `npm run build`  | Root      | Compile frontend (Vite) and backend (Esbuild) production bundles             |
-| `npm run test`   | Root      | Execute full automated test suite (1,390+ unit, integration, and RBAC tests) |
-| `npm run prod`   | Root      | Build and run production server bundles                                      |
-| `npm run seed`   | Backend   | Seed PostgreSQL database with initial test users and classrooms              |
-| `npm run format` | Root      | Format entire codebase using Prettier                                        |
-| `npm run lint`   | Root      | Run TypeScript type checking across all workspace packages                   |
+---
+
+## Database Migrations and Schema Management
+
+This project uses Prisma ORM 7 with PostgreSQL. Follow the procedures below for all schema updates, migration deployments, and client generation.
+
+### 1. Generating Prisma Client Types
+
+Whenever you modify `apps/backend/prisma/schema.prisma` or pull changes containing schema updates, regenerate the Prisma Client TypeScript definitions:
+
+```bash
+# From workspace root
+npm run prisma:generate
+
+# Or directly in apps/backend
+cd apps/backend && npx prisma generate
+```
+
+### 2. Creating New Migrations (Development)
+
+To make schema modifications and generate a new SQL migration file:
+
+1. Update `apps/backend/prisma/schema.prisma` with your model changes.
+2. Run `prisma migrate dev` with a descriptive migration name:
+
+```bash
+# From workspace root
+npm exec -w lms-backend -- prisma migrate dev --name <migration_name>
+
+# Example
+npm exec -w lms-backend -- prisma migrate dev --name add_user_secondary_phone
+```
+
+This command will:
+- Generate a new migration folder under `apps/backend/prisma/migrations/`.
+- Apply the SQL migration to your local PostgreSQL database.
+- Automatically regenerate the Prisma Client types.
+
+### 3. Deploying Pending Migrations (Staging / Production / CI)
+
+To apply existing, committed migration files to a target database without creating new migration files:
+
+```bash
+# From workspace root
+npm run prisma:deploy
+
+# Or directly in apps/backend
+cd apps/backend && npx prisma migrate deploy
+```
+
+### 4. Checking Migration Status
+
+To check if your database schema is up-to-date or if there are unapplied migrations:
+
+```bash
+# From workspace root
+npm run prisma:status
+
+# Or directly in apps/backend
+cd apps/backend && npx prisma migrate status
+```
+
+### 5. Seeding Database Records
+
+To populate the database with default administrative, teacher, student, and parent test records:
+
+```bash
+# From workspace root
+npm run seed
+
+# Or directly in apps/backend
+cd apps/backend && npx prisma db seed
+```
+
+### 6. Resetting Development Database
+
+If you need to drop the local database, re-apply all migrations from scratch, and re-seed data:
+
+```bash
+# From workspace root
+npm exec -w lms-backend -- prisma migrate reset
+```
+
+### 7. Opening Visual Database GUI (Prisma Studio)
+
+To inspect and manage database records visually in your browser:
+
+```bash
+# From workspace root
+npm exec -w lms-backend -- npx prisma studio
+```
+
+Prisma Studio will launch locally at `http://localhost:5555`.
 
 ---
 
