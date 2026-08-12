@@ -24,7 +24,11 @@ import {
   Plus,
   Trash2,
   BookMarked,
+  History,
+  ShieldCheck,
+  ArrowRight,
 } from 'lucide-react';
+import { TeacherSubstitutesAndLeavesModal } from './TeacherSubstitutesAndLeavesModal';
 
 interface TeacherDashboardProps {
   onOpenGradeModal: (submissionId: string) => void;
@@ -50,10 +54,12 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     updateDaySchedule,
     substituteRequests,
     teacherAbsenceRequests,
+    teacherAssignmentAuditLogs,
     submitTeacherAbsenceRequest,
     updateSubstituteStatus,
   } = useApp();
 
+  const [isSubsAndLeavesModalOpen, setIsSubsAndLeavesModalOpen] = useState(false);
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [leaveStartDate, setLeaveStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [leaveEndDate, setLeaveEndDate] = useState(new Date().toISOString().split('T')[0]);
@@ -150,6 +156,31 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveView('subs-leaves')}
+              className="px-4 py-3 rounded-2xl bg-[#E88D67] hover:bg-[#D87B55] text-white font-extrabold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer relative"
+            >
+              <UserCheck className="w-4 h-4 text-white" />
+              <span>Assigned Subs & Leaves</span>
+              {substituteRequests.filter(
+                (r) =>
+                  (r.assignedSubstituteId === currentUser.id ||
+                    r.suggestedSubstituteId === currentUser.id) &&
+                  r.status === 'PENDING',
+              ).length > 0 && (
+                <span className="px-2 py-0.5 rounded-full bg-white text-[#E88D67] text-[10px] font-extrabold animate-pulse">
+                  {
+                    substituteRequests.filter(
+                      (r) =>
+                        (r.assignedSubstituteId === currentUser.id ||
+                          r.suggestedSubstituteId === currentUser.id) &&
+                        r.status === 'PENDING',
+                    ).length
+                  }
+                </span>
+              )}
+            </button>
+
+            <button
               onClick={() => setActiveView('attendance')}
               className="px-4 py-3 rounded-2xl bg-[#88A070] text-white font-extrabold text-xs flex items-center gap-2 shadow-sm hover:bg-[#4A6741] transition-all cursor-pointer"
             >
@@ -158,7 +189,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </button>
             <button
               onClick={() => setIsLeaveModalOpen(true)}
-              className="px-4 py-3 rounded-2xl bg-[#E88D67] text-white font-extrabold text-xs flex items-center gap-2 shadow-sm hover:bg-[#D87B55] transition-all cursor-pointer"
+              className="px-4 py-3 rounded-2xl bg-white/20 backdrop-blur-md hover:bg-white/30 text-white font-extrabold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
             >
               <Calendar className="w-4 h-4 text-white" />
               <span>Request Leave / Absence</span>
@@ -171,10 +202,19 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Substitute Duties Assigned */}
         <div className="bg-white rounded-3xl p-6 border border-[#EDEAE2] shadow-xs space-y-4">
-          <h3 className="font-bold text-sm text-[#2D2D2A] font-serif flex items-center gap-2">
-            <UserCheck className="w-4 h-4 text-[#E88D67]" />
-            <span>Assigned Substitute Duties</span>
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-sm text-[#2D2D2A] font-serif flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-[#E88D67]" />
+              <span>Assigned Substitute Duties</span>
+            </h3>
+            <button
+              onClick={() => setActiveView('subs-leaves')}
+              className="text-xs font-bold text-[#E88D67] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <span>View Hub & History</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
 
           {substituteRequests.filter(
             (r) =>
@@ -195,10 +235,12 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 .map((req) => (
                   <div
                     key={req.id}
-                    className="p-3.5 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-2"
+                    className="p-3.5 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-2 shadow-xs"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-[#2D2D2A]">{req.classroomName}</span>
+                      <span className="font-bold text-[#2D2D2A] font-serif">
+                        {req.classroomName}
+                      </span>
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${req.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}
                       >
@@ -225,7 +267,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                               currentUser.id,
                             )
                           }
-                          className="px-3 py-1 rounded-xl bg-white border border-rose-200 text-rose-700 font-bold text-[10px]"
+                          className="px-3 py-1 rounded-xl bg-white border border-rose-200 text-rose-700 font-bold text-[10px] cursor-pointer"
                         >
                           Decline
                         </button>
@@ -238,7 +280,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                               currentUser.id,
                             )
                           }
-                          className="px-3 py-1 rounded-xl bg-emerald-600 text-white font-bold text-[10px] shadow-xs"
+                          className="px-3 py-1 rounded-xl bg-emerald-600 text-white font-bold text-[10px] shadow-xs cursor-pointer"
                         >
                           Accept Substitute Duty
                         </button>
@@ -250,19 +292,22 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           )}
         </div>
 
-        {/* My Leave Requests */}
+        {/* My Leave Requests & Substitute Coverage Tracker */}
         <div className="bg-white rounded-3xl p-6 border border-[#EDEAE2] shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-sm text-[#2D2D2A] font-serif flex items-center gap-2">
               <Calendar className="w-4 h-4 text-[#4A6741]" />
-              <span>My Leave & Absence Requests</span>
+              <span>My Leave & Substitute Coverage</span>
             </h3>
-            <button
-              onClick={() => setIsLeaveModalOpen(true)}
-              className="text-xs font-bold text-[#E88D67] hover:underline"
-            >
-              + Submit Request
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActiveView('subs-leaves')}
+                className="text-xs font-bold text-[#4A6741] hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span>Full Tracker & History Check</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
           {teacherAbsenceRequests.filter((r) => r.teacherId === currentUser.id).length === 0 ? (
@@ -271,24 +316,48 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             <div className="space-y-3 text-xs">
               {teacherAbsenceRequests
                 .filter((r) => r.teacherId === currentUser.id)
-                .map((req) => (
-                  <div
-                    key={req.id}
-                    className="p-3.5 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-1.5"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-[#2D2D2A]">
-                        {req.startDate} to {req.endDate}
-                      </span>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${req.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : req.status === 'rejected' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}`}
-                      >
-                        {req.status}
-                      </span>
+                .map((req) => {
+                  const linkedSubs = substituteRequests.filter(
+                    (s) =>
+                      s.teacherAbsenceRequestId === req.id ||
+                      (s.originalTeacherId === currentUser.id &&
+                        s.date >= req.startDate &&
+                        s.date <= req.endDate),
+                  );
+
+                  return (
+                    <div
+                      key={req.id}
+                      className="p-3.5 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-2 shadow-xs"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-[#2D2D2A]">
+                          {req.startDate} to {req.endDate}
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${req.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : req.status === 'rejected' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}`}
+                        >
+                          {req.status}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#7A7A72]">Reason: {req.reason}</p>
+
+                      {/* Sub Coverage Tag */}
+                      <div className="pt-1 border-t border-[#EDEAE2] flex items-center justify-between text-[11px]">
+                        <span className="text-[#7A7A72]">Substitute Coverage:</span>
+                        <span className="font-bold text-[#4A6741]">
+                          {linkedSubs.length > 0
+                            ? linkedSubs.some((s) => s.status === 'APPROVED')
+                              ? `Sub Assigned (${linkedSubs.find((s) => s.assignedSubstituteName)?.assignedSubstituteName || 'Confirmed'})`
+                              : 'Sub Pending Confirmation'
+                            : req.status === 'pending'
+                              ? 'Awaiting Admin Review'
+                              : 'No Sub Required'}
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-[11px] text-[#7A7A72]">Reason: {req.reason}</p>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
           )}
         </div>
@@ -845,6 +914,18 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Faculty Leave & Substitute Duties Detailed Modal Hub */}
+      <TeacherSubstitutesAndLeavesModal
+        isOpen={isSubsAndLeavesModalOpen}
+        onClose={() => setIsSubsAndLeavesModalOpen(false)}
+        currentUser={currentUser}
+        teacherAbsenceRequests={teacherAbsenceRequests}
+        substituteRequests={substituteRequests}
+        teacherAssignmentAuditLogs={teacherAssignmentAuditLogs}
+        updateSubstituteStatus={updateSubstituteStatus}
+        onRequestNewLeave={() => setIsLeaveModalOpen(true)}
+      />
     </div>
   );
 };

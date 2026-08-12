@@ -20,12 +20,21 @@ import {
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
-  const { currentUser, activeView, setActiveView, activeChild } = useApp();
+  const { currentUser, activeView, setActiveView, activeChild, substituteRequests } = useApp();
 
   const isStudent = currentUser.role === 'student';
   const isTeacher = currentUser.role === 'teacher';
   const isParent = currentUser.role === 'parent';
   const isAdmin = currentUser.role === 'admin';
+
+  const pendingSubDutiesCount = isTeacher
+    ? (substituteRequests || []).filter(
+        (r) =>
+          (r.assignedSubstituteId === currentUser.id ||
+            r.suggestedSubstituteId === currentUser.id) &&
+          r.status === 'PENDING',
+      ).length
+    : 0;
 
   interface NavItem {
     id: string;
@@ -46,6 +55,12 @@ export const Sidebar: React.FC = () => {
     { id: 'dashboard', label: 'Teacher Hub', icon: LayoutDashboard },
     { id: 'classroom', label: 'Classrooms', icon: BookOpen },
     ...(import.meta.env.DEV ? [{ id: 'quizzes', label: 'Quiz Creator & AI', icon: Sparkles }] : []),
+    {
+      id: 'subs-leaves',
+      label: 'Assigned Subs & Leaves',
+      icon: UserCheck,
+      badge: pendingSubDutiesCount > 0 ? `${pendingSubDutiesCount} New` : undefined,
+    },
     { id: 'attendance', label: 'Attendance Register', icon: UserCheck },
     { id: 'progress', label: 'Student Analytics', icon: TrendingUp },
     { id: 'calendar', label: 'Academic Calendar', icon: Calendar },

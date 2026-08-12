@@ -21,6 +21,7 @@ import { QuizRunnerModal } from './components/student/QuizRunnerModal';
 import { CompletedQuizzesModal } from './components/student/CompletedQuizzesModal';
 import { QuizBuilderWizard } from './components/teacher/QuizBuilderWizard';
 import { TeacherQuizHubView } from './components/teacher/TeacherQuizHubView';
+import { TeacherSubstitutesAndLeavesView } from './components/teacher/TeacherSubstitutesAndLeavesView';
 import { ParentalControlsModal } from './components/parent/ParentalControlsModal';
 import { InDevelopmentView } from './components/common/InDevelopmentView';
 import { LoginView } from './components/common/LoginView';
@@ -126,6 +127,9 @@ const AppContent: React.FC = () => {
 
       case 'attendance':
         return <AttendanceRegister />;
+
+      case 'subs-leaves':
+        return <TeacherSubstitutesAndLeavesView />;
 
       case 'calendar':
         return <AcademicCalendarView />;

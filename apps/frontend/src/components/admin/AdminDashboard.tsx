@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { StudentProfile, User, BadgeDefinition } from '@lms/shared';
+import { StudentProfile, User, BadgeDefinition, SubstituteRequest } from '@lms/shared';
 import { AdminStudentModal } from './AdminStudentModal';
 import { AdminTeacherModal } from './AdminTeacherModal';
 import { AdminParentLinkModal } from './AdminParentLinkModal';
@@ -18,6 +18,7 @@ import {
   Plus,
   Search,
   Edit,
+  Edit3,
   Trash2,
   Link as LinkIcon,
   Download,
@@ -90,6 +91,7 @@ export const AdminDashboard: React.FC = () => {
   const [isSubModalOpen, setIsSubModalOpen] = useState(false);
   const [subClassroomId, setSubClassroomId] = useState<string | undefined>(undefined);
   const [subAbsenceReqId, setSubAbsenceReqId] = useState<string | undefined>(undefined);
+  const [editingSubRequest, setEditingSubRequest] = useState<SubstituteRequest | null>(null);
 
   const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
   const [reassignClassroomId, setReassignClassroomId] = useState<string>('');
@@ -1412,6 +1414,7 @@ export const AdminDashboard: React.FC = () => {
 
             <button
               onClick={() => {
+                setEditingSubRequest(null);
                 setSubClassroomId(undefined);
                 setSubAbsenceReqId(undefined);
                 setIsSubModalOpen(true);
@@ -1444,17 +1447,19 @@ export const AdminDashboard: React.FC = () => {
                       </span>
                     </div>
 
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase ${
-                        req.status === 'APPROVED'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : req.status === 'REJECTED'
-                            ? 'bg-rose-100 text-rose-800'
-                            : 'bg-amber-100 text-amber-800'
-                      }`}
-                    >
-                      {req.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase ${
+                          req.status === 'APPROVED'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : req.status === 'REJECTED'
+                              ? 'bg-rose-100 text-rose-800'
+                              : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {req.status}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
@@ -1474,9 +1479,14 @@ export const AdminDashboard: React.FC = () => {
                       <p className="text-[10px] text-[#7A7A72] font-semibold">
                         Assigned Substitute:
                       </p>
-                      <p className="font-bold text-[#4A6741]">
-                        {req.assignedSubstituteName || req.suggestedSubstituteName || 'Unassigned'}
-                      </p>
+                      <div className="font-bold text-[#4A6741] flex items-center gap-1.5 mt-0.5">
+                        {req.assignedSubstituteName || req.suggestedSubstituteName || (
+                          <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold flex items-center gap-1 border border-amber-300">
+                            <AlertCircle className="w-3.5 h-3.5 text-amber-700" />
+                            <span>Choose Teacher</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -1484,24 +1494,51 @@ export const AdminDashboard: React.FC = () => {
                     <strong>Reason:</strong> {req.reason}
                   </p>
 
-                  {req.status === 'PENDING' && (
-                    <div className="pt-2 flex justify-end gap-2 border-t border-[#EDEAE2]">
-                      <button
-                        onClick={() => updateSubstituteStatus(req.id, 'REJECTED', 'Admin decline')}
-                        className="px-3.5 py-1.5 rounded-xl bg-white border border-rose-200 text-rose-700 font-bold text-xs hover:bg-rose-50 cursor-pointer"
-                      >
-                        Reject
-                      </button>
-                      <button
-                        onClick={() =>
-                          updateSubstituteStatus(req.id, 'APPROVED', 'Confirmed by Admin')
-                        }
-                        className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 shadow-xs cursor-pointer"
-                      >
-                        Approve & Confirm Substitute
-                      </button>
-                    </div>
-                  )}
+                  <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-[#EDEAE2]">
+                    <button
+                      onClick={() => {
+                        setEditingSubRequest(req);
+                        setSubClassroomId(req.classroomId);
+                        setIsSubModalOpen(true);
+                      }}
+                      className="px-3.5 py-1.5 rounded-xl bg-white border border-[#EDEAE2] text-[#2D2D2A] font-bold text-xs hover:bg-[#F9F7F2] flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-[#E88D67]" />
+                      <span>
+                        {!req.assignedSubstituteId && !req.suggestedSubstituteId
+                          ? 'Choose Teacher'
+                          : 'Edit Request'}
+                      </span>
+                    </button>
+
+                    {req.status === 'PENDING' && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() =>
+                            updateSubstituteStatus(req.id, 'REJECTED', 'Admin decline')
+                          }
+                          className="px-3.5 py-1.5 rounded-xl bg-white border border-rose-200 text-rose-700 font-bold text-xs hover:bg-rose-50 cursor-pointer"
+                        >
+                          Reject
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (!req.assignedSubstituteId && !req.suggestedSubstituteId) {
+                              toast.warning('Please choose a substitute teacher before approving.');
+                              setEditingSubRequest(req);
+                              setSubClassroomId(req.classroomId);
+                              setIsSubModalOpen(true);
+                              return;
+                            }
+                            updateSubstituteStatus(req.id, 'APPROVED', 'Confirmed by Admin');
+                          }}
+                          className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 shadow-xs cursor-pointer"
+                        >
+                          Approve & Confirm Substitute
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))
             )}
@@ -2040,9 +2077,13 @@ export const AdminDashboard: React.FC = () => {
 
       <SubstituteRequestModal
         isOpen={isSubModalOpen}
-        onClose={() => setIsSubModalOpen(false)}
+        onClose={() => {
+          setIsSubModalOpen(false);
+          setEditingSubRequest(null);
+        }}
         initialClassroomId={subClassroomId}
         initialTeacherAbsenceRequestId={subAbsenceReqId}
+        editingSubstituteRequest={editingSubRequest}
       />
 
       {/* Assign Subject Modal */}

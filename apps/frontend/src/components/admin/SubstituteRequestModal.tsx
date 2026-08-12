@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { EligibleSubstituteTeacher, Classroom } from '@lms/shared';
+import { EligibleSubstituteTeacher, Classroom, SubstituteRequest } from '@lms/shared';
 import { toast } from '@utils/toast';
 import {
   UserCheck,
@@ -14,6 +14,7 @@ import {
   Sparkles,
   Search,
   Filter,
+  Edit3,
 } from 'lucide-react';
 
 interface SubstituteRequestModalProps {
@@ -21,6 +22,7 @@ interface SubstituteRequestModalProps {
   onClose: () => void;
   initialClassroomId?: string;
   initialTeacherAbsenceRequestId?: string;
+  editingSubstituteRequest?: SubstituteRequest | null;
 }
 
 export const SubstituteRequestModal: React.FC<SubstituteRequestModalProps> = ({
@@ -28,8 +30,15 @@ export const SubstituteRequestModal: React.FC<SubstituteRequestModalProps> = ({
   onClose,
   initialClassroomId,
   initialTeacherAbsenceRequestId,
+  editingSubstituteRequest,
 }) => {
-  const { classrooms, allUsers, fetchEligibleSubstitutes, createSubstituteRequest } = useApp();
+  const {
+    classrooms,
+    allUsers,
+    fetchEligibleSubstitutes,
+    createSubstituteRequest,
+    updateSubstituteStatus,
+  } = useApp();
 
   const [selectedClassroomId, setSelectedClassroomId] = useState<string>(
     initialClassroomId || classrooms[0]?.id || '',
@@ -47,8 +56,20 @@ export const SubstituteRequestModal: React.FC<SubstituteRequestModalProps> = ({
   const originalTeacher = allUsers.find((u) => u.id === currentClassroom?.teacherId);
 
   useEffect(() => {
-    if (initialClassroomId) setSelectedClassroomId(initialClassroomId);
-  }, [initialClassroomId]);
+    if (editingSubstituteRequest) {
+      setSelectedClassroomId(editingSubstituteRequest.classroomId);
+      setDate(editingSubstituteRequest.date);
+      setTimeSlot(editingSubstituteRequest.timeSlot);
+      setReason(editingSubstituteRequest.reason);
+      setSelectedSubstituteId(
+        editingSubstituteRequest.assignedSubstituteId ||
+          editingSubstituteRequest.suggestedSubstituteId ||
+          '',
+      );
+    } else if (initialClassroomId) {
+      setSelectedClassroomId(initialClassroomId);
+    }
+  }, [initialClassroomId, editingSubstituteRequest, isOpen]);
 
   useEffect(() => {
     if (isOpen && currentClassroom) {
@@ -69,21 +90,41 @@ export const SubstituteRequestModal: React.FC<SubstituteRequestModalProps> = ({
       return;
     }
 
+    if (!selectedSubstituteId) {
+      toast.warning('Please choose a substitute teacher before submitting.');
+      return;
+    }
+
     if (!originalTeacher) {
       toast.error('Classroom does not have a primary teacher assigned.');
       return;
     }
 
-    await createSubstituteRequest({
-      classroomId: selectedClassroomId,
-      subjectId: currentClassroom?.subject || 'General',
-      date,
-      timeSlot,
-      originalTeacherId: originalTeacher.id,
-      suggestedSubstituteId: selectedSubstituteId || undefined,
-      reason: reason.trim(),
-      teacherAbsenceRequestId: initialTeacherAbsenceRequestId,
-    });
+    if (editingSubstituteRequest) {
+      await updateSubstituteStatus(
+        editingSubstituteRequest.id,
+        editingSubstituteRequest.status || 'PENDING',
+        'Updated substitute teacher assignment',
+        selectedSubstituteId,
+      );
+      toast.success('Substitute teacher assigned & request updated successfully!', {
+        title: 'Substitute Updated',
+      });
+    } else {
+      await createSubstituteRequest({
+        classroomId: selectedClassroomId,
+        subjectId: currentClassroom?.subject || 'General',
+        date,
+        timeSlot,
+        originalTeacherId: originalTeacher.id,
+        suggestedSubstituteId: selectedSubstituteId,
+        reason: reason.trim(),
+        teacherAbsenceRequestId: initialTeacherAbsenceRequestId,
+      });
+      toast.success('Substitute request created successfully!', {
+        title: 'Request Created',
+      });
+    }
 
     onClose();
   };
@@ -232,81 +273,119 @@ export const SubstituteRequestModal: React.FC<SubstituteRequestModalProps> = ({
               </div>
             ) : (
               <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                {filteredCandidates.map((cand) => (
-                  <div
-                    key={cand.teacherId}
-                    onClick={() => setSelectedSubstituteId(cand.teacherId)}
-                    className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                      selectedSubstituteId === cand.teacherId
-                        ? 'border-[#E88D67] bg-[#FDEEDC]/40 ring-1 ring-[#E88D67]'
-                        : 'border-[#EDEAE2] bg-[#F9F7F2] hover:border-[#4A6741]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={cand.teacherAvatar}
-                        alt={cand.teacherName}
-                        className="w-8 h-8 rounded-full object-cover shrink-0 border border-white shadow-xs"
-                      />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-xs text-[#2D2D2A]">
-                            {cand.teacherName}
-                          </span>
-                          {cand.isQualified ? (
-                            <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                              Subject Qualified ✅
+                {filteredCandidates.map((cand) => {
+                  const isAvailable = cand.isAvailable;
+                  const isSelected = selectedSubstituteId === cand.teacherId;
+
+                  return (
+                    <div
+                      key={cand.teacherId}
+                      onClick={() => {
+                        if (!isAvailable) {
+                          toast.warning(
+                            `Cannot select ${cand.teacherName}: ${cand.rejectionReason || 'Teacher is on leave'}`,
+                          );
+                          return;
+                        }
+                        setSelectedSubstituteId(cand.teacherId);
+                      }}
+                      className={`p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                        !isAvailable
+                          ? 'opacity-50 bg-gray-100 border-gray-200 cursor-not-allowed'
+                          : isSelected
+                            ? 'border-[#E88D67] bg-[#FDEEDC]/40 ring-1 ring-[#E88D67] cursor-pointer'
+                            : 'border-[#EDEAE2] bg-[#F9F7F2] hover:border-[#4A6741] cursor-pointer'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={cand.teacherAvatar}
+                          alt={cand.teacherName}
+                          className="w-8 h-8 rounded-full object-cover shrink-0 border border-white shadow-xs"
+                        />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-xs text-[#2D2D2A]">
+                              {cand.teacherName}
                             </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[10px] font-semibold">
-                              General Staff
-                            </span>
-                          )}
+                            {cand.isQualified ? (
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                                Subject Qualified ✅
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[10px] font-semibold">
+                                General Staff
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-[#7A7A72]">
+                            Active Workload: {cand.currentWorkload} duties •{' '}
+                            {isAvailable ? (
+                              <span className="text-emerald-700 font-bold">Available</span>
+                            ) : (
+                              <span className="text-rose-600 font-bold">
+                                ⛔ {cand.rejectionReason || 'On Approved Leave'}
+                              </span>
+                            )}
+                          </p>
                         </div>
-                        <p className="text-[10px] text-[#7A7A72]">
-                          Active Workload: {cand.currentWorkload} duties •{' '}
-                          {cand.isAvailable ? (
-                            <span className="text-emerald-700 font-bold">Available</span>
-                          ) : (
-                            <span className="text-rose-600 font-bold">
-                              {cand.rejectionReason || 'Busy'}
-                            </span>
-                          )}
-                        </p>
+                      </div>
+
+                      <div className="shrink-0">
+                        {!isAvailable ? (
+                          <span className="px-3 py-1 rounded-xl bg-rose-100 text-rose-800 text-[10px] font-extrabold flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3 text-rose-700" />
+                            <span>On Leave ⛔</span>
+                          </span>
+                        ) : isSelected ? (
+                          <span className="px-3 py-1 rounded-xl bg-[#E88D67] text-white text-[10px] font-extrabold shadow-xs">
+                            Selected
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 rounded-xl bg-white border border-[#EDEAE2] text-[#2D2D2A] text-[10px] font-bold hover:bg-[#EDEAE2]">
+                            Select
+                          </span>
+                        )}
                       </div>
                     </div>
-
-                    <div className="shrink-0">
-                      {selectedSubstituteId === cand.teacherId ? (
-                        <span className="px-3 py-1 rounded-xl bg-[#E88D67] text-white text-[10px] font-extrabold shadow-xs">
-                          Selected
-                        </span>
-                      ) : (
-                        <span className="px-3 py-1 rounded-xl bg-white border border-[#EDEAE2] text-[#2D2D2A] text-[10px] font-bold hover:bg-[#EDEAE2]">
-                          Select
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-[#EDEAE2]">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#7A7A72] hover:bg-[#F9F7F2]"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2.5 rounded-xl bg-[#E88D67] hover:bg-[#D87B55] text-white text-xs font-extrabold shadow-sm transition-all cursor-pointer"
-            >
-              Submit Substitute Request
-            </button>
+          <div className="flex items-center justify-between gap-4 pt-4 border-t border-[#EDEAE2]">
+            {!selectedSubstituteId && (
+              <p className="text-xs font-bold text-amber-700 flex items-center gap-1.5 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Choose a substitute teacher above before submitting.</span>
+              </p>
+            )}
+
+            <div className="flex justify-end gap-2 ml-auto">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#7A7A72] hover:bg-[#F9F7F2]"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={!selectedSubstituteId}
+                className={`px-5 py-2.5 rounded-xl text-xs font-extrabold shadow-sm transition-all ${
+                  selectedSubstituteId
+                    ? 'bg-[#E88D67] hover:bg-[#D87B55] text-white cursor-pointer'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-75'
+                }`}
+              >
+                {selectedSubstituteId
+                  ? editingSubstituteRequest
+                    ? 'Save & Update Substitute'
+                    : 'Submit Substitute Request'
+                  : 'Choose Teacher to Submit'}
+              </button>
+            </div>
           </div>
         </form>
       </div>

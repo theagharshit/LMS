@@ -436,12 +436,10 @@ export class TeacherAssignmentService {
           where: { date, status: { in: ['APPROVED', 'PENDING'] } },
         },
         teacherAbsencesSubmitted: {
-          where: { status: 'approved' },
+          where: { status: { in: ['approved', 'pending'] } },
         },
       },
     });
-
-    const reqDate = new Date(date);
 
     const candidates: EligibleSubstituteTeacher[] = teachers.map((teacher) => {
       // 1. Qualification Check
@@ -455,15 +453,15 @@ export class TeacherAssignmentService {
       let isAvailable = true;
       let rejectionReason: string | undefined;
 
-      // Check if teacher has approved leave covering date
+      // Check if teacher has approved or pending leave covering date
       const isOnLeave = teacher.teacherAbsencesSubmitted.some((abs) => {
-        const start = new Date(abs.startDate);
-        const end = new Date(abs.endDate);
-        return reqDate >= start && reqDate <= end;
+        const startStr = abs.startDate.toISOString().split('T')[0];
+        const endStr = abs.endDate.toISOString().split('T')[0];
+        return date >= startStr && date <= endStr;
       });
       if (isOnLeave) {
         isAvailable = false;
-        rejectionReason = 'Teacher is on approved leave';
+        rejectionReason = 'Teacher is on approved/pending leave';
       }
 
       // Check if teacher already has substitute duty at exact timeSlot
@@ -531,6 +529,46 @@ export class TeacherAssignmentService {
         where: { id: data.suggestedSubstituteId },
         select: { id: true, name: true },
       });
+    }
+
+    // Check if active substitute request already exists for this classroom, date, timeSlot & original teacher
+    const existing = await prisma.substituteRequest.findFirst({
+      where: {
+        classroomId: data.classroomId,
+        date: data.date,
+        timeSlot: data.timeSlot,
+        originalTeacherId: originalTeacher.id,
+        status: { in: ['PENDING', 'APPROVED'] },
+      },
+      include: {
+        classroom: true,
+        subject: true,
+        originalTeacher: true,
+        suggestedSubstitute: true,
+        assignedSubstitute: true,
+        createdByAdmin: true,
+      },
+    });
+
+    if (existing) {
+      const updatedExisting = await prisma.substituteRequest.update({
+        where: { id: existing.id },
+        data: {
+          teacherAbsenceRequestId: data.teacherAbsenceRequestId || existing.teacherAbsenceRequestId,
+          suggestedSubstituteId: suggestedSubstitute?.id || existing.suggestedSubstituteId,
+          assignedSubstituteId: suggestedSubstitute?.id || existing.assignedSubstituteId,
+          reason: data.reason || existing.reason,
+        },
+        include: {
+          classroom: true,
+          subject: true,
+          originalTeacher: true,
+          suggestedSubstitute: true,
+          assignedSubstitute: true,
+          createdByAdmin: true,
+        },
+      });
+      return this.mapSubstituteRequest(updatedExisting);
     }
 
     const created = await prisma.substituteRequest.create({
