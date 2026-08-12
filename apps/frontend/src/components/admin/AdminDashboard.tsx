@@ -166,9 +166,7 @@ export const AdminDashboard: React.FC = () => {
   const eligibleTeachersForSubject = useMemo(() => {
     if (!clsSubject) return [];
     return teacherUsers.filter((t) =>
-      (t.subjectsTaught || []).some(
-        (s) => s.toLowerCase() === clsSubject.toLowerCase(),
-      ),
+      (t.subjectsTaught || []).some((s) => s.toLowerCase() === clsSubject.toLowerCase()),
     );
   }, [teacherUsers, clsSubject]);
 
@@ -1669,7 +1667,9 @@ export const AdminDashboard: React.FC = () => {
                 >
                   <option value="">-- Select Subject --</option>
                   {knownSubjects.map((sub) => (
-                    <option key={sub} value={sub}>{sub}</option>
+                    <option key={sub} value={sub}>
+                      {sub}
+                    </option>
                   ))}
                 </select>
               </div>

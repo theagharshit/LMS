@@ -191,12 +191,16 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
     try {
       const success = await joinClassroomByCode(joinCodeInput);
       if (success) {
-        toast.success('You are now enrolled and can access this classroom!', { title: 'Classroom joined' });
+        toast.success('You are now enrolled and can access this classroom!', {
+          title: 'Classroom joined',
+        });
         setJoinCodeInput('');
         setJoinError('');
         setShowJoinModal(false);
       } else {
-        setJoinError('Invalid class code or the classroom is at capacity. Please double-check with your teacher.');
+        setJoinError(
+          'Invalid class code or the classroom is at capacity. Please double-check with your teacher.',
+        );
         toast.error('Class code not recognised or classroom is full.', { title: 'Could not join' });
       }
     } finally {
@@ -285,7 +289,6 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
       subjectFilter === 'all' || cls.subject.toLowerCase().includes(subjectFilter.toLowerCase());
     return matchesSearch && matchesSubject;
   });
-
 
   if (!selectedClassroomId || !currentClassroom) {
     return (

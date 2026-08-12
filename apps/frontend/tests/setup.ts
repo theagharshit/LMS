@@ -145,7 +145,16 @@ const mockApiRouter = async (input: RequestInfo | URL, init?: RequestInit): Prom
   if (url.includes('/api/db/classrooms/join')) {
     const requestedCode = (body?.code || '').toUpperCase();
     // Only succeed for known test classroom codes (MATH8A, SCI8A, CLS1001 etc.)
-    const knownTestCodes = ['MATH8A', 'SCI8A', 'NEP8A', 'COMP8A', 'CLS1001', 'CLS1002', 'CLS1003', 'CLS1004'];
+    const knownTestCodes = [
+      'MATH8A',
+      'SCI8A',
+      'NEP8A',
+      'COMP8A',
+      'CLS1001',
+      'CLS1002',
+      'CLS1003',
+      'CLS1004',
+    ];
     if (knownTestCodes.includes(requestedCode)) {
       return new Response(
         JSON.stringify({

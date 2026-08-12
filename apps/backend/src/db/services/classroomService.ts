@@ -141,7 +141,13 @@ export class ClassroomService {
       prisma.$transaction(async (tx) => {
         const classroom = await tx.classroom.findFirst({
           where: { code: code.trim().toUpperCase(), isArchived: false },
-          include: { _count: { select: { enrollments: true } }, subjectRef: true, cohortRef: true, teacher: true, enrollments: true },
+          include: {
+            _count: { select: { enrollments: true } },
+            subjectRef: true,
+            cohortRef: true,
+            teacher: true,
+            enrollments: true,
+          },
         });
         if (!classroom) throw new Error('No classroom found with that code.');
         if (classroom._count.enrollments >= classroom.maxCapacity)
@@ -151,7 +157,9 @@ export class ClassroomService {
           create: { classroomId: classroom.id, studentId },
           update: {},
         });
-        const updatedEnrollments = await tx.classroomEnrollment.findMany({ where: { classroomId: classroom.id } });
+        const updatedEnrollments = await tx.classroomEnrollment.findMany({
+          where: { classroomId: classroom.id },
+        });
         return {
           id: classroom.id,
           name: classroom.name,
