@@ -72,19 +72,19 @@ adminRoutes.post(
 );
 adminRoutes.patch(
   '/db/teachers/substitutes/:id/status',
-  requireRolesWhenStrict(['admin', 'teacher']),
+  requireRolesWhenStrict('admin', 'teacher'),
   updateSubstituteRequestStatus,
 );
 adminRoutes.get(
   '/db/teachers/substitutes',
-  requireRolesWhenStrict(['admin', 'teacher']),
+  requireRolesWhenStrict('admin', 'teacher'),
   getSubstituteRequests,
 );
 
 // Teacher Absence Requests
 adminRoutes.post(
   '/db/teachers/absence-requests',
-  requireRolesWhenStrict(['teacher', 'admin']),
+  requireRolesWhenStrict('teacher', 'admin'),
   submitTeacherAbsenceRequest,
 );
 adminRoutes.patch(
@@ -94,7 +94,7 @@ adminRoutes.patch(
 );
 adminRoutes.get(
   '/db/teachers/absence-requests',
-  requireRolesWhenStrict(['admin', 'teacher']),
+  requireRolesWhenStrict('admin', 'teacher'),
   getTeacherAbsenceRequests,
 );
 
