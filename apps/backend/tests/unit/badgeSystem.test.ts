@@ -92,7 +92,7 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
     // Ensure classroom & quiz exists for auto-trigger tests
     await prisma.user.upsert({
       where: { id: 'user-teach-1' },
-      update: {},
+      update: { name: 'Mr. Ramesh Thapa' },
       create: {
         id: 'user-teach-1',
         name: 'Mr. Ramesh Thapa',

@@ -35,6 +35,13 @@ teacherRoutes.post(
 );
 teacherRoutes.post('/db/assignments', requireRolesWhenStrict('teacher', 'admin'), addAssignment);
 teacherRoutes.post('/db/quizzes', requireRolesWhenStrict('teacher', 'admin'), addQuiz);
+teacherRoutes.put('/db/quizzes/:id', requireRolesWhenStrict('teacher', 'admin'), updateQuiz);
+teacherRoutes.delete('/db/quizzes/:id', requireRolesWhenStrict('teacher', 'admin'), deleteQuiz);
+teacherRoutes.post(
+  '/db/quizzes/:id/start',
+  requireRolesWhenStrict('teacher', 'admin'),
+  startQuizLive,
+);
 teacherRoutes.put(
   '/db/quizzes/:id/marks-mode',
   requireRolesWhenStrict('teacher', 'admin'),
@@ -56,3 +63,15 @@ teacherRoutes.post(
   requireRolesWhenStrict('teacher', 'admin'),
   askTeacherAssistantAi,
 );
+teacherRoutes.get('/db/resources', requireRolesWhenStrict('teacher', 'admin'), getResources);
+teacherRoutes.post('/db/resources', requireRolesWhenStrict('teacher', 'admin'), addResource);
+teacherRoutes.put('/db/resources/:id', requireRolesWhenStrict('teacher', 'admin'), updateResource);
+teacherRoutes.delete(
+  '/db/resources/:id',
+  requireRolesWhenStrict('teacher', 'admin'),
+  deleteResource,
+);
+teacherRoutes.get('/db/modules', requireRolesWhenStrict('teacher', 'admin'), getModules);
+teacherRoutes.post('/db/modules', requireRolesWhenStrict('teacher', 'admin'), addModule);
+teacherRoutes.put('/db/modules/:id', requireRolesWhenStrict('teacher', 'admin'), updateModule);
+teacherRoutes.delete('/db/modules/:id', requireRolesWhenStrict('teacher', 'admin'), deleteModule);

@@ -80,6 +80,14 @@ export const useAuthState = () => {
   const activeChildList = studentProfiles.filter((s) => currentUser.childrenIds?.includes(s.id));
   const activeChild = studentProfiles.find((s) => s.id === activeChildId) || studentProfiles[0];
 
+  const updateStudentIdCardPhoto = (studentId: string, idCardPhotoUrl: string) => {
+    setStudentProfiles((profiles) =>
+      profiles.map((profile) =>
+        profile.id === studentId ? { ...profile, idCardPhotoUrl } : profile,
+      ),
+    );
+  };
+
   useEffect(() => {
     if (typeof sessionStorage === 'undefined' || currentUser.role !== 'parent') return;
     sessionStorage.setItem(
@@ -107,6 +115,7 @@ export const useAuthState = () => {
     setActiveChildId,
     activeChildList,
     activeChild,
+    updateStudentIdCardPhoto,
     jwtToken,
     authReady: Boolean(jwtToken && authenticatedUserId === currentUser.id),
   };

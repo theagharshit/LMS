@@ -8,7 +8,7 @@ function mapModule(m: {
   title: string;
   description: string;
   durationMinutes: number;
-  completedByStudentIds: string[];
+  completions: { studentId: string }[];
   attachments: { id: string; title: string; type: string; url: string; size: string | null }[];
 }): ModuleItem {
   return {
@@ -18,23 +18,21 @@ function mapModule(m: {
     title: m.title,
     description: m.description,
     durationMinutes: m.durationMinutes,
-    completedByStudentIds: m.completedByStudentIds,
-    attachments: m.attachments.map(
-      (a): Attachment => ({
-        id: a.id,
-        title: a.title,
-        type: a.type as Attachment['type'],
-        url: a.url,
-        size: a.size || undefined,
-      }),
-    ),
+    completedByStudentIds: m.completions.map((completion) => completion.studentId),
+    attachments: m.attachments.map((a): Attachment => ({
+      id: a.id,
+      title: a.title,
+      type: a.type as Attachment['type'],
+      url: a.url,
+      size: a.size || undefined,
+    })),
   };
 }
 
 export class ModuleService {
   public async getModules(): Promise<ModuleItem[]> {
     const modules = await prisma.moduleItem.findMany({
-      include: { attachments: true },
+      include: { attachments: true, completions: { select: { studentId: true } } },
       orderBy: { unitName: 'asc' },
     });
     return modules.map(mapModule);
@@ -43,7 +41,7 @@ export class ModuleService {
   public async getModulesByClassroom(classroomId: string): Promise<ModuleItem[]> {
     const modules = await prisma.moduleItem.findMany({
       where: { classroomId },
-      include: { attachments: true },
+      include: { attachments: true, completions: { select: { studentId: true } } },
       orderBy: { unitName: 'asc' },
     });
     return modules.map(mapModule);
@@ -61,7 +59,11 @@ export class ModuleService {
         title: data.title,
         description: data.description,
         durationMinutes: data.durationMinutes,
-        completedByStudentIds: data.completedByStudentIds || [],
+        completions: data.completedByStudentIds?.length
+          ? {
+              create: [...new Set(data.completedByStudentIds)].map((studentId) => ({ studentId })),
+            }
+          : undefined,
         attachments: data.attachments?.length
           ? {
               create: data.attachments.map((a) => ({
@@ -73,7 +75,7 @@ export class ModuleService {
             }
           : undefined,
       },
-      include: { attachments: true },
+      include: { attachments: true, completions: { select: { studentId: true } } },
     });
     return mapModule(created);
   }
@@ -85,30 +87,41 @@ export class ModuleService {
     const existing = await prisma.moduleItem.findUnique({ where: { id } });
     if (!existing) return null;
 
-    if (data.attachments) {
-      await prisma.attachment.deleteMany({ where: { moduleItemId: id } });
-    }
+    const updated = await prisma.$transaction(async (tx) => {
+      if (data.attachments) {
+        await tx.attachment.deleteMany({ where: { moduleItemId: id } });
+      }
+      if (data.completedByStudentIds) {
+        await tx.moduleCompletion.deleteMany({ where: { moduleItemId: id } });
+      }
 
-    const updated = await prisma.moduleItem.update({
-      where: { id },
-      data: {
-        unitName: data.unitName,
-        title: data.title,
-        description: data.description,
-        durationMinutes: data.durationMinutes,
-        completedByStudentIds: data.completedByStudentIds,
-        attachments: data.attachments?.length
-          ? {
-              create: data.attachments.map((a) => ({
-                title: a.title,
-                type: a.type,
-                url: a.url,
-                size: a.size,
-              })),
-            }
-          : undefined,
-      },
-      include: { attachments: true },
+      return tx.moduleItem.update({
+        where: { id },
+        data: {
+          unitName: data.unitName,
+          title: data.title,
+          description: data.description,
+          durationMinutes: data.durationMinutes,
+          attachments: data.attachments?.length
+            ? {
+                create: data.attachments.map((a) => ({
+                  title: a.title,
+                  type: a.type,
+                  url: a.url,
+                  size: a.size,
+                })),
+              }
+            : undefined,
+          completions: data.completedByStudentIds?.length
+            ? {
+                create: [...new Set(data.completedByStudentIds)].map((studentId) => ({
+                  studentId,
+                })),
+              }
+            : undefined,
+        },
+        include: { attachments: true, completions: { select: { studentId: true } } },
+      });
     });
     return mapModule(updated);
   }

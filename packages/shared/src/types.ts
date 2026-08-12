@@ -25,6 +25,8 @@ export interface User {
 }
 
 export interface StudentProfile extends User {
+  /** Student-uploaded image used for the printable ID card. */
+  idCardPhotoUrl?: string;
   attendancePercentage: number;
   streakDays: number;
   xpPoints: number;

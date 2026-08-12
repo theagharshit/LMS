@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '@context/AppContext';
 import { Classroom, StudyResource, Attachment } from '@lms/shared';
+import { apiFetch } from '@utils/apiFetch';
+import { toast } from '@utils/toast';
 import {
   Upload,
   FileText,
@@ -57,7 +59,7 @@ export const TeacherMaterialsPanel: React.FC<TeacherMaterialsPanelProps> = ({ cl
 
     let fileUrl = '';
     try {
-      const res = await fetch('/api/upload', {
+      const res = await apiFetch('/api/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -68,15 +70,27 @@ export const TeacherMaterialsPanel: React.FC<TeacherMaterialsPanelProps> = ({ cl
           uploadedBy: currentUser.name,
           classroomId: classroom.id,
         }),
+        feedback: {
+          success: `${file.name} was uploaded securely.`,
+          error: 'The file was rejected and was not added to study materials.',
+          successTitle: 'Material uploaded',
+        },
       });
-      if (res.ok) {
-        const data = await res.json();
-        fileUrl = data.record?.downloadUrl || URL.createObjectURL(file);
-      } else {
-        fileUrl = URL.createObjectURL(file);
+      if (!res.ok) return;
+      const data = await res.json();
+      fileUrl = data.record?.downloadUrl || '';
+      if (!fileUrl) {
+        toast.error('The upload returned no valid file location.', { title: 'Upload incomplete' });
+        return;
       }
-    } catch {
-      fileUrl = URL.createObjectURL(file);
+    } catch (error) {
+      console.error('[TeacherMaterialsPanel] Material upload failed:', error);
+      toast.error('The material could not be uploaded and was not added.', {
+        title: 'Upload failed',
+      });
+      return;
+    } finally {
+      setIsUploading(false);
     }
 
     let type: StudyResource['type'] = 'doc';
@@ -94,7 +108,6 @@ export const TeacherMaterialsPanel: React.FC<TeacherMaterialsPanelProps> = ({ cl
       sizeFormatted: formattedSize,
       tags: [classroom.subject],
     });
-    setIsUploading(false);
   };
 
   const handleAddLink = () => {
@@ -122,15 +135,13 @@ export const TeacherMaterialsPanel: React.FC<TeacherMaterialsPanelProps> = ({ cl
       dueDate: asgDueDate || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
       dueTime: '23:59',
       totalPoints: asgPoints,
-      attachments: classResources.slice(0, 2).map(
-        (r): Attachment => ({
-          id: r.id,
-          title: r.title,
-          type: r.type === 'pdf' ? 'pdf' : r.type === 'video' ? 'video' : 'doc',
-          url: r.url,
-          size: r.sizeFormatted,
-        }),
-      ),
+      attachments: classResources.slice(0, 2).map((r): Attachment => ({
+        id: r.id,
+        title: r.title,
+        type: r.type === 'pdf' ? 'pdf' : r.type === 'video' ? 'video' : 'doc',
+        url: r.url,
+        size: r.sizeFormatted,
+      })),
       rubric: [],
     });
     setAsgTitle('');
@@ -147,15 +158,13 @@ export const TeacherMaterialsPanel: React.FC<TeacherMaterialsPanelProps> = ({ cl
       title: modTitle,
       description: modDescription,
       durationMinutes: modDuration,
-      attachments: classResources.slice(0, 3).map(
-        (r): Attachment => ({
-          id: r.id,
-          title: r.title,
-          type: r.type === 'pdf' ? 'pdf' : r.type === 'video' ? 'video' : 'doc',
-          url: r.url,
-          size: r.sizeFormatted,
-        }),
-      ),
+      attachments: classResources.slice(0, 3).map((r): Attachment => ({
+        id: r.id,
+        title: r.title,
+        type: r.type === 'pdf' ? 'pdf' : r.type === 'video' ? 'video' : 'doc',
+        url: r.url,
+        size: r.sizeFormatted,
+      })),
     });
     setModUnit('');
     setModTitle('');

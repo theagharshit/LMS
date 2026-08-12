@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useApp } from '@context/AppContext';
 import { Quiz, QuizQuestion, StudyResource } from '@lms/shared';
+import { apiFetch } from '@utils/apiFetch';
 import {
   X,
   ChevronRight,
@@ -42,14 +43,7 @@ export const QuizBuilderWizard: React.FC<QuizBuilderWizardProps> = ({
   editingQuiz,
   hasSubmissions = false,
 }) => {
-  const {
-    classrooms,
-    resources,
-    streamPosts,
-    addQuiz,
-    updateQuiz,
-    currentUser,
-  } = useApp();
+  const { classrooms, resources, streamPosts, addQuiz, updateQuiz, currentUser } = useApp();
 
   const isEditMode = Boolean(editingQuiz);
   const readOnly = isEditMode && hasSubmissions;
@@ -91,18 +85,16 @@ export const QuizBuilderWizard: React.FC<QuizBuilderWizardProps> = ({
     const fromStream: StudyResource[] = streamPosts
       .filter((p) => p.classroomId === selectedClassroomId && p.attachments?.length)
       .flatMap((p) =>
-        (p.attachments || []).map(
-          (att, i): StudyResource => ({
-            id: `stream-${p.id}-${i}`,
-            classroomId: p.classroomId,
-            teacherId: currentUser.id,
-            title: att.title,
-            type: att.type === 'pdf' ? 'pdf' : att.type === 'video' ? 'video' : 'doc',
-            url: att.url,
-            sizeFormatted: att.size,
-            createdAt: p.createdAt,
-          }),
-        ),
+        (p.attachments || []).map((att, i): StudyResource => ({
+          id: `stream-${p.id}-${i}`,
+          classroomId: p.classroomId,
+          teacherId: currentUser.id,
+          title: att.title,
+          type: att.type === 'pdf' ? 'pdf' : att.type === 'video' ? 'video' : 'doc',
+          url: att.url,
+          sizeFormatted: att.size,
+          createdAt: p.createdAt,
+        })),
       );
 
     const merged = [...fromLibrary];
@@ -114,9 +106,7 @@ export const QuizBuilderWizard: React.FC<QuizBuilderWizardProps> = ({
     return merged;
   }, [resources, streamPosts, selectedClassroomId, showAllResources, currentUser.id]);
 
-  const selectedResources = availableResources.filter((r) =>
-    selectedResourceIds.includes(r.id),
-  );
+  const selectedResources = availableResources.filter((r) => selectedResourceIds.includes(r.id));
 
   // Prevent stale resource IDs (e.g. after classroom change) from producing an empty AI context.
   useEffect(() => {
@@ -147,12 +137,14 @@ export const QuizBuilderWizard: React.FC<QuizBuilderWizardProps> = ({
       }
 
       if (creationMode === 'ai' && selectedResources.length === 0) {
-        setAiGenerationError('Please select at least one study material before generating questions.');
+        setAiGenerationError(
+          'Please select at least one study material before generating questions.',
+        );
         setStep(2);
         return;
       }
 
-      const res = await fetch('/api/ai/quiz-generator', {
+      const res = await apiFetch('/api/ai/quiz-generator', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -167,20 +159,26 @@ export const QuizBuilderWizard: React.FC<QuizBuilderWizardProps> = ({
           resourceTypes: selectedResources.map((r) => r.type),
           resourceMimeTypes: selectedResources.map((r) => r.mimeType || ''),
         }),
+        feedback: {
+          success: 'Quiz questions were generated from the selected materials.',
+          error: 'Quiz questions could not be generated.',
+          successTitle: 'Questions generated',
+        },
       });
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {
         const message =
-          (data && (data.error || data.message)) ||
-          'Quiz generation failed. Please try again.';
+          (data && (data.error || data.message)) || 'Quiz generation failed. Please try again.';
         setAiGenerationError(message);
         return;
       }
 
       const generated = data?.quiz?.questions || data?.questions || [];
       if (!Array.isArray(generated) || generated.length === 0) {
-        setAiGenerationError('AI returned no questions. Please select different resources and try again.');
+        setAiGenerationError(
+          'AI returned no questions. Please select different resources and try again.',
+        );
         return;
       }
 
@@ -362,7 +360,8 @@ export const QuizBuilderWizard: React.FC<QuizBuilderWizardProps> = ({
             <>
               <div className="flex items-center justify-between">
                 <p className="text-xs text-[#7A7A72]">
-                  Select study materials to base this quiz on ({selectedResourceIds.length} selected)
+                  Select study materials to base this quiz on ({selectedResourceIds.length}{' '}
+                  selected)
                 </p>
                 <label className="flex items-center gap-1.5 text-xs font-bold text-[#4A6741] cursor-pointer">
                   <input
@@ -419,7 +418,9 @@ export const QuizBuilderWizard: React.FC<QuizBuilderWizardProps> = ({
                     min={1}
                     max={50}
                     value={questionCount}
-                    onChange={(e) => setQuestionCount(Math.min(50, Math.max(1, Number(e.target.value))))}
+                    onChange={(e) =>
+                      setQuestionCount(Math.min(50, Math.max(1, Number(e.target.value))))
+                    }
                     disabled={readOnly}
                     className="w-full mt-1 px-3 py-2 rounded-xl border border-[#EDEAE2] text-sm"
                   />
@@ -467,14 +468,19 @@ export const QuizBuilderWizard: React.FC<QuizBuilderWizardProps> = ({
                           : 'bg-[#F9F7F2] border border-[#EDEAE2]'
                       }`}
                     >
-                      {mode === 'immediate' ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                      {mode === 'immediate' ? (
+                        <Eye className="w-3.5 h-3.5" />
+                      ) : (
+                        <EyeOff className="w-3.5 h-3.5" />
+                      )}
                       {mode === 'immediate' ? 'Show Now' : 'Hide Until Release'}
                     </button>
                   ))}
                 </div>
                 <p className="text-[10px] text-[#7A7A72] mt-1">
-                  Grading uses the correct answers (answer key) you enter in the Questions step. Choose whether
-                  students can see their scores and solutions immediately or only after you release them.
+                  Grading uses the correct answers (answer key) you enter in the Questions step.
+                  Choose whether students can see their scores and solutions immediately or only
+                  after you release them.
                 </p>
               </div>
               {!readOnly && (
@@ -580,7 +586,9 @@ export const QuizBuilderWizard: React.FC<QuizBuilderWizardProps> = ({
                         type="number"
                         min={1}
                         value={q.points}
-                        onChange={(e) => updateQuestion(idx, { points: Math.max(1, Number(e.target.value)) })}
+                        onChange={(e) =>
+                          updateQuestion(idx, { points: Math.max(1, Number(e.target.value)) })
+                        }
                         disabled={readOnly}
                         placeholder="Marks"
                         className="px-2 py-1.5 rounded-lg border border-[#EDEAE2] text-xs bg-white"

@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { getAvatarUrl } from '../../utils/avatarUtils';
-import { Attachment } from '@lms/shared';
+import { TeacherMaterialsPanel } from '../teacher/TeacherMaterialsPanel';
+import { Attachment, isQuizTakeable, isQuizVisibleToStudents } from '@lms/shared';
 import { useDebouncedValue } from '../../utils/hooks';
 import { apiFetch } from '@utils/apiFetch';
 import { toast } from '@utils/toast';
@@ -212,6 +213,50 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
       .catch(() => toast.error('Could not copy the class code. Please copy it manually.'));
   };
 
+  const subjectFilterOptions = useMemo(() => {
+    const subjects = Array.from(new Set(classrooms.map((classroom) => classroom.subject))).sort();
+    return [
+      { id: 'all', label: 'All Subjects' },
+      ...subjects.map((subject) => ({ id: subject.toLowerCase(), label: subject })),
+    ];
+  }, [classrooms]);
+
+  const getPendingTaskCount = (classroomId: string) => {
+    const pendingAssignments = assignments.filter((assignment) => {
+      if (assignment.classroomId !== classroomId) return false;
+      const submission = submissions.find(
+        (item) => item.assignmentId === assignment.id && item.studentId === currentUser.id,
+      );
+      return !submission || submission.status === 'pending';
+    });
+    const pendingQuizzes = quizzes.filter((quiz) => {
+      if (
+        quiz.classroomId !== classroomId ||
+        !isQuizVisibleToStudents(quiz) ||
+        !isQuizTakeable(quiz)
+      ) {
+        return false;
+      }
+      return !quizSubmissions.some(
+        (submission) => submission.quizId === quiz.id && submission.studentId === currentUser.id,
+      );
+    });
+    return pendingAssignments.length + pendingQuizzes.length;
+  };
+
+  const landingStats = useMemo(
+    () => ({
+      totalAssignments: assignments.length,
+      totalModules: modules.length,
+      liveQuizzes: quizzes.filter(isQuizTakeable).length,
+      pendingTasks: classrooms.reduce(
+        (total, classroom) => total + getPendingTaskCount(classroom.id),
+        0,
+      ),
+    }),
+    [assignments, modules, quizzes, classrooms, submissions, quizSubmissions, currentUser.id],
+  );
+
   // Check if current user is allowed access to the given classroom
   const isUserAllowed = (cls: (typeof classrooms)[0]): boolean => {
     if (currentUser.role === 'admin') return true;
@@ -247,7 +292,9 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
           🔒
         </div>
         <div className="space-y-2">
-          <h2 className="text-xl font-extrabold text-[#2D2D2A] font-serif">Classroom Access Restricted</h2>
+          <h2 className="text-xl font-extrabold text-[#2D2D2A] font-serif">
+            Classroom Access Restricted
+          </h2>
           <p className="text-xs md:text-sm text-[#7A7A72] max-w-md mx-auto">
             {currentUser.role === 'student'
               ? 'This classroom will remain hidden until a valid class code is provided. Please ask your subject teacher for the code to unlock access.'
@@ -424,10 +471,30 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
         {/* Quick overview */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: 'Subjects', value: classrooms.length, icon: BookOpen, color: 'text-[#4A6741]' },
-            { label: 'Modules', value: landingStats.totalModules, icon: FileText, color: 'text-[#4A6741]' },
-            { label: 'Homework', value: landingStats.totalAssignments, icon: ClipboardList, color: 'text-[#E88D67]' },
-            { label: 'Live Quizzes', value: landingStats.liveQuizzes, icon: Sparkles, color: 'text-[#E88D67]' },
+            {
+              label: 'Subjects',
+              value: classrooms.length,
+              icon: BookOpen,
+              color: 'text-[#4A6741]',
+            },
+            {
+              label: 'Modules',
+              value: landingStats.totalModules,
+              icon: FileText,
+              color: 'text-[#4A6741]',
+            },
+            {
+              label: 'Homework',
+              value: landingStats.totalAssignments,
+              icon: ClipboardList,
+              color: 'text-[#E88D67]',
+            },
+            {
+              label: 'Live Quizzes',
+              value: landingStats.liveQuizzes,
+              icon: Sparkles,
+              color: 'text-[#E88D67]',
+            },
           ].map((stat) => {
             const Icon = stat.icon;
             return (
@@ -504,21 +571,21 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                         >
                           {copiedCode === cls.id ? 'Copied!' : `Code: ${cls.code}`}
                         </span>
-                        {pendingTasks > 0 && (
-                          <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-[#E88D67] text-white shadow-sm">
-                            {pendingTasks} to do
-                          </span>
-                        )}
-                      </div>
+                      )}
+                      {pendingTasks > 0 && (
+                        <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-[#E88D67] text-white shadow-sm">
+                          {pendingTasks} to do
+                        </span>
+                      )}
+                    </div>
 
-                      <div className="space-y-1">
-                        <h2 className="text-lg font-bold font-serif text-white tracking-tight leading-snug line-clamp-2">
-                          {cls.name}
-                        </h2>
-                        <p className="text-[11px] text-white/80">
-                          Grade {cls.gradeLevel}-{cls.section} · {cls.roomNumber}
-                        </p>
-                      </div>
+                    <div className="space-y-1">
+                      <h2 className="text-lg font-bold font-serif text-white tracking-tight leading-snug line-clamp-2">
+                        {cls.name}
+                      </h2>
+                      <p className="text-[11px] text-white/80">
+                        Grade {cls.gradeLevel}-{cls.section} · {cls.roomNumber}
+                      </p>
                     </div>
                   </div>
 
@@ -534,7 +601,9 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
                         className="w-9 h-9 rounded-full object-cover border-2 border-[#EBF1E8] shrink-0"
                       />
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-[#2D2D2A] truncate">{cls.teacherName}</p>
+                        <p className="text-xs font-bold text-[#2D2D2A] truncate">
+                          {cls.teacherName}
+                        </p>
                         <p className="text-[10px] text-[#7A7A72]">
                           {cls.studentCount} students enrolled
                         </p>
@@ -998,9 +1067,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
       {/* TAB 2: CLASSWORK, NOTES & MODULES */}
       {activeTab === 'classwork' && (
         <div className="space-y-6">
-          {currentUser.role === 'teacher' && (
-            <TeacherMaterialsPanel classroom={currentClassroom} />
-          )}
+          {currentUser.role === 'teacher' && <TeacherMaterialsPanel classroom={currentClassroom} />}
 
           {/* Modules & PDF Notes Section */}
           <div className="space-y-4">

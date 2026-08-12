@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '@context/AppContext';
 import { getAvatarUrl } from '@utils/avatarUtils';
+import { toast } from '@utils/toast';
 import { StudentLocationTracker } from '../common/StudentLocationTracker';
 import { IdCardModal } from './IdCardModal';
 import {
@@ -68,6 +69,39 @@ export const StudentProfileView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'progress' | 'attendance' | 'activities' | 'badges'>(
     'progress',
   );
+
+  const handleIdCardPhotoUpload = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Choose a JPG, PNG, WEBP, or another image file.', {
+        title: 'Invalid ID card file',
+      });
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      toast.error('The ID card image must be 1 MB or smaller.', { title: 'Image too large' });
+      return;
+    }
+
+    setIsUploadingIdCard(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      updateStudentIdCardPhoto(studentData.id, String(reader.result));
+      setIsUploadingIdCard(false);
+      setIsIdCardOpen(true);
+      toast.success('Your ID card photo is ready to preview and print.', {
+        title: 'ID card updated',
+      });
+    };
+    reader.onerror = () => {
+      setIsUploadingIdCard(false);
+      toast.error('The selected image could not be read. Please try again.', {
+        title: 'Upload failed',
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const triggerIdCardUpload = () => idCardInputRef.current?.click();
 
   const termProgressData = termProgress
     .filter((t) => t.studentId === studentData.id)

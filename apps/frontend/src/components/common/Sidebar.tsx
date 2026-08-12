@@ -45,9 +45,7 @@ export const Sidebar: React.FC = () => {
   const teacherNav: NavItem[] = [
     { id: 'dashboard', label: 'Teacher Hub', icon: LayoutDashboard },
     { id: 'classroom', label: 'Classrooms', icon: BookOpen },
-    ...(import.meta.env.DEV
-      ? [{ id: 'quizzes', label: 'Quiz Creator & AI', icon: Sparkles }]
-      : []),
+    ...(import.meta.env.DEV ? [{ id: 'quizzes', label: 'Quiz Creator & AI', icon: Sparkles }] : []),
     { id: 'attendance', label: 'Attendance Register', icon: UserCheck },
     { id: 'progress', label: 'Student Analytics', icon: TrendingUp },
     { id: 'calendar', label: 'Academic Calendar', icon: Calendar },

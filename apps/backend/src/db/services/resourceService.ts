@@ -12,7 +12,7 @@ function mapResource(r: {
   mimeType: string | null;
   sizeFormatted: string | null;
   tags: string[];
-  createdAt: string;
+  createdAt: Date;
 }): StudyResource {
   return {
     id: r.id,
@@ -25,7 +25,7 @@ function mapResource(r: {
     mimeType: r.mimeType || undefined,
     sizeFormatted: r.sizeFormatted || undefined,
     tags: r.tags,
-    createdAt: r.createdAt,
+    createdAt: r.createdAt.toISOString(),
   };
 }
 
@@ -51,9 +51,25 @@ export class ResourceService {
     return resources.map(mapResource);
   }
 
-  public async addResource(
-    data: Omit<StudyResource, 'id' | 'createdAt'>,
-  ): Promise<StudyResource> {
+  public async addResource(data: Omit<StudyResource, 'id' | 'createdAt'>): Promise<StudyResource> {
+    const [classroom, teacher] = await Promise.all([
+      prisma.classroom.findUnique({
+        where: { id: data.classroomId },
+        select: { teacherId: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: data.teacherId },
+        select: { role: true, isArchived: true },
+      }),
+    ]);
+    if (!classroom) throw new Error('The selected classroom does not exist.');
+    if (!teacher || teacher.isArchived || teacher.role !== 'teacher') {
+      throw new Error('The selected resource owner is not an active teacher.');
+    }
+    if (classroom.teacherId !== data.teacherId) {
+      throw new Error('Resources can only be added by the teacher assigned to this classroom.');
+    }
+
     const created = await prisma.studyResource.create({
       data: {
         classroomId: data.classroomId,
@@ -65,7 +81,7 @@ export class ResourceService {
         mimeType: data.mimeType,
         sizeFormatted: data.sizeFormatted,
         tags: data.tags || [],
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
       },
     });
     return mapResource(created);

@@ -42,6 +42,21 @@ enum QuizAttemptStatus {
   expired
 }
 
+enum QuizStatus {
+  draft
+  published
+  live
+}
+
+enum StudyResourceType {
+  pdf
+  video
+  link
+  image
+  doc
+  notes
+}
+
 enum NotificationCategory {
   CRITICAL
   ACADEMIC
@@ -212,6 +227,7 @@ model User {
   assignedBadges           StudentBadge[]            @relation("BadgeAssigner")
   markedAttendanceRecords  AttendanceRecord[]        @relation("AttendanceMarker")
   auditChanges             AuditTrail[]              @relation("AuditActor")
+  teachingResources        StudyResource[]           @relation("TeacherResources")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -254,6 +270,7 @@ model StudentProfile {
   normalizedRollNumber Int            @default(autoincrement())
   isArchived           Boolean        @default(false)
   lastStreakDate       DateTime?
+  idCardPhotoUrl       String?
 
   badges StudentBadge[]
 
@@ -316,6 +333,7 @@ model Classroom {
   moduleItems ModuleItem[]
   storedFiles StoredFileRecord[]
   substitutes ClassroomSubstitute[]
+  resources   StudyResource[]
 
   @@index([schoolId, cohortId])
   @@index([teacherId])
@@ -475,12 +493,15 @@ model Quiz {
   maxAttempts     Int                 @default(1)
   availableFrom   DateTime?
   closesAt        DateTime?
+  status          QuizStatus          @default(draft)
+  liveStartedAt   DateTime?           @db.Timestamptz(3)
 
   createdAt String
 
-  questions   QuizQuestion[]
-  submissions QuizSubmission[]
-  sessions    QuizAttemptSession[]
+  questions     QuizQuestion[]
+  submissions   QuizSubmission[]
+  sessions      QuizAttemptSession[]
+  resourceLinks QuizResourceLink[]
 }
 
 model QuizQuestion {
@@ -501,11 +522,13 @@ model QuizSubmission {
   quizId String
   quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
 
-  studentId   String
-  student     User   @relation("StudentQuizSubmissions", fields: [studentId], references: [id], onDelete: Cascade)
-  score       Float
-  totalPoints Int
-  completedAt String
+  studentId        String
+  student          User      @relation("StudentQuizSubmissions", fields: [studentId], references: [id], onDelete: Cascade)
+  score            Float
+  totalPoints      Int
+  completedAt      String
+  startedAt        DateTime? @db.Timestamptz(3)
+  timeSpentSeconds Int?
 
   answers       Json
   attemptNumber Int   @default(1)
@@ -513,6 +536,36 @@ model QuizSubmission {
 
   @@unique([quizId, studentId, attemptNumber])
   @@index([studentId, completedAt])
+}
+
+model StudyResource {
+  id            String             @id @default(cuid())
+  classroomId   String
+  classroom     Classroom          @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  teacherId     String
+  teacher       User               @relation("TeacherResources", fields: [teacherId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  type          StudyResourceType
+  url           String
+  mimeType      String?
+  sizeFormatted String?
+  tags          String[]           @default([])
+  createdAt     DateTime           @default(now()) @db.Timestamptz(3)
+  quizLinks     QuizResourceLink[]
+
+  @@index([classroomId, createdAt])
+  @@index([teacherId, createdAt])
+}
+
+model QuizResourceLink {
+  quizId     String
+  quiz       Quiz          @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  resourceId String
+  resource   StudyResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@id([quizId, resourceId])
+  @@index([resourceId])
 }
 
 model QuizAttemptSession {

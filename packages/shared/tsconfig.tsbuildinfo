@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/mockdata.ts","./src/types.ts"],"version":"5.8.3"}
+{"root":["./src/index.ts","./src/mockdata.ts","./src/quizutils.ts","./src/types.ts"],"version":"5.8.3"}

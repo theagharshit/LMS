@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { apiFetch } from '@utils/apiFetch';
 import { useApp } from '../../context/AppContext';
 import { Quiz, getQuizStatus } from '@lms/shared';
 import { QuizBuilderWizard } from './QuizBuilderWizard';
@@ -50,110 +49,8 @@ export const TeacherQuizHubView: React.FC = () => {
     setIsWizardOpen(true);
   };
 
-  const handleUpdateQuestionText = (index: number, text: string) => {
-    setQuestions((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], text };
-      return updated;
-    });
-  };
-
-  const handleUpdateQuestionPoints = (index: number, points: number) => {
-    setQuestions((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], points };
-      return updated;
-    });
-  };
-
-  const handleUpdateQuestionExplanation = (index: number, explanation: string) => {
-    setQuestions((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], explanation };
-      return updated;
-    });
-  };
-
-  const handleUpdateOption = (qIndex: number, optIndex: number, newOptionText: string) => {
-    setQuestions((prev) => {
-      const updated = [...prev];
-      const currentQ = updated[qIndex];
-      const newOptions = [...(currentQ.options || [])];
-      const oldVal = newOptions[optIndex];
-      newOptions[optIndex] = newOptionText;
-
-      let newCorrect = currentQ.correctAnswer;
-      if (currentQ.correctAnswer === oldVal) {
-        newCorrect = newOptionText;
-      }
-
-      updated[qIndex] = {
-        ...currentQ,
-        options: newOptions,
-        correctAnswer: newCorrect,
-      };
-      return updated;
-    });
-  };
-
-  const handleSelectCorrectOption = (qIndex: number, optionText: string) => {
-    setQuestions((prev) => {
-      const updated = [...prev];
-      updated[qIndex] = { ...updated[qIndex], correctAnswer: optionText };
-      return updated;
-    });
-  };
-
-  const handleAiAutoGenerate = async () => {
-    setIsAiGenerating(true);
-    try {
-      const res = await apiFetch('/api/ai/quiz-generator', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subject,
-          topic,
-          gradeLevel: 'Grade 8',
-          questionCount: 3,
-        }),
-        feedback: {
-          success: 'AI questions added to your quiz draft.',
-          error: 'Could not generate AI questions.',
-          successTitle: 'Questions generated',
-        },
-      });
-      if (!res.ok) throw new Error('Quiz generation request failed.');
-      const data = await res.json();
-      if (data.questions && Array.isArray(data.questions)) {
-        setQuestions(data.questions);
-      }
-    } catch (err) {
-      console.error('[QuizHub] AI generation error', err);
-    } finally {
-      setIsAiGenerating(false);
-    }
-  };
-
-  const handlePublishNewQuiz = () => {
-    const targetClass = classrooms.find((c) => c.id === selectedClassroomId) || classrooms[0];
-    addQuiz({
-      classroomId: targetClass ? targetClass.id : 'cls-math-8a',
-      classroomName: targetClass ? targetClass.name : 'Grade 8 Mathematics - Sec A',
-      subject,
-      title: `${topic} Quiz (${subject})`,
-      description: `Teacher assessment for ${subject} - ${topic}`,
-      durationMinutes,
-      dueDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-      totalQuestions: questions.length,
-      questions,
-      published: true,
-      revealMarksMode,
-    });
-
-    setCreateSuccessMsg(`Quiz "${topic}" published successfully to ${targetClass?.name}!`);
-    setTimeout(() => setCreateSuccessMsg(null), 4000);
-    setActiveTab('evaluation');
-  };
+  const getQuizSubmissionCount = (quizId: string) =>
+    quizSubmissions.filter((submission) => submission.quizId === quizId).length;
 
   // --- EVALUATION DESK HELPERS ---
   const activeEvalQuiz = quizzes.find((q) => q.id === selectedEvalQuizId) || quizzes[0];

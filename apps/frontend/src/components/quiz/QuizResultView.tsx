@@ -66,7 +66,8 @@ export const QuizResultView: React.FC<QuizResultViewProps> = ({
           <h2 className="text-2xl font-black text-slate-900 dark:text-white">Attempt Submitted!</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
             Your responses for <strong>{title}</strong> have been recorded in the database. Your
-            teacher will release the grades & solutions later (auto-graded using the quiz answer key you filled in).
+            teacher will release the grades & solutions later (auto-graded using the quiz answer key
+            you filled in).
           </p>
         </div>
 

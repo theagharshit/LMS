@@ -83,6 +83,7 @@ export class UserService {
         : 0,
       streakDays: p.streakDays,
       xpPoints: p.xpPoints,
+      idCardPhotoUrl: p.idCardPhotoUrl || undefined,
       parentName: p.user.guardianLinks[0]?.parent.name || 'Parent',
       parentPhone: p.user.guardianLinks[0]?.parent.phone || '',
       parentSecondaryPhone: p.user.guardianLinks[0]?.parent.secondaryPhone || undefined,
@@ -287,6 +288,8 @@ export class UserService {
 
     const profileUpdate: any = {};
     if (data.rollNumber !== undefined) profileUpdate.normalizedRollNumber = data.rollNumber;
+    if (data.idCardPhotoUrl !== undefined)
+      profileUpdate.idCardPhotoUrl = data.idCardPhotoUrl || null;
 
     if (data.gradeLevel || data.section) {
       const { gradeLevel, section } = normalizeCohortSelection(

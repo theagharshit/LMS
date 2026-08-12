@@ -18,6 +18,8 @@ import {
   DirectMessage,
   NotificationPreference,
   NotificationItem,
+  StudyResource,
+  ModuleItem,
 } from '@lms/shared';
 
 import {
@@ -158,7 +160,10 @@ export class LMSDatabaseService {
     return quizService.addQuiz(quiz);
   }
 
-  public updateQuiz(id: string, quiz: Partial<Omit<Quiz, 'id' | 'createdAt'>>): Promise<Quiz | null> {
+  public updateQuiz(
+    id: string,
+    quiz: Partial<Omit<Quiz, 'id' | 'createdAt'>>,
+  ): Promise<Quiz | null> {
     return quizService.updateQuiz(id, quiz);
   }
 
@@ -226,7 +231,10 @@ export class LMSDatabaseService {
     return moduleService.addModule(data);
   }
 
-  public updateModule(id: string, data: Partial<Omit<ModuleItem, 'id'>>): Promise<ModuleItem | null> {
+  public updateModule(
+    id: string,
+    data: Partial<Omit<ModuleItem, 'id'>>,
+  ): Promise<ModuleItem | null> {
     return moduleService.updateModule(id, data);
   }
 

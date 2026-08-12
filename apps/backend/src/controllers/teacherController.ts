@@ -117,11 +117,14 @@ export const getResources = async (req: Request, res: Response) => {
 
 export const addResource = async (req: Request, res: Response) => {
   try {
-    const resource = await lmsDB.addResource(req.body);
+    const resource = await lmsDB.addResource({
+      ...req.body,
+      teacherId: req.user?.role === 'teacher' ? req.user.id : req.body.teacherId,
+    });
     res.json({ status: 'success', resource });
-  } catch (err) {
+  } catch (err: any) {
     logger.error('Failed to add resource:', err);
-    res.status(500).json({ status: 'error', message: 'Failed to add resource' });
+    res.status(400).json({ status: 'error', message: err?.message || 'Failed to add resource' });
   }
 };
 
@@ -264,60 +267,62 @@ export const updateStudentLocation = async (req: Request, res: Response) => {
 };
 
 export const generateQuizAi = async (req: Request, res: Response) => {
-  try {
-    const {
-      topic,
-      subject,
-      gradeLevel,
-      questionCount = 5,
-      defaultPoints = 5,
-      questionTypes = ['MCQ', 'True/False'],
-      resourceTitles = [],
-      resourceDescriptions = [],
-      resourceUrls = [],
-      resourceTypes = [],
-      resourceMimeTypes = [],
-    } = req.body;
-    const ai = getAi();
+  const {
+    topic,
+    subject,
+    gradeLevel,
+    questionCount = 5,
+    defaultPoints = 5,
+    questionTypes = ['MCQ', 'True/False'],
+    resourceTitles = [],
+    resourceDescriptions = [],
+    resourceUrls = [],
+    resourceTypes = [],
+    resourceMimeTypes = [],
+  } = req.body;
 
-    const generateFallbackQuiz = () => {
-      const safeLen = resourceTitles.length || resourceDescriptions.length || resourceUrls.length || 0;
-      const minQuestions = Math.min(questionCount, 50);
+  const generateFallbackQuiz = () => {
+    const safeLen =
+      resourceTitles.length || resourceDescriptions.length || resourceUrls.length || 0;
+    const minQuestions = Math.min(questionCount, 50);
 
-      return {
-        title: `${topic} Assessment (${subject})`,
-        questions: Array.from({ length: minQuestions }).map((_, i) => {
-          const type: string = i % 2 === 0 ? 'MCQ' : 'True/False';
-          const options =
-            i % 2 === 0 ? ['Option A', 'Option B', 'Option C', 'Option D'] : ['True', 'False'];
-          const correctAnswer = i % 2 === 0 ? 'Option A' : 'True';
+    return {
+      title: `${topic} Assessment (${subject})`,
+      questions: Array.from({ length: minQuestions }).map((_, i) => {
+        const type: string = i % 2 === 0 ? 'MCQ' : 'True/False';
+        const options =
+          i % 2 === 0 ? ['Option A', 'Option B', 'Option C', 'Option D'] : ['True', 'False'];
+        const correctAnswer = i % 2 === 0 ? 'Option A' : 'True';
 
-          const refIndex = safeLen > 0 ? i % safeLen : 0;
-          const refTitle = safeLen > 0 ? resourceTitles[refIndex] : undefined;
-          const refDesc = safeLen > 0 ? resourceDescriptions[refIndex] : undefined;
-          const refUrl = safeLen > 0 ? resourceUrls[refIndex] : undefined;
-          const refType = safeLen > 0 ? resourceTypes[refIndex] : undefined;
+        const refIndex = safeLen > 0 ? i % safeLen : 0;
+        const refTitle = safeLen > 0 ? resourceTitles[refIndex] : undefined;
+        const refDesc = safeLen > 0 ? resourceDescriptions[refIndex] : undefined;
+        const refUrl = safeLen > 0 ? resourceUrls[refIndex] : undefined;
+        const refType = safeLen > 0 ? resourceTypes[refIndex] : undefined;
 
-          const refLine = refTitle
-            ? `Based on ${refTitle}${refType ? ` (${refType})` : ''}${refUrl ? ` (${refUrl})` : ''}.`
-            : 'Based on the provided study materials.';
+        const refLine = refTitle
+          ? `Based on ${refTitle}${refType ? ` (${refType})` : ''}${refUrl ? ` (${refUrl})` : ''}.`
+          : 'Based on the provided study materials.';
 
-          const explanation = refDesc
-            ? `${refLine} Focus the question on: ${refDesc}`
-            : `${refLine} Reference the provided materials or chapter notes.`;
+        const explanation = refDesc
+          ? `${refLine} Focus the question on: ${refDesc}`
+          : `${refLine} Reference the provided materials or chapter notes.`;
 
-          return {
-            id: `q-${i + 1}`,
-            text: `Sample question ${i + 1} regarding ${topic} for Grade ${gradeLevel}`,
-            type,
-            options,
-            correctAnswer,
-            explanation,
-            points: defaultPoints,
-          };
-        }),
-      };
+        return {
+          id: `q-${i + 1}`,
+          text: `Sample question ${i + 1} regarding ${topic} for Grade ${gradeLevel}`,
+          type,
+          options,
+          correctAnswer,
+          explanation,
+          points: defaultPoints,
+        };
+      }),
     };
+  };
+
+  try {
+    const ai = getAi();
 
     const resourceContext =
       resourceTitles.length > 0
@@ -361,7 +366,15 @@ export const generateQuizAi = async (req: Request, res: Response) => {
                   explanation: { type: Type.STRING },
                   points: { type: Type.NUMBER },
                 },
-                required: ['id', 'text', 'type', 'options', 'correctAnswer', 'explanation', 'points'],
+                required: [
+                  'id',
+                  'text',
+                  'type',
+                  'options',
+                  'correctAnswer',
+                  'explanation',
+                  'points',
+                ],
               },
             },
           },

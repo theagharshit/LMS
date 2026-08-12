@@ -320,28 +320,62 @@ export const useAcademicState = (currentUser: User) => {
         success: `Quiz “${quizData.title}” was created.`,
         error: `Could not create quiz “${quizData.title}”.`,
       },
-    }).catch((err) => console.error('[AppContext] Failed to persist quiz', err));
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          setQuizzes((items) => items.filter((item) => item.id !== newQuiz.id));
+          return;
+        }
+        const result = await response.json();
+        if (result.quiz) {
+          setQuizzes((items) => items.map((item) => (item.id === newQuiz.id ? result.quiz : item)));
+        }
+      })
+      .catch((err) => {
+        setQuizzes((items) => items.filter((item) => item.id !== newQuiz.id));
+        console.error('[AppContext] Failed to persist quiz', err);
+      });
 
     return newQuiz;
   };
 
   const updateQuiz = (quizId: string, updates: Partial<Omit<Quiz, 'id'>>) => {
-    setQuizzes((prev) =>
-      prev.map((q) => (q.id === quizId ? { ...q, ...updates } : q)),
-    );
+    const previous = quizzes.find((quiz) => quiz.id === quizId);
+    setQuizzes((prev) => prev.map((q) => (q.id === quizId ? { ...q, ...updates } : q)));
 
     apiFetch(`/api/db/quizzes/${quizId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
-    }).catch((err) => console.error('[AppContext] Failed to update quiz', err));
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          if (previous)
+            setQuizzes((items) => items.map((item) => (item.id === quizId ? previous : item)));
+          return;
+        }
+        const result = await response.json();
+        if (result.quiz) {
+          setQuizzes((items) => items.map((item) => (item.id === quizId ? result.quiz : item)));
+        }
+      })
+      .catch((err) => {
+        if (previous)
+          setQuizzes((items) => items.map((item) => (item.id === quizId ? previous : item)));
+        console.error('[AppContext] Failed to update quiz', err);
+      });
   };
 
   const startQuizLive = (quizId: string) => {
     setQuizzes((prev) =>
       prev.map((q) =>
         q.id === quizId
-          ? { ...q, status: 'live' as const, published: true, liveStartedAt: new Date().toISOString() }
+          ? {
+              ...q,
+              status: 'live' as const,
+              published: true,
+              liveStartedAt: new Date().toISOString(),
+            }
           : q,
       ),
     );
@@ -371,12 +405,31 @@ export const useAcademicState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
-    }).catch((err) => console.error('[AppContext] Failed to persist resource', err));
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          setResources((items) => items.filter((item) => item.id !== newResource.id));
+          return;
+        }
+        const result = await response.json();
+        if (result.resource) {
+          setResources((items) =>
+            items.map((item) => (item.id === newResource.id ? result.resource : item)),
+          );
+        }
+      })
+      .catch((err) => {
+        setResources((items) => items.filter((item) => item.id !== newResource.id));
+        console.error('[AppContext] Failed to persist resource', err);
+      });
 
     return newResource;
   };
 
-  const updateResource = (id: string, updates: Partial<Omit<StudyResource, 'id' | 'createdAt'>>) => {
+  const updateResource = (
+    id: string,
+    updates: Partial<Omit<StudyResource, 'id' | 'createdAt'>>,
+  ) => {
     setResources((prev) => prev.map((r) => (r.id === id ? { ...r, ...updates } : r)));
 
     apiFetch(`/api/db/resources/${id}`, {
@@ -408,7 +461,23 @@ export const useAcademicState = (currentUser: User) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
-    }).catch((err) => console.error('[AppContext] Failed to persist module', err));
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          setModules((items) => items.filter((item) => item.id !== newModule.id));
+          return;
+        }
+        const result = await response.json();
+        if (result.module) {
+          setModules((items) =>
+            items.map((item) => (item.id === newModule.id ? result.module : item)),
+          );
+        }
+      })
+      .catch((err) => {
+        setModules((items) => items.filter((item) => item.id !== newModule.id));
+        console.error('[AppContext] Failed to persist module', err);
+      });
 
     return newModule;
   };

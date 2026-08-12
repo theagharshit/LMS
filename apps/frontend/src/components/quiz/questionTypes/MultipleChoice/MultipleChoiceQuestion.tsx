@@ -17,9 +17,9 @@ export const MultipleChoiceQuestion: React.FC<QuestionComponentProps> = ({
   return (
     <div className="space-y-6">
       {/* Question Prompt Card */}
-        <div className="p-6 rounded-3xl bg-[#F9F7F2] dark:bg-[#1d281c] border border-[#EDEAE2] dark:border-[#2b3d2a] shadow-xs space-y-2">
+      <div className="p-6 rounded-3xl bg-[#F9F7F2] dark:bg-[#1d281c] border border-[#EDEAE2] dark:border-[#2b3d2a] shadow-xs space-y-2">
         <div className="flex items-center justify-between">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#4A6741] dark:text-emerald-400">
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#4A6741] dark:text-emerald-400">
             Multiple Choice Question • {question.points}{' '}
             {question.points === 1 ? 'Point' : 'Points'}
           </span>
