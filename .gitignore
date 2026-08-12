@@ -12,3 +12,6 @@ coverage/
 .windsurf
 skills-lock.json
 .vscode
+script.py
+./venv
+./__pycache__

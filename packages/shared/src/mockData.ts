@@ -356,6 +356,7 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     bannerImage:
       'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=1000&auto=format&fit=crop&q=80',
     studentCount: 34,
+    enrolledStudentIds: ['user-stu-1', 'user-stu-3', 'user-stu-4'],
     meetLink: 'https://meet.google.com/sikshya-math-8a',
     code: 'MATH8A',
   },
@@ -374,6 +375,7 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     bannerImage:
       'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1000&auto=format&fit=crop&q=80',
     studentCount: 34,
+    enrolledStudentIds: ['user-stu-1', 'user-stu-3', 'user-stu-4'],
     meetLink: 'https://meet.google.com/sikshya-sci-8a',
     code: 'SCI8A',
   },
@@ -392,6 +394,7 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     bannerImage:
       'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=1000&auto=format&fit=crop&q=80',
     studentCount: 34,
+    enrolledStudentIds: ['user-stu-1', 'user-stu-3', 'user-stu-4'],
     meetLink: 'https://meet.google.com/sikshya-nep-8a',
     code: 'NEP8A',
   },
@@ -410,6 +413,7 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     bannerImage:
       'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1000&auto=format&fit=crop&q=80',
     studentCount: 34,
+    enrolledStudentIds: ['user-stu-1', 'user-stu-3', 'user-stu-4'],
     meetLink: 'https://meet.google.com/sikshya-cs-8a',
     code: 'COMP8A',
   },
