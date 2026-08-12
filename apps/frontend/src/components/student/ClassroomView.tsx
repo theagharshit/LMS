@@ -208,8 +208,23 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
       .catch(() => toast.error('Could not copy the class code. Please copy it manually.'));
   };
 
+  // Check if current user is allowed access to the given classroom
+  const isUserAllowed = (cls: (typeof classrooms)[0]): boolean => {
+    if (currentUser.role === 'admin') return true;
+    if (currentUser.role === 'teacher') return cls.teacherId === currentUser.id;
+    if (currentUser.role === 'student') {
+      if (cls.enrolledStudentIds && cls.enrolledStudentIds.length > 0) {
+        return cls.enrolledStudentIds.includes(currentUser.id);
+      }
+      return currentUser.gradeLevel ? cls.gradeLevel === currentUser.gradeLevel : true;
+    }
+    return true;
+  };
+
   // Filter classrooms for landing page
   const filteredClassrooms = classrooms.filter((cls) => {
+    if (!isUserAllowed(cls)) return false;
+
     const matchesSearch =
       cls.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
       cls.subject.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
@@ -219,6 +234,44 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
       subjectFilter === 'all' || cls.subject.toLowerCase().includes(subjectFilter.toLowerCase());
     return matchesSearch && matchesSubject;
   });
+
+  // Guard against unauthorized classroom access when a specific classroom is selected
+  if (selectedClassroomId && currentClassroom && !isUserAllowed(currentClassroom)) {
+    return (
+      <div className="p-8 max-w-2xl mx-auto my-12 text-center space-y-5 bg-white rounded-3xl border border-rose-200 shadow-lg animate-in fade-in">
+        <div className="w-16 h-16 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto text-2xl font-bold shadow-xs">
+          🔒
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-extrabold text-[#2D2D2A] font-serif">Classroom Access Restricted</h2>
+          <p className="text-xs md:text-sm text-[#7A7A72] max-w-md mx-auto">
+            {currentUser.role === 'student'
+              ? 'This classroom will remain hidden until a valid class code is provided. Please ask your subject teacher for the code to unlock access.'
+              : 'This classroom is not assigned to your teacher account.'}
+          </p>
+        </div>
+        <div className="pt-2 flex flex-wrap justify-center gap-3">
+          <button
+            onClick={() => setSelectedClassroomId(null)}
+            className="px-5 py-2.5 rounded-xl bg-[#2D2D2A] text-white text-xs font-extrabold hover:bg-black transition-all cursor-pointer shadow-xs"
+          >
+            ← Back to My Classrooms
+          </button>
+          {currentUser.role === 'student' && (
+            <button
+              onClick={() => {
+                setSelectedClassroomId(null);
+                setShowJoinModal(true);
+              }}
+              className="px-5 py-2.5 rounded-xl bg-[#E88D67] text-white text-xs font-extrabold hover:bg-[#D87B55] transition-all cursor-pointer shadow-xs"
+            >
+              + Join via Class Code
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // =========================================================================
   // SCENARIO 1: LANDING PAGE - ALL ENROLLED SUBJECTS OVERVIEW
