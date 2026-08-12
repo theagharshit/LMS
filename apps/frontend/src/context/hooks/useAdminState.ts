@@ -329,24 +329,50 @@ export const useAdminState = (
 
     addAuditLog('Deleted Classroom', 'classroom', `Removed classroom ${cls?.name || id}.`);
   };
+const addAnnouncement = async (
+  annData: Omit<SchoolAnnouncement, 'id' | 'createdAt'>,
+) => {
+  const newAnn: SchoolAnnouncement = {
+    ...annData,
+    id: `ann-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
 
-  const addAnnouncement = (annData: Omit<SchoolAnnouncement, 'id' | 'createdAt'>) => {
-    const newAnn: SchoolAnnouncement = {
-      ...annData,
-      id: `ann-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
+  try {
+    await apiFetch('/api/db/notifications/dispatch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetAudience: newAnn.targetAudience,
+        title: newAnn.title,
+        body: newAnn.content,
+        category: 'COMMUNICATION',
+        severity: newAnn.priority === 'high' ? 'high' : 'normal',
+        type: 'announcement',
+        senderId: currentUser.id,
+        senderName: currentUser.name,
+        senderRole: currentUser.role,
+      }),
+    });
+
+    // Only runs if API call succeeds
     setSchoolAnnouncements((prev) => [newAnn, ...prev]);
+
     toast.success(`Announcement “${newAnn.title}” was published.`, {
       title: 'Announcement published',
     });
+
     addAuditLog(
       'Broadcast School Notice',
       'broadcast',
       `Posted announcement "${newAnn.title}" to ${newAnn.targetAudience}.`,
     );
-  };
+  } catch (err) {
+    console.error('Failed to publish announcement', err);
 
+    toast.error('Could not publish announcement. Please try again.');
+  }
+};
   const deleteAnnouncement = (id: string) => {
     const announcement = schoolAnnouncements.find((item) => item.id === id);
     setSchoolAnnouncements((prev) => prev.filter((a) => a.id !== id));
