@@ -1590,7 +1590,8 @@ export const MOCK_TEACHER_ASSIGNMENT_AUDIT_LOGS: TeacherAssignmentAuditLog[] = [
     subjectName: 'Mathematics',
     classroomId: 'cls-math-8a',
     classroomName: 'Grade 8 Mathematics - Sec A',
-    details: 'Approved substitute assignment (Mrs. Sabina Karki) for Grade 8 Mathematics - Sec A on 2026-08-16.',
+    details:
+      'Approved substitute assignment (Mrs. Sabina Karki) for Grade 8 Mathematics - Sec A on 2026-08-16.',
     reason: 'Teacher approved leave',
     createdAt: '2026-08-10T10:05:00Z',
   },

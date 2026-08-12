@@ -47,23 +47,63 @@ adminRoutes.put('/db/teachers/:id', requireRolesWhenStrict('admin'), updateTeach
 adminRoutes.delete('/db/teachers/:id', requireRolesWhenStrict('admin'), deleteTeacher);
 
 // Teacher Subject Assignments & Reassignments
-adminRoutes.post('/db/teachers/assign-subject', requireRolesWhenStrict('admin'), assignSubjectToTeacher);
-adminRoutes.post('/db/teachers/deassign-subject', requireRolesWhenStrict('admin'), deassignSubjectFromTeacher);
+adminRoutes.post(
+  '/db/teachers/assign-subject',
+  requireRolesWhenStrict('admin'),
+  assignSubjectToTeacher,
+);
+adminRoutes.post(
+  '/db/teachers/deassign-subject',
+  requireRolesWhenStrict('admin'),
+  deassignSubjectFromTeacher,
+);
 adminRoutes.post('/db/teachers/reassign-subject', requireRolesWhenStrict('admin'), reassignSubject);
 
 // Substitute Request Routes & Qualification Filters
-adminRoutes.get('/db/teachers/substitutes/eligible', requireRolesWhenStrict('admin'), getEligibleSubstitutes);
-adminRoutes.post('/db/teachers/substitutes/request', requireRolesWhenStrict('admin'), createSubstituteRequest);
-adminRoutes.patch('/db/teachers/substitutes/:id/status', requireRolesWhenStrict(['admin', 'teacher']), updateSubstituteRequestStatus);
-adminRoutes.get('/db/teachers/substitutes', requireRolesWhenStrict(['admin', 'teacher']), getSubstituteRequests);
+adminRoutes.get(
+  '/db/teachers/substitutes/eligible',
+  requireRolesWhenStrict('admin'),
+  getEligibleSubstitutes,
+);
+adminRoutes.post(
+  '/db/teachers/substitutes/request',
+  requireRolesWhenStrict('admin'),
+  createSubstituteRequest,
+);
+adminRoutes.patch(
+  '/db/teachers/substitutes/:id/status',
+  requireRolesWhenStrict(['admin', 'teacher']),
+  updateSubstituteRequestStatus,
+);
+adminRoutes.get(
+  '/db/teachers/substitutes',
+  requireRolesWhenStrict(['admin', 'teacher']),
+  getSubstituteRequests,
+);
 
 // Teacher Absence Requests
-adminRoutes.post('/db/teachers/absence-requests', requireRolesWhenStrict(['teacher', 'admin']), submitTeacherAbsenceRequest);
-adminRoutes.patch('/db/teachers/absence-requests/:id/review', requireRolesWhenStrict('admin'), reviewTeacherAbsenceRequest);
-adminRoutes.get('/db/teachers/absence-requests', requireRolesWhenStrict(['admin', 'teacher']), getTeacherAbsenceRequests);
+adminRoutes.post(
+  '/db/teachers/absence-requests',
+  requireRolesWhenStrict(['teacher', 'admin']),
+  submitTeacherAbsenceRequest,
+);
+adminRoutes.patch(
+  '/db/teachers/absence-requests/:id/review',
+  requireRolesWhenStrict('admin'),
+  reviewTeacherAbsenceRequest,
+);
+adminRoutes.get(
+  '/db/teachers/absence-requests',
+  requireRolesWhenStrict(['admin', 'teacher']),
+  getTeacherAbsenceRequests,
+);
 
 // Assignment Audit Logs
-adminRoutes.get('/db/teachers/assignment-audit-logs', requireRolesWhenStrict('admin'), getAssignmentAuditLogs);
+adminRoutes.get(
+  '/db/teachers/assignment-audit-logs',
+  requireRolesWhenStrict('admin'),
+  getAssignmentAuditLogs,
+);
 
 // Parent Admin Routes
 adminRoutes.post('/db/parents', requireRolesWhenStrict('admin'), createParent);

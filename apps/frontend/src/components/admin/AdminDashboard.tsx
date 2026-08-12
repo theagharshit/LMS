@@ -406,7 +406,9 @@ export const AdminDashboard: React.FC = () => {
           }`}
         >
           <UserCheck className="w-4 h-4" />
-          <span>Substitute Requests ({substituteRequests.filter((r) => r.status === 'PENDING').length})</span>
+          <span>
+            Substitute Requests ({substituteRequests.filter((r) => r.status === 'PENDING').length})
+          </span>
         </button>
 
         <button
@@ -468,10 +470,12 @@ export const AdminDashboard: React.FC = () => {
                 <AlertCircle className="w-5 h-5 text-amber-700 shrink-0" />
                 <div>
                   <h4 className="font-bold text-sm text-amber-900 font-serif">
-                    {teacherAbsenceRequests.filter((r) => r.status === 'pending').length} Pending Faculty Leave Request(s)
+                    {teacherAbsenceRequests.filter((r) => r.status === 'pending').length} Pending
+                    Faculty Leave Request(s)
                   </h4>
                   <p className="text-xs text-amber-800">
-                    Faculty instructors have requested leave. Review and approve requests to auto-assign substitute teachers.
+                    Faculty instructors have requested leave. Review and approve requests to
+                    auto-assign substitute teachers.
                   </p>
                 </div>
               </div>
@@ -1128,7 +1132,10 @@ export const AdminDashboard: React.FC = () => {
           <div className="pt-6 border-t border-[#EDEAE2] space-y-4">
             <h4 className="font-bold text-sm text-[#2D2D2A] font-serif flex items-center gap-2">
               <CalendarDays className="w-4 h-4 text-[#E88D67]" />
-              <span>Teacher Leave & Absence Requests ({teacherAbsenceRequests.filter((r) => r.status === 'pending').length} Pending)</span>
+              <span>
+                Teacher Leave & Absence Requests (
+                {teacherAbsenceRequests.filter((r) => r.status === 'pending').length} Pending)
+              </span>
             </h4>
 
             {teacherAbsenceRequests.length === 0 ? (
@@ -1207,7 +1214,8 @@ export const AdminDashboard: React.FC = () => {
                 Subject & Classroom Assignments
               </h3>
               <p className="text-xs text-[#7A7A72]">
-                Assign, de-assign, or reassign subjects and classrooms to teachers with conflict validation.
+                Assign, de-assign, or reassign subjects and classrooms to teachers with conflict
+                validation.
               </p>
             </div>
 
@@ -1234,17 +1242,24 @@ export const AdminDashboard: React.FC = () => {
               const teacher = teacherUsers.find((t) => t.id === cls.teacherId);
 
               return (
-                <div key={cls.id} className="p-4 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-3">
+                <div
+                  key={cls.id}
+                  className="p-4 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-3"
+                >
                   <div className="flex items-center justify-between">
                     <span className="px-2.5 py-0.5 rounded-full bg-[#EBF1E8] text-[#4A6741] text-[10px] font-extrabold">
                       {cls.code}
                     </span>
-                    <span className="text-[11px] text-[#7A7A72] font-semibold">Grade {cls.gradeLevel}-{cls.section}</span>
+                    <span className="text-[11px] text-[#7A7A72] font-semibold">
+                      Grade {cls.gradeLevel}-{cls.section}
+                    </span>
                   </div>
 
                   <div>
                     <h4 className="font-bold text-[#2D2D2A] text-sm font-serif">{cls.name}</h4>
-                    <p className="text-[11px] text-[#7A7A72]">Subject: <strong className="text-[#2D2D2A]">{cls.subject}</strong></p>
+                    <p className="text-[11px] text-[#7A7A72]">
+                      Subject: <strong className="text-[#2D2D2A]">{cls.subject}</strong>
+                    </p>
                   </div>
 
                   <div className="p-3 bg-white rounded-xl border border-[#EDEAE2] flex items-center gap-3">
@@ -1254,8 +1269,12 @@ export const AdminDashboard: React.FC = () => {
                       className="w-8 h-8 rounded-full object-cover shrink-0"
                     />
                     <div>
-                      <p className="text-[10px] text-[#7A7A72] font-semibold uppercase">Assigned Teacher:</p>
-                      <p className="font-bold text-xs text-[#2D2D2A]">{teacher?.name || cls.teacherName}</p>
+                      <p className="text-[10px] text-[#7A7A72] font-semibold uppercase">
+                        Assigned Teacher:
+                      </p>
+                      <p className="font-bold text-xs text-[#2D2D2A]">
+                        {teacher?.name || cls.teacherName}
+                      </p>
                     </div>
                   </div>
 
@@ -1275,8 +1294,17 @@ export const AdminDashboard: React.FC = () => {
 
                     <button
                       onClick={() => {
-                        if (confirm(`Remove subject assignment from ${cls.teacherName} for ${cls.name}?`)) {
-                          deassignSubjectFromTeacher(cls.teacherId, cls.subject, cls.id, 'Admin removal');
+                        if (
+                          confirm(
+                            `Remove subject assignment from ${cls.teacherName} for ${cls.name}?`,
+                          )
+                        ) {
+                          deassignSubjectFromTeacher(
+                            cls.teacherId,
+                            cls.subject,
+                            cls.id,
+                            'Admin removal',
+                          );
                         }
                       }}
                       className="px-3 py-1.5 rounded-xl bg-white border border-rose-200 text-rose-700 font-bold text-[11px] hover:bg-rose-50 flex items-center gap-1 cursor-pointer"
@@ -1300,7 +1328,10 @@ export const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-sm text-[#2D2D2A] font-serif flex items-center gap-2">
                 <CalendarDays className="w-4 h-4 text-[#E88D67]" />
-                <span>Faculty Leave & Absence Requests ({teacherAbsenceRequests.filter((r) => r.status === 'pending').length} Pending)</span>
+                <span>
+                  Faculty Leave & Absence Requests (
+                  {teacherAbsenceRequests.filter((r) => r.status === 'pending').length} Pending)
+                </span>
               </h4>
               <span className="text-xs font-bold text-[#7A7A72]">
                 Total Requests: {teacherAbsenceRequests.length}
@@ -1374,7 +1405,8 @@ export const AdminDashboard: React.FC = () => {
                 Substitute Teacher Duties
               </h3>
               <p className="text-xs text-[#7A7A72]">
-                Create and manage substitute teacher duties with qualification and workload filtering.
+                Create and manage substitute teacher duties with qualification and workload
+                filtering.
               </p>
             </div>
 
@@ -1404,7 +1436,9 @@ export const AdminDashboard: React.FC = () => {
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EDEAE2] pb-3">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-[#2D2D2A] font-serif">{req.classroomName}</span>
+                      <span className="font-bold text-sm text-[#2D2D2A] font-serif">
+                        {req.classroomName}
+                      </span>
                       <span className="px-2 py-0.5 rounded-full bg-[#EBF1E8] text-[#4A6741] text-[10px] font-bold">
                         {req.subjectName}
                       </span>
@@ -1425,16 +1459,24 @@ export const AdminDashboard: React.FC = () => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     <div>
-                      <p className="text-[10px] text-[#7A7A72] font-semibold">Duty Date & Time Slot:</p>
-                      <p className="font-bold text-[#2D2D2A]">{req.date} ({req.timeSlot})</p>
+                      <p className="text-[10px] text-[#7A7A72] font-semibold">
+                        Duty Date & Time Slot:
+                      </p>
+                      <p className="font-bold text-[#2D2D2A]">
+                        {req.date} ({req.timeSlot})
+                      </p>
                     </div>
                     <div>
                       <p className="text-[10px] text-[#7A7A72] font-semibold">Original Teacher:</p>
                       <p className="font-bold text-[#2D2D2A]">{req.originalTeacherName}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-[#7A7A72] font-semibold">Assigned Substitute:</p>
-                      <p className="font-bold text-[#4A6741]">{req.assignedSubstituteName || req.suggestedSubstituteName || 'Unassigned'}</p>
+                      <p className="text-[10px] text-[#7A7A72] font-semibold">
+                        Assigned Substitute:
+                      </p>
+                      <p className="font-bold text-[#4A6741]">
+                        {req.assignedSubstituteName || req.suggestedSubstituteName || 'Unassigned'}
+                      </p>
                     </div>
                   </div>
 
@@ -1451,7 +1493,9 @@ export const AdminDashboard: React.FC = () => {
                         Reject
                       </button>
                       <button
-                        onClick={() => updateSubstituteStatus(req.id, 'APPROVED', 'Confirmed by Admin')}
+                        onClick={() =>
+                          updateSubstituteStatus(req.id, 'APPROVED', 'Confirmed by Admin')
+                        }
                         className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 shadow-xs cursor-pointer"
                       >
                         Approve & Confirm Substitute
@@ -1474,7 +1518,8 @@ export const AdminDashboard: React.FC = () => {
               Teacher Assignment Audit Logs
             </h3>
             <p className="text-xs text-[#7A7A72]">
-              Complete history of subject assignments, reassignments, substitute requests, and leave reviews.
+              Complete history of subject assignments, reassignments, substitute requests, and leave
+              reviews.
             </p>
           </div>
 
@@ -1503,12 +1548,14 @@ export const AdminDashboard: React.FC = () => {
                         {log.action}
                       </span>
                     </td>
-                    <td className="py-3 px-3 font-bold text-[#2D2D2A]">
-                      {log.targetTeacherName}
-                    </td>
+                    <td className="py-3 px-3 font-bold text-[#2D2D2A]">{log.targetTeacherName}</td>
                     <td className="py-3 px-3 text-[#7A7A72]">
                       {log.details}
-                      {log.reason && <span className="block text-[10px] italic text-gray-500">Reason: {log.reason}</span>}
+                      {log.reason && (
+                        <span className="block text-[10px] italic text-gray-500">
+                          Reason: {log.reason}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -2002,7 +2049,9 @@ export const AdminDashboard: React.FC = () => {
       {isAssignModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-[#EDEAE2] shadow-2xl space-y-4">
-            <h3 className="font-bold text-base text-[#2D2D2A] font-serif">Assign Subject to Teacher</h3>
+            <h3 className="font-bold text-base text-[#2D2D2A] font-serif">
+              Assign Subject to Teacher
+            </h3>
             <div className="space-y-3 text-xs">
               <div>
                 <label className="block font-bold text-[#2D2D2A] mb-1">Select Teacher *</label>
@@ -2013,7 +2062,9 @@ export const AdminDashboard: React.FC = () => {
                 >
                   <option value="">-- Choose Faculty Teacher --</option>
                   {teacherUsers.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name} ({t.email})</option>
+                    <option key={t.id} value={t.id}>
+                      {t.name} ({t.email})
+                    </option>
                   ))}
                 </select>
               </div>
@@ -2038,7 +2089,9 @@ export const AdminDashboard: React.FC = () => {
                 >
                   <option value="">None (Subject Qualification Only)</option>
                   {classrooms.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -2068,7 +2121,12 @@ export const AdminDashboard: React.FC = () => {
                     toast.warning('Teacher and Subject Name are required.');
                     return;
                   }
-                  await assignSubjectToTeacher(assignTeacherId, assignSubjectId, assignClassroomId || undefined, assignReason);
+                  await assignSubjectToTeacher(
+                    assignTeacherId,
+                    assignSubjectId,
+                    assignClassroomId || undefined,
+                    assignReason,
+                  );
                   setIsAssignModalOpen(false);
                 }}
                 className="px-4 py-2 rounded-xl bg-[#4A6741] text-white font-bold text-xs"
@@ -2084,7 +2142,9 @@ export const AdminDashboard: React.FC = () => {
       {isReassignModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-[#EDEAE2] shadow-2xl space-y-4">
-            <h3 className="font-bold text-base text-[#2D2D2A] font-serif">Reassign Classroom Teacher</h3>
+            <h3 className="font-bold text-base text-[#2D2D2A] font-serif">
+              Reassign Classroom Teacher
+            </h3>
             <div className="space-y-3 text-xs">
               <div>
                 <label className="block font-bold text-[#2D2D2A] mb-1">Target Classroom *</label>
@@ -2102,7 +2162,9 @@ export const AdminDashboard: React.FC = () => {
                 >
                   <option value="">-- Choose Classroom --</option>
                   {classrooms.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name} ({c.teacherName})</option>
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.teacherName})
+                    </option>
                   ))}
                 </select>
               </div>
@@ -2115,9 +2177,13 @@ export const AdminDashboard: React.FC = () => {
                   className="w-full p-2.5 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2]"
                 >
                   <option value="">-- Choose New Lead Teacher --</option>
-                  {teacherUsers.filter((t) => t.id !== reassignFromTeacherId).map((t) => (
-                    <option key={t.id} value={t.id}>{t.name} ({t.email})</option>
-                  ))}
+                  {teacherUsers
+                    .filter((t) => t.id !== reassignFromTeacherId)
+                    .map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} ({t.email})
+                      </option>
+                    ))}
                 </select>
               </div>
 

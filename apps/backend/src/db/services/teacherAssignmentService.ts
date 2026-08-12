@@ -104,7 +104,8 @@ export class TeacherAssignmentService {
     actorId: string,
   ): Promise<TeacherAbsenceRequest> {
     const admin = await prisma.user.findUnique({ where: { id: actorId } });
-    if (!admin || admin.role !== 'admin') throw new Error('Only administrators can review teacher absence requests.');
+    if (!admin || admin.role !== 'admin')
+      throw new Error('Only administrators can review teacher absence requests.');
 
     const req = await prisma.teacherAbsenceRequest.findUnique({
       where: { id: requestId },
@@ -163,7 +164,10 @@ export class TeacherAssignmentService {
             createdByAdminId: actorId,
           });
         } catch (e: any) {
-          logger.warn(`Could not auto-create substitute request for classroom ${cls.id}:`, e?.message || e);
+          logger.warn(
+            `Could not auto-create substitute request for classroom ${cls.id}:`,
+            e?.message || e,
+          );
         }
       }
     }
@@ -470,8 +474,7 @@ export class TeacherAssignmentService {
       }
 
       // 3. Workload Score
-      const currentWorkload =
-        teacher.taughtClassrooms.length + teacher.assignedSubstitutes.length;
+      const currentWorkload = teacher.taughtClassrooms.length + teacher.assignedSubstitutes.length;
 
       return {
         teacherId: teacher.id,
@@ -604,7 +607,8 @@ export class TeacherAssignmentService {
     });
     if (!currentReq) throw new Error('Substitute request not found.');
 
-    const targetSubId = assignedSubstituteId || currentReq.suggestedSubstituteId || currentReq.assignedSubstituteId;
+    const targetSubId =
+      assignedSubstituteId || currentReq.suggestedSubstituteId || currentReq.assignedSubstituteId;
 
     const updated = await prisma.substituteRequest.update({
       where: { id: requestId },
@@ -731,7 +735,9 @@ export class TeacherAssignmentService {
   /**
    * Fetch assignment audit history logs
    */
-  public async getAssignmentAuditLogs(targetTeacherId?: string): Promise<TeacherAssignmentAuditLog[]> {
+  public async getAssignmentAuditLogs(
+    targetTeacherId?: string,
+  ): Promise<TeacherAssignmentAuditLog[]> {
     const where: any = {};
     if (targetTeacherId) where.targetTeacherId = targetTeacherId;
 

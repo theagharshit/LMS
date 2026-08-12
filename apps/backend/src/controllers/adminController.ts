@@ -356,7 +356,9 @@ export const assignSubjectToTeacher = async (req: Request, res: Response) => {
     const actorId = req.user?.id || 'user-admin-1';
     const { teacherId, subjectId, classroomId, reason } = req.body;
     if (!teacherId || !subjectId) {
-      return res.status(400).json({ status: 'error', message: 'teacherId and subjectId are required.' });
+      return res
+        .status(400)
+        .json({ status: 'error', message: 'teacherId and subjectId are required.' });
     }
     const result = await teacherAssignmentService.assignSubjectToTeacher(
       teacherId,
@@ -377,7 +379,9 @@ export const deassignSubjectFromTeacher = async (req: Request, res: Response) =>
     const actorId = req.user?.id || 'user-admin-1';
     const { teacherId, subjectId, classroomId, reason } = req.body;
     if (!teacherId || !subjectId) {
-      return res.status(400).json({ status: 'error', message: 'teacherId and subjectId are required.' });
+      return res
+        .status(400)
+        .json({ status: 'error', message: 'teacherId and subjectId are required.' });
     }
     const result = await teacherAssignmentService.deassignSubjectFromTeacher(
       teacherId,
@@ -426,7 +430,9 @@ export const getEligibleSubstitutes = async (req: Request, res: Response) => {
     const date = String(req.query.date || new Date().toISOString().split('T')[0]);
     const timeSlot = String(req.query.timeSlot || '10:00 AM - 10:45 AM');
     if (!classroomId) {
-      return res.status(400).json({ status: 'error', message: 'classroomId query parameter is required.' });
+      return res
+        .status(400)
+        .json({ status: 'error', message: 'classroomId query parameter is required.' });
     }
     const candidates = await teacherAssignmentService.getEligibleSubstitutes(
       classroomId,
@@ -443,8 +449,20 @@ export const getEligibleSubstitutes = async (req: Request, res: Response) => {
 
 export const createSubstituteRequest = async (req: Request, res: Response) => {
   try {
-    const actorId = (req.user && req.user.role === 'admin') ? req.user.id : (req.body.createdByAdminId || 'user-admin-1');
-    const { classroomId, subjectId, date, timeSlot, originalTeacherId, suggestedSubstituteId, reason, teacherAbsenceRequestId } = req.body;
+    const actorId =
+      req.user && req.user.role === 'admin'
+        ? req.user.id
+        : req.body.createdByAdminId || 'user-admin-1';
+    const {
+      classroomId,
+      subjectId,
+      date,
+      timeSlot,
+      originalTeacherId,
+      suggestedSubstituteId,
+      reason,
+      teacherAbsenceRequestId,
+    } = req.body;
     if (!classroomId || !date || !timeSlot || !originalTeacherId || !reason) {
       return res.status(400).json({
         status: 'error',
@@ -471,11 +489,15 @@ export const createSubstituteRequest = async (req: Request, res: Response) => {
 
 export const updateSubstituteRequestStatus = async (req: Request, res: Response) => {
   try {
-    const actorId = (req.user && req.user.role === 'admin') ? req.user.id : (req.body.adminId || 'user-admin-1');
+    const actorId =
+      req.user && req.user.role === 'admin' ? req.user.id : req.body.adminId || 'user-admin-1';
     const { id } = req.params;
     const { status, responseNotes, assignedSubstituteId } = req.body;
     if (!status || !['APPROVED', 'REJECTED', 'CANCELLED'].includes(status)) {
-      return res.status(400).json({ status: 'error', message: 'Valid status (APPROVED, REJECTED, CANCELLED) is required.' });
+      return res.status(400).json({
+        status: 'error',
+        message: 'Valid status (APPROVED, REJECTED, CANCELLED) is required.',
+      });
     }
     const substituteRequest = await teacherAssignmentService.updateSubstituteRequestStatus(
       id,
@@ -505,10 +527,14 @@ export const getSubstituteRequests = async (req: Request, res: Response) => {
 // --- TEACHER ABSENCE REQUEST CONTROLLERS ---
 export const submitTeacherAbsenceRequest = async (req: Request, res: Response) => {
   try {
-    const teacherId = req.body.teacherId || (req.user && req.user.role === 'teacher' ? req.user.id : undefined);
+    const teacherId =
+      req.body.teacherId || (req.user && req.user.role === 'teacher' ? req.user.id : undefined);
     const { startDate, endDate, reason } = req.body;
     if (!teacherId || !startDate || !endDate || !reason) {
-      return res.status(400).json({ status: 'error', message: 'teacherId, startDate, endDate, and reason are required.' });
+      return res.status(400).json({
+        status: 'error',
+        message: 'teacherId, startDate, endDate, and reason are required.',
+      });
     }
     const absenceRequest = await teacherAssignmentService.submitTeacherAbsenceRequest(
       teacherId,
@@ -525,11 +551,14 @@ export const submitTeacherAbsenceRequest = async (req: Request, res: Response) =
 
 export const reviewTeacherAbsenceRequest = async (req: Request, res: Response) => {
   try {
-    const actorId = (req.user && req.user.role === 'admin') ? req.user.id : (req.body.adminId || 'user-admin-1');
+    const actorId =
+      req.user && req.user.role === 'admin' ? req.user.id : req.body.adminId || 'user-admin-1';
     const { id } = req.params;
     const { status } = req.body;
     if (!status || !['approved', 'rejected'].includes(status)) {
-      return res.status(400).json({ status: 'error', message: 'Status must be approved or rejected.' });
+      return res
+        .status(400)
+        .json({ status: 'error', message: 'Status must be approved or rejected.' });
     }
     const absenceRequest = await teacherAssignmentService.reviewTeacherAbsenceRequest(
       id,
@@ -557,7 +586,9 @@ export const getTeacherAbsenceRequests = async (req: Request, res: Response) => 
 // --- ASSIGNMENT AUDIT LOG CONTROLLER ---
 export const getAssignmentAuditLogs = async (req: Request, res: Response) => {
   try {
-    const targetTeacherId = req.query.targetTeacherId ? String(req.query.targetTeacherId) : undefined;
+    const targetTeacherId = req.query.targetTeacherId
+      ? String(req.query.targetTeacherId)
+      : undefined;
     const logs = await teacherAssignmentService.getAssignmentAuditLogs(targetTeacherId);
     res.json({ status: 'success', auditLogs: logs });
   } catch (err) {

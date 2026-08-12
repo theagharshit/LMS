@@ -53,12 +53,7 @@ export const SubstituteRequestModal: React.FC<SubstituteRequestModalProps> = ({
   useEffect(() => {
     if (isOpen && currentClassroom) {
       setIsLoadingCandidates(true);
-      fetchEligibleSubstitutes(
-        currentClassroom.id,
-        currentClassroom.subject,
-        date,
-        timeSlot,
-      )
+      fetchEligibleSubstitutes(currentClassroom.id, currentClassroom.subject, date, timeSlot)
         .then((res) => setCandidates(res))
         .catch(() => setCandidates([]))
         .finally(() => setIsLoadingCandidates(false));
@@ -108,7 +103,8 @@ export const SubstituteRequestModal: React.FC<SubstituteRequestModalProps> = ({
               Request Substitute Teacher
             </h3>
             <p className="text-xs text-[#7A7A72]">
-              Filter eligible teachers by subject qualification, schedule availability, and workload score.
+              Filter eligible teachers by subject qualification, schedule availability, and workload
+              score.
             </p>
           </div>
           <button

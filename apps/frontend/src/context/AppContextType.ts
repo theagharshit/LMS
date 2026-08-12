@@ -201,12 +201,54 @@ export interface AppContextType {
   substituteRequests: SubstituteRequest[];
   teacherAbsenceRequests: TeacherAbsenceRequest[];
   teacherAssignmentAuditLogs: TeacherAssignmentAuditLog[];
-  assignSubjectToTeacher: (teacherId: string, subjectId: string, classroomId?: string, reason?: string) => Promise<void>;
-  deassignSubjectFromTeacher: (teacherId: string, subjectId: string, classroomId?: string, reason?: string) => Promise<void>;
-  reassignSubject: (subjectId: string, classroomId: string, fromTeacherId: string, toTeacherId: string, reason?: string) => Promise<void>;
-  fetchEligibleSubstitutes: (classroomId: string, subjectId: string, date: string, timeSlot: string) => Promise<EligibleSubstituteTeacher[]>;
-  createSubstituteRequest: (data: { classroomId: string; subjectId: string; date: string; timeSlot: string; originalTeacherId: string; suggestedSubstituteId?: string; reason: string; teacherAbsenceRequestId?: string }) => Promise<void>;
-  updateSubstituteStatus: (requestId: string, status: SubstituteRequestStatus, responseNotes?: string, assignedSubstituteId?: string) => Promise<void>;
-  submitTeacherAbsenceRequest: (startDate: string, endDate: string, reason: string) => Promise<void>;
-  reviewTeacherAbsenceRequest: (requestId: string, status: 'approved' | 'rejected') => Promise<void>;
+  assignSubjectToTeacher: (
+    teacherId: string,
+    subjectId: string,
+    classroomId?: string,
+    reason?: string,
+  ) => Promise<void>;
+  deassignSubjectFromTeacher: (
+    teacherId: string,
+    subjectId: string,
+    classroomId?: string,
+    reason?: string,
+  ) => Promise<void>;
+  reassignSubject: (
+    subjectId: string,
+    classroomId: string,
+    fromTeacherId: string,
+    toTeacherId: string,
+    reason?: string,
+  ) => Promise<void>;
+  fetchEligibleSubstitutes: (
+    classroomId: string,
+    subjectId: string,
+    date: string,
+    timeSlot: string,
+  ) => Promise<EligibleSubstituteTeacher[]>;
+  createSubstituteRequest: (data: {
+    classroomId: string;
+    subjectId: string;
+    date: string;
+    timeSlot: string;
+    originalTeacherId: string;
+    suggestedSubstituteId?: string;
+    reason: string;
+    teacherAbsenceRequestId?: string;
+  }) => Promise<void>;
+  updateSubstituteStatus: (
+    requestId: string,
+    status: SubstituteRequestStatus,
+    responseNotes?: string,
+    assignedSubstituteId?: string,
+  ) => Promise<void>;
+  submitTeacherAbsenceRequest: (
+    startDate: string,
+    endDate: string,
+    reason: string,
+  ) => Promise<void>;
+  reviewTeacherAbsenceRequest: (
+    requestId: string,
+    status: 'approved' | 'rejected',
+  ) => Promise<void>;
 }

@@ -176,32 +176,68 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             <span>Assigned Substitute Duties</span>
           </h3>
 
-          {substituteRequests.filter((r) => r.assignedSubstituteId === currentUser.id || r.suggestedSubstituteId === currentUser.id).length === 0 ? (
-            <p className="text-xs text-[#7A7A72]">You have no upcoming substitute teaching duties.</p>
+          {substituteRequests.filter(
+            (r) =>
+              r.assignedSubstituteId === currentUser.id ||
+              r.suggestedSubstituteId === currentUser.id,
+          ).length === 0 ? (
+            <p className="text-xs text-[#7A7A72]">
+              You have no upcoming substitute teaching duties.
+            </p>
           ) : (
             <div className="space-y-3 text-xs">
               {substituteRequests
-                .filter((r) => r.assignedSubstituteId === currentUser.id || r.suggestedSubstituteId === currentUser.id)
+                .filter(
+                  (r) =>
+                    r.assignedSubstituteId === currentUser.id ||
+                    r.suggestedSubstituteId === currentUser.id,
+                )
                 .map((req) => (
-                  <div key={req.id} className="p-3.5 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-2">
+                  <div
+                    key={req.id}
+                    className="p-3.5 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-2"
+                  >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-[#2D2D2A]">{req.classroomName}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${req.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${req.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}
+                      >
                         {req.status}
                       </span>
                     </div>
-                    <p className="text-[11px] text-[#7A7A72]">Date & Time: <strong>{req.date} ({req.timeSlot})</strong></p>
-                    <p className="text-[11px] text-[#7A7A72]">Replacing Teacher: <strong>{req.originalTeacherName}</strong></p>
+                    <p className="text-[11px] text-[#7A7A72]">
+                      Date & Time:{' '}
+                      <strong>
+                        {req.date} ({req.timeSlot})
+                      </strong>
+                    </p>
+                    <p className="text-[11px] text-[#7A7A72]">
+                      Replacing Teacher: <strong>{req.originalTeacherName}</strong>
+                    </p>
                     {req.status === 'PENDING' && (
                       <div className="flex justify-end gap-2 pt-2 border-t border-[#EDEAE2]">
                         <button
-                          onClick={() => updateSubstituteStatus(req.id, 'REJECTED', 'Teacher unavailable', currentUser.id)}
+                          onClick={() =>
+                            updateSubstituteStatus(
+                              req.id,
+                              'REJECTED',
+                              'Teacher unavailable',
+                              currentUser.id,
+                            )
+                          }
                           className="px-3 py-1 rounded-xl bg-white border border-rose-200 text-rose-700 font-bold text-[10px]"
                         >
                           Decline
                         </button>
                         <button
-                          onClick={() => updateSubstituteStatus(req.id, 'APPROVED', 'Teacher accepted duty', currentUser.id)}
+                          onClick={() =>
+                            updateSubstituteStatus(
+                              req.id,
+                              'APPROVED',
+                              'Teacher accepted duty',
+                              currentUser.id,
+                            )
+                          }
                           className="px-3 py-1 rounded-xl bg-emerald-600 text-white font-bold text-[10px] shadow-xs"
                         >
                           Accept Substitute Duty
@@ -236,10 +272,17 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               {teacherAbsenceRequests
                 .filter((r) => r.teacherId === currentUser.id)
                 .map((req) => (
-                  <div key={req.id} className="p-3.5 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-1.5">
+                  <div
+                    key={req.id}
+                    className="p-3.5 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-1.5"
+                  >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-[#2D2D2A]">{req.startDate} to {req.endDate}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${req.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : req.status === 'rejected' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}`}>
+                      <span className="font-bold text-[#2D2D2A]">
+                        {req.startDate} to {req.endDate}
+                      </span>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${req.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : req.status === 'rejected' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}`}
+                      >
                         {req.status}
                       </span>
                     </div>
@@ -736,7 +779,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               Submit Faculty Leave Request
             </h3>
             <p className="text-xs text-[#7A7A72]">
-              Submit your absence dates. Once approved by administration, substitute requests will be initialized for your classes.
+              Submit your absence dates. Once approved by administration, substitute requests will
+              be initialized for your classes.
             </p>
 
             <div className="space-y-3 text-xs">
@@ -785,7 +829,11 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     toast.warning('Please provide Start Date, End Date, and Reason.');
                     return;
                   }
-                  await submitTeacherAbsenceRequest(leaveStartDate, leaveEndDate, leaveReason.trim());
+                  await submitTeacherAbsenceRequest(
+                    leaveStartDate,
+                    leaveEndDate,
+                    leaveReason.trim(),
+                  );
                   setIsLeaveModalOpen(false);
                   setLeaveReason('');
                 }}

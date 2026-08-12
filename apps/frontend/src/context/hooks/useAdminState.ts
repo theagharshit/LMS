@@ -377,13 +377,20 @@ export const useAdminState = (
     if (res.ok) {
       if (classroomId && teacher) {
         setClassrooms((prev) =>
-          prev.map((c) => (c.id === classroomId ? { ...c, teacherId, teacherName: teacher.name, teacherAvatar: teacher.avatar } : c)),
+          prev.map((c) =>
+            c.id === classroomId
+              ? { ...c, teacherId, teacherName: teacher.name, teacherAvatar: teacher.avatar }
+              : c,
+          ),
         );
       }
       setAllUsers((prev) =>
         prev.map((u) =>
           u.id === teacherId
-            ? { ...u, subjectsTaught: Array.from(new Set([...(u.subjectsTaught || []), subjectId])) }
+            ? {
+                ...u,
+                subjectsTaught: Array.from(new Set([...(u.subjectsTaught || []), subjectId])),
+              }
             : u,
         ),
       );
@@ -472,7 +479,12 @@ export const useAdminState = (
       setClassrooms((prev) =>
         prev.map((c) =>
           c.id === classroomId
-            ? { ...c, teacherId: toTeacherId, teacherName: toTeacher.name, teacherAvatar: toTeacher.avatar }
+            ? {
+                ...c,
+                teacherId: toTeacherId,
+                teacherName: toTeacher.name,
+                teacherAvatar: toTeacher.avatar,
+              }
             : c,
         ),
       );
@@ -517,7 +529,9 @@ export const useAdminState = (
           teacherId: t.id,
           teacherName: t.name,
           teacherAvatar: t.avatar,
-          isQualified: (t.subjectsTaught || []).some((s) => s.toLowerCase().includes(subjectId.toLowerCase())),
+          isQualified: (t.subjectsTaught || []).some((s) =>
+            s.toLowerCase().includes(subjectId.toLowerCase()),
+          ),
           isAvailable: true,
           currentWorkload: classrooms.filter((c) => c.teacherId === t.id).length,
         }));
@@ -615,7 +629,11 @@ export const useAdminState = (
     }).catch((err) => console.error('Failed to update substitute status via API:', err));
   };
 
-  const submitTeacherAbsenceRequest = async (startDate: string, endDate: string, reason: string) => {
+  const submitTeacherAbsenceRequest = async (
+    startDate: string,
+    endDate: string,
+    reason: string,
+  ) => {
     const res = await apiFetch('/api/db/teachers/absence-requests', {
       method: 'POST',
       body: JSON.stringify({ teacherId: currentUser.id, startDate, endDate, reason }),
@@ -652,10 +670,22 @@ export const useAdminState = (
     setTeacherAbsenceRequests((prev) => [newAbs, ...prev]);
   };
 
-  const reviewTeacherAbsenceRequest = async (requestId: string, status: 'approved' | 'rejected') => {
+  const reviewTeacherAbsenceRequest = async (
+    requestId: string,
+    status: 'approved' | 'rejected',
+  ) => {
     const req = teacherAbsenceRequests.find((r) => r.id === requestId);
     setTeacherAbsenceRequests((prev) =>
-      prev.map((r) => (r.id === requestId ? { ...r, status, reviewedByAdminId: currentUser.id, reviewedByAdminName: currentUser.name } : r)),
+      prev.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              status,
+              reviewedByAdminId: currentUser.id,
+              reviewedByAdminName: currentUser.name,
+            }
+          : r,
+      ),
     );
 
     apiFetch(`/api/db/teachers/absence-requests/${requestId}/review`, {
