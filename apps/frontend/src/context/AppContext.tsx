@@ -65,30 +65,107 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     if (!authState.currentUser?.id || !authState.authReady || !authState.jwtToken) return;
 
-    const token = authState.jwtToken;
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws?token=${token}`;
-    const ws = new WebSocket(wsUrl);
+    let ws: WebSocket | null = null;
+    let reconnectTimeout: NodeJS.Timeout | null = null;
+    let isDisposed = false;
+    let retryDelay = 1000;
+    const MAX_RETRY_DELAY = 16000;
 
-    ws.onmessage = (event) => {
+    const connect = () => {
+      if (isDisposed) return;
+
+      const token = authState.jwtToken;
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws?token=${token}`;
+
       try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'notification' && data.payload) {
-          communicationState.addRealtimeNotification(data.payload);
-        }
+        ws = new WebSocket(wsUrl);
       } catch (err) {
-        console.error('[Realtime] Failed to parse WebSocket message', err);
+        console.error('[Realtime] Failed to construct WebSocket instance', err);
+        scheduleReconnect();
+        return;
+      }
+
+      ws.onopen = () => {
+        console.log(
+          '[Realtime] WebSocket connected successfully for user:',
+          authState.currentUser?.id,
+        );
+        retryDelay = 1000;
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('[DEBUG Chat] AppContext received WebSocket message:', data);
+          if (data.type === 'notification' && data.payload) {
+            communicationState.addRealtimeNotification(data.payload);
+          } else if (data.type === 'chatMessage' && data.payload) {
+            console.log('[DEBUG Chat] Passing chatMessage to addRealtimeMessage');
+            communicationState.addRealtimeMessage(data.payload);
+          }
+        } catch (err) {
+          console.error('[Realtime] Failed to parse WebSocket message', err);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.warn('[Realtime] WebSocket encountered an error:', err);
+      };
+
+      ws.onclose = (event) => {
+        console.log(
+          `[Realtime] WebSocket connection closed (code: ${event.code}). Will attempt reconnect.`,
+        );
+        if (!isDisposed) {
+          scheduleReconnect();
+        }
+      };
+    };
+
+    const scheduleReconnect = () => {
+      if (isDisposed || reconnectTimeout) return;
+      const jitter = Math.floor(Math.random() * 500);
+      const delay = Math.min(retryDelay + jitter, MAX_RETRY_DELAY);
+
+      reconnectTimeout = setTimeout(() => {
+        reconnectTimeout = null;
+        connect();
+      }, delay);
+
+      retryDelay = Math.min(retryDelay * 2, MAX_RETRY_DELAY);
+    };
+
+    const handleOnline = () => {
+      if (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+        if (reconnectTimeout) {
+          clearTimeout(reconnectTimeout);
+          reconnectTimeout = null;
+        }
+        retryDelay = 1000;
+        connect();
       }
     };
 
+    window.addEventListener('online', handleOnline);
+    connect();
+
     return () => {
-      ws.close();
+      isDisposed = true;
+      window.removeEventListener('online', handleOnline);
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+      if (ws) {
+        ws.close();
+      }
     };
   }, [
     authState.currentUser?.id,
     authState.authReady,
     authState.jwtToken,
     communicationState.addRealtimeNotification,
+    communicationState.addRealtimeMessage,
   ]);
 
   const switchUser = (userId: string) => {
@@ -274,6 +351,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Communication State
     messages: communicationState.messages,
+    chatContacts: communicationState.chatContacts,
+    fetchChatHistory: communicationState.fetchChatHistory,
+    addRealtimeMessage: communicationState.addRealtimeMessage,
     sendMessage: communicationState.sendMessage,
     notifications: communicationState.notifications,
     addRealtimeNotification: communicationState.addRealtimeNotification,

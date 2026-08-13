@@ -49,6 +49,7 @@ export const Sidebar: React.FC = () => {
     { id: 'classroom', label: 'Classrooms & Notes', icon: BookOpen },
     { id: 'profile', label: 'Student Profile & ID', icon: UserCheck },
     { id: 'calendar', label: 'Academic Calendar', icon: Calendar },
+    { id: 'messages', label: 'Messages', icon: MessageSquare },
   ];
 
   const teacherNav: NavItem[] = [
@@ -64,6 +65,7 @@ export const Sidebar: React.FC = () => {
     { id: 'attendance', label: 'Attendance Register', icon: UserCheck },
     { id: 'progress', label: 'Student Analytics', icon: TrendingUp },
     { id: 'calendar', label: 'Academic Calendar', icon: Calendar },
+    { id: 'messages', label: 'Messages', icon: MessageSquare },
   ];
 
   const parentNav: NavItem[] = [
@@ -87,6 +89,7 @@ export const Sidebar: React.FC = () => {
   const adminNav: NavItem[] = [
     { id: 'dashboard', label: 'Admin Hub', icon: ShieldAlert },
     { id: 'calendar', label: 'Academic Calendar', icon: Calendar },
+    { id: 'messages', label: 'Messages', icon: MessageSquare },
   ];
 
   const navItems = isStudent ? studentNav : isTeacher ? teacherNav : isAdmin ? adminNav : parentNav;

@@ -4,6 +4,16 @@ import { apiFetch } from '../../utils/apiFetch';
 
 export const useCommunicationState = (currentUser: User, authReady = true) => {
   const [messages, setMessages] = useState<DirectMessage[]>([]);
+  const [chatContacts, setChatContacts] = useState<
+    {
+      id: string;
+      name: string;
+      role: string;
+      avatar?: string;
+      online?: boolean;
+      unreadCount?: number;
+    }[]
+  >([]);
 
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreference>({
     userId: currentUser?.id || 'user-1',
@@ -89,7 +99,40 @@ export const useCommunicationState = (currentUser: User, authReady = true) => {
       .catch((err) =>
         console.error('[useCommunicationState] Failed to fetch user notifications', err),
       );
+
+    apiFetch('/api/chat/contacts')
+      .then((res) => res.json())
+      .then((data: any) => {
+        if (data.status === 'success' && Array.isArray(data.contacts)) {
+          setChatContacts(data.contacts);
+        }
+      })
+      .catch((err) => console.error('[useCommunicationState] Failed to fetch chat contacts', err));
   }, [authReady, currentUser?.id]);
+
+  const fetchChatHistory = useCallback(async (contactId: string) => {
+    console.log('[DEBUG Chat] fetchChatHistory called for contact:', contactId);
+    try {
+      const res = await apiFetch(`/api/chat/${contactId}`);
+      const data = await res.json();
+      console.log('[DEBUG Chat] fetchChatHistory response:', data);
+      if (data.status === 'success' && Array.isArray(data.messages)) {
+        setMessages(data.messages);
+
+        // Mark as read in DB
+        apiFetch(`/api/chat/${contactId}/read`, { method: 'POST', feedback: false }).catch(
+          console.error,
+        );
+
+        // Clear unread count locally
+        setChatContacts((prev) =>
+          prev.map((c) => (c.id === contactId ? { ...c, unreadCount: 0 } : c)),
+        );
+      }
+    } catch (err) {
+      console.error('[useCommunicationState] Failed to fetch chat history', err);
+    }
+  }, []);
 
   const updateNotificationPreferences = (
     prefs: Partial<Omit<NotificationPreference, 'userId'>>,
@@ -110,8 +153,11 @@ export const useCommunicationState = (currentUser: User, authReady = true) => {
   };
 
   const sendMessage = (receiverId: string, receiverName: string, content: string) => {
+    console.log('[DEBUG Chat] sendMessage called', { receiverId, receiverName, content });
+    // Optimistic UI update
+    const tempId = `msg-temp-${Date.now()}`;
     const newMsg: DirectMessage = {
-      id: `msg-${Date.now()}`,
+      id: tempId,
       senderId: currentUser.id,
       senderName: currentUser.name,
       senderRole: currentUser.role,
@@ -122,18 +168,42 @@ export const useCommunicationState = (currentUser: User, authReady = true) => {
       createdAt: new Date().toISOString(),
       read: false,
     };
-    setMessages((prev) => [newMsg, ...prev]);
+    console.log('[DEBUG Chat] Adding optimistic message', newMsg);
+    setMessages((prev) => [...prev, newMsg]); // Append to end
 
-    apiFetch('/api/db/messages', {
+    apiFetch(`/api/chat/${receiverId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newMsg),
-      feedback: {
-        success: `Message sent to ${receiverName}.`,
-        error: `Your message to ${receiverName} could not be sent.`,
-      },
-    }).catch((err) => console.error('[AppContext] Failed to persist message', err));
+      body: JSON.stringify({ content }),
+      feedback: false, // Let UI handle success silently
+    })
+      .then((res) => res.json())
+      .then((data: any) => {
+        console.log('[DEBUG Chat] sendMessage API response:', data);
+        if (data.status === 'success' && data.message) {
+          // Replace temp message with real one from DB
+          console.log('[DEBUG Chat] Replacing temp message with real DB message', data.message);
+          setMessages((prev) => prev.map((m) => (m.id === tempId ? data.message : m)));
+        }
+      })
+      .catch((err) => {
+        console.error('[useCommunicationState] Failed to send message', err);
+        // Optionally remove temp message on failure
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      });
   };
+
+  const addRealtimeMessage = useCallback((message: DirectMessage) => {
+    console.log('[DEBUG Chat] addRealtimeMessage called via WebSocket:', message);
+    setMessages((prev) => {
+      if (prev.some((m) => m.id === message.id)) {
+        console.log('[DEBUG Chat] Message already exists in state, ignoring');
+        return prev;
+      }
+      console.log('[DEBUG Chat] Appending realtime message to state');
+      return [...prev, message];
+    });
+  }, []);
 
   const markNotificationRead = (id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
@@ -251,5 +321,8 @@ export const useCommunicationState = (currentUser: User, authReady = true) => {
     clearReadNotifications,
     dispatchNotification,
     unreadCount,
+    chatContacts,
+    fetchChatHistory,
+    addRealtimeMessage,
   };
 };
