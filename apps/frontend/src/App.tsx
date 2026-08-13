@@ -135,14 +135,6 @@ const AppContent: React.FC = () => {
         return <AcademicCalendarView />;
 
       case 'messages':
-        if (currentUser.role === 'teacher') {
-          return (
-            <TeacherDashboard
-              onOpenGradeModal={(id) => setActiveAssignmentId(id)}
-              onOpenQuizBuilderModal={() => setIsQuizBuilderOpen(true)}
-            />
-          );
-        }
         return <MessagesView />;
 
       case 'parent-portal':

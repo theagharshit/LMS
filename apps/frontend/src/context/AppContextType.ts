@@ -109,6 +109,16 @@ export interface AppContextType {
   updateParentControls: (studentId: string, settings: Partial<ParentControlSettings>) => void;
 
   messages: DirectMessage[];
+  chatContacts: {
+    id: string;
+    name: string;
+    role: string;
+    avatar?: string;
+    online?: boolean;
+    unreadCount?: number;
+  }[];
+  fetchChatHistory: (contactId: string) => void;
+  addRealtimeMessage: (message: DirectMessage) => void;
   sendMessage: (receiverId: string, receiverName: string, content: string) => void;
 
   // Timetable Schedule Data

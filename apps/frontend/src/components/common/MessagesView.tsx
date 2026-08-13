@@ -12,43 +12,45 @@ import {
 } from 'lucide-react';
 
 export const MessagesView: React.FC = () => {
-  const { messages, sendMessage, currentUser } = useApp();
+  const { messages, sendMessage, currentUser, chatContacts, fetchChatHistory } = useApp();
 
-  const [activeChannelId, setActiveChannelId] = useState('chan-1');
+  const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [inputText, setInputText] = useState('');
 
-  const channels = [
-    {
-      id: 'chan-1',
-      name: 'Ramesh Thapa (Math Faculty)',
-      subtitle: 'Grade 8 Mathematics',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-      online: true,
-    },
-    {
-      id: 'chan-2',
-      name: 'Grade 8-A Parent-Teacher Group',
-      subtitle: 'Official Class Updates',
-      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-      online: true,
-    },
-    {
-      id: 'chan-3',
-      name: 'Saraswati Gurung (Science)',
-      subtitle: 'Science Lab Instructor',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-      online: false,
-    },
-  ];
+  // Automatically select the first contact if none is selected
+  React.useEffect(() => {
+    if (!activeChannelId && chatContacts.length > 0) {
+      setActiveChannelId(chatContacts[0].id!);
+    }
+  }, [activeChannelId, chatContacts]);
 
-  const currentChannel = channels.find((c) => c.id === activeChannelId) || channels[0];
-  const channelMessages = messages.filter((m) => m.id === activeChannelId);
+  React.useEffect(() => {
+    if (activeChannelId) {
+      fetchChatHistory(activeChannelId);
+    }
+  }, [activeChannelId, fetchChatHistory]);
+
+  const currentContact = chatContacts.find((c) => c.id === activeChannelId) || chatContacts[0];
+  const channelMessages = messages.filter(
+    (m) =>
+      (m.senderId === activeChannelId && m.receiverId === currentUser.id) ||
+      (m.senderId === currentUser.id && m.receiverId === activeChannelId),
+  );
+
+  React.useEffect(() => {
+    console.log('[DEBUG Chat] MessagesView rendering.', {
+      activeChannelId,
+      totalMessagesInContext: messages.length,
+      filteredChannelMessages: channelMessages.length,
+      channelMessages,
+    });
+  }, [messages, activeChannelId, channelMessages]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || !activeChannelId || !currentContact) return;
 
-    sendMessage(activeChannelId, 'Unknown', inputText);
+    sendMessage(activeChannelId, currentContact.name || 'Unknown', inputText);
     setInputText('');
   };
 
@@ -71,12 +73,12 @@ export const MessagesView: React.FC = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
-          {channels.map((chan) => {
-            const isSel = chan.id === activeChannelId;
+          {chatContacts.map((contact) => {
+            const isSel = contact.id === activeChannelId;
             return (
               <div
-                key={chan.id}
-                onClick={() => setActiveChannelId(chan.id)}
+                key={contact.id}
+                onClick={() => setActiveChannelId(contact.id!)}
                 className={`p-3 rounded-2xl cursor-pointer transition-all flex items-center gap-3 ${
                   isSel
                     ? 'bg-white text-[#4A6741] shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-[#EDEAE2]'
@@ -85,25 +87,35 @@ export const MessagesView: React.FC = () => {
               >
                 <div className="relative">
                   <img
-                    src={chan.avatar}
-                    alt={chan.name}
+                    src={contact.avatar || 'https://via.placeholder.com/150'}
+                    alt={contact.name}
                     className="w-10 h-10 rounded-full object-cover shrink-0"
                   />
-                  {chan.online && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#88A070] border-2 border-white absolute right-0 bottom-0" />
-                  )}
+                  <div
+                    className={`w-2.5 h-2.5 rounded-full border-2 border-white absolute right-0 bottom-0 ${contact.online ? 'bg-[#88A070]' : 'bg-gray-400'}`}
+                  />
                 </div>
                 <div className="flex-1 truncate">
-                  <h4 className="font-bold truncate text-xs">{chan.name}</h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-bold truncate text-xs">{contact.name}</h4>
+                    {(contact.unreadCount ?? 0) > 0 && (
+                      <span className="bg-[#4A6741] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">
+                        {contact.unreadCount}
+                      </span>
+                    )}
+                  </div>
                   <p
-                    className={`text-[11px] truncate ${isSel ? 'text-[#4A6741]' : 'text-[#7A7A72]'}`}
+                    className={`text-[11px] truncate capitalize ${isSel ? 'text-[#4A6741]' : 'text-[#7A7A72]'}`}
                   >
-                    {chan.subtitle}
+                    {contact.role}
                   </p>
                 </div>
               </div>
             );
           })}
+          {chatContacts.length === 0 && (
+            <p className="p-4 text-xs text-center text-[#7A7A72]">No contacts available.</p>
+          )}
         </div>
       </div>
 
@@ -111,17 +123,28 @@ export const MessagesView: React.FC = () => {
       <div className="flex-1 flex flex-col bg-white">
         {/* Chat Header */}
         <div className="p-4 border-b border-[#E5E1D8] flex items-center justify-between bg-[#F0EDE5]/40">
-          <div className="flex items-center gap-3">
-            <img
-              src={currentChannel.avatar}
-              alt={currentChannel.name}
-              className="w-9 h-9 rounded-full object-cover"
-            />
-            <div>
-              <h3 className="font-bold text-xs text-[#2D2D2A] font-serif">{currentChannel.name}</h3>
-              <p className="text-[10px] text-[#7A7A72]">{currentChannel.subtitle}</p>
+          {currentContact ? (
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <img
+                  src={currentContact.avatar || 'https://via.placeholder.com/150'}
+                  alt={currentContact.name}
+                  className="w-9 h-9 rounded-full object-cover"
+                />
+                <div
+                  className={`w-2.5 h-2.5 rounded-full border-2 border-white absolute right-0 bottom-0 ${currentContact.online ? 'bg-[#88A070]' : 'bg-gray-400'}`}
+                />
+              </div>
+              <div>
+                <h3 className="font-bold text-xs text-[#2D2D2A] font-serif">
+                  {currentContact.name}
+                </h3>
+                <p className="text-[10px] text-[#7A7A72] capitalize">{currentContact.role}</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div />
+          )}
 
           <div className="flex items-center gap-2">
             <button className="p-2 text-[#7A7A72] hover:bg-[#E5E1D8]/50 rounded-xl">

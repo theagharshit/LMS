@@ -12,6 +12,7 @@ import { studentRoutes } from '@routes/studentRoutes';
 import { teacherRoutes } from '@routes/teacherRoutes';
 import { parentRoutes } from '@routes/parentRoutes';
 import { adminRoutes } from '@routes/adminRoutes';
+import { chatRoutes } from '@routes/chatRoutes';
 import { optionalAuthenticateJwt, requireRoles } from '@middlewares/authMiddleware';
 import {
   csrfProtection,
@@ -108,7 +109,8 @@ export function createApp() {
   app.use('/api', teacherRoutes);
   app.use('/api', parentRoutes);
   app.use('/api', adminRoutes);
-  app.use('/api', platformRoutes);
+  app.use('/api/platform', platformRoutes);
+  app.use('/api/chat', chatRoutes);
 
   app.get('/', (_req, res) => {
     res.json({ message: 'LMS API Backend is running with JWT Authentication & RBAC Support' });
