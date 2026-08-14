@@ -745,8 +745,15 @@ export const AdminDashboard: React.FC = () => {
 
           {/* Student Grid / List */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
-            {filteredStudents.map((s) => {
-              const isUnenrolled = s.isArchived;
+            {filteredStudents.length === 0 ? (
+              <div className="col-span-full py-12 flex flex-col items-center justify-center text-[#7A7A72] bg-[#F9F7F2] rounded-2xl border border-[#EDEAE2] shadow-xs">
+                <span className="text-4xl mb-3 opacity-50">📭</span>
+                <p className="font-bold text-[#2D2D2A] text-sm">No students found</p>
+                <p className="text-xs mt-1 font-medium">Try adjusting your filters or search terms.</p>
+              </div>
+            ) : (
+              filteredStudents.map((s) => {
+                const isUnenrolled = s.isArchived;
               const isPending = s.verificationStatus === 'pending_verification';
 
               return (
@@ -876,7 +883,7 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
               );
-            })}
+            }))}
           </div>
         </div>
       )}
