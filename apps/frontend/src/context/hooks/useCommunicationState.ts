@@ -12,6 +12,8 @@ export const useCommunicationState = (currentUser: User, authReady = true) => {
       avatar?: string;
       online?: boolean;
       unreadCount?: number;
+      lastMessage?: string;
+      lastMessageAt?: string;
     }[]
   >([]);
 
@@ -170,6 +172,11 @@ export const useCommunicationState = (currentUser: User, authReady = true) => {
     };
     console.log('[DEBUG Chat] Adding optimistic message', newMsg);
     setMessages((prev) => [...prev, newMsg]); // Append to end
+    setChatContacts((prev) =>
+      prev.map((c) =>
+        c.id === receiverId ? { ...c, lastMessage: content, lastMessageAt: newMsg.createdAt } : c,
+      ),
+    );
 
     apiFetch(`/api/chat/${receiverId}`, {
       method: 'POST',
@@ -195,6 +202,19 @@ export const useCommunicationState = (currentUser: User, authReady = true) => {
 
   const addRealtimeMessage = useCallback((message: DirectMessage) => {
     console.log('[DEBUG Chat] addRealtimeMessage called via WebSocket:', message);
+    const otherId = message.senderId === currentUser?.id ? message.receiverId : message.senderId;
+    setChatContacts((prev) =>
+      prev.map((c) =>
+        c.id === otherId
+          ? {
+              ...c,
+              lastMessage: message.content,
+              lastMessageAt: message.createdAt,
+              unreadCount: message.senderId !== currentUser?.id ? (c.unreadCount || 0) + 1 : c.unreadCount,
+            }
+          : c,
+      ),
+    );
     setMessages((prev) => {
       if (prev.some((m) => m.id === message.id)) {
         console.log('[DEBUG Chat] Message already exists in state, ignoring');
@@ -203,7 +223,7 @@ export const useCommunicationState = (currentUser: User, authReady = true) => {
       console.log('[DEBUG Chat] Appending realtime message to state');
       return [...prev, message];
     });
-  }, []);
+  }, [currentUser?.id]);
 
   const markNotificationRead = (id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));

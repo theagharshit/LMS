@@ -95,7 +95,7 @@ export const getContacts = async (req: Request, res: Response) => {
       });
     }
 
-    // Map online status and unread counts
+    // Map online status, unread counts, and latest message timestamps
     const unreadCounts = await prisma.directMessage.groupBy({
       by: ['senderId'],
       where: { receiverId: userId, read: false },
@@ -107,11 +107,46 @@ export const getContacts = async (req: Request, res: Response) => {
       unreadMap.set(u.senderId, u._count.id);
     }
 
-    const enhancedContacts = contacts.map((c) => ({
-      ...c,
-      online: isUserOnline(c.id),
-      unreadCount: unreadMap.get(c.id) || 0,
-    }));
+    const directMessages = await prisma.directMessage.findMany({
+      where: {
+        OR: [{ senderId: userId }, { receiverId: userId }],
+      },
+      select: {
+        senderId: true,
+        receiverId: true,
+        content: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const lastMsgMap = new Map<string, { content: string; createdAt: string }>();
+    for (const msg of directMessages) {
+      const otherId = msg.senderId === userId ? msg.receiverId : msg.senderId;
+      if (!lastMsgMap.has(otherId)) {
+        lastMsgMap.set(otherId, { content: msg.content, createdAt: msg.createdAt });
+      }
+    }
+
+    const enhancedContacts = contacts.map((c) => {
+      const lastMsg = lastMsgMap.get(c.id);
+      return {
+        ...c,
+        online: isUserOnline(c.id),
+        unreadCount: unreadMap.get(c.id) || 0,
+        lastMessage: lastMsg?.content || '',
+        lastMessageAt: lastMsg?.createdAt || '',
+      };
+    });
+
+    // Sort contacts: newest message activity first, then unread counts, then alphabetical
+    enhancedContacts.sort((a, b) => {
+      const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+      const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+      if (timeA !== timeB) return timeB - timeA;
+      if (a.unreadCount !== b.unreadCount) return b.unreadCount - a.unreadCount;
+      return a.name.localeCompare(b.name);
+    });
 
     res.json({ status: 'success', contacts: enhancedContacts });
   } catch (error) {

@@ -116,6 +116,8 @@ export interface AppContextType {
     avatar?: string;
     online?: boolean;
     unreadCount?: number;
+    lastMessage?: string;
+    lastMessageAt?: string;
   }[];
   fetchChatHistory: (contactId: string) => void;
   addRealtimeMessage: (message: DirectMessage) => void;
