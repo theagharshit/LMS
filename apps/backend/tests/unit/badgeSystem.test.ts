@@ -12,6 +12,8 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
   beforeEach(async () => {
     await prisma.studentBadge.deleteMany();
     await prisma.badgeDefinition.deleteMany();
+    await prisma.quizSubmission.deleteMany({ where: { quizId: 'quiz-1' } });
+    await prisma.quizQuestion.deleteMany({ where: { quizId: 'quiz-1' } });
     // Seed core badge definitions
     await prisma.badgeDefinition.createMany({
       data: [
@@ -45,7 +47,7 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
     // Ensure student profile & user exists
     await prisma.user.upsert({
       where: { id: 'user-stu-1' },
-      update: {},
+      update: { isArchived: false },
       create: {
         id: 'user-stu-1',
         name: 'Aarav Sharma',
@@ -57,18 +59,17 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
     });
     await prisma.studentProfile.upsert({
       where: { id: 'user-stu-1' },
-      update: {},
+      update: { isArchived: false },
       create: {
         id: 'user-stu-1',
         userId: 'user-stu-1',
         streakDays: 10,
         xpPoints: 500,
-        cohortId: 'cohort-8-a',
       },
     });
     await prisma.user.upsert({
       where: { id: 'user-stu-2' },
-      update: {},
+      update: { isArchived: false },
       create: {
         id: 'user-stu-2',
         name: 'Sunita Sharma',
@@ -80,19 +81,18 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
     });
     await prisma.studentProfile.upsert({
       where: { id: 'user-stu-2' },
-      update: {},
+      update: { isArchived: false },
       create: {
         id: 'user-stu-2',
         userId: 'user-stu-2',
         streakDays: 5,
         xpPoints: 200,
-        cohortId: 'cohort-8-a',
       },
     });
     // Ensure classroom & quiz exists for auto-trigger tests
     await prisma.user.upsert({
       where: { id: 'user-teach-1' },
-      update: { name: 'Mr. Ramesh Thapa' },
+      update: { name: 'Mr. Ramesh Thapa', isArchived: false },
       create: {
         id: 'user-teach-1',
         name: 'Mr. Ramesh Thapa',
@@ -104,7 +104,7 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
     });
     await prisma.classroom.upsert({
       where: { id: 'cls-math-8a' },
-      update: {},
+      update: { teacherId: 'user-teach-1', isArchived: false },
       create: {
         id: 'cls-math-8a',
         name: 'Math 8A',
@@ -118,17 +118,55 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
         cohortId: 'cohort-8-a',
       },
     });
+    for (const studentId of ['user-stu-1', 'user-stu-2']) {
+      await prisma.classroomEnrollment.upsert({
+        where: { classroomId_studentId: { classroomId: 'cls-math-8a', studentId } },
+        update: { isActive: true, endedAt: null },
+        create: { classroomId: 'cls-math-8a', studentId, isActive: true },
+      });
+    }
     await prisma.quiz.upsert({
       where: { id: 'quiz-1' },
-      update: {},
+      update: { published: true, status: 'published' },
       create: {
         id: 'quiz-1',
         classroomId: 'cls-math-8a',
+        createdById: 'user-teach-1',
         title: 'Quiz 1',
         description: 'Desc',
         durationMinutes: 15,
         dueDate: '2026-08-10',
+        published: true,
+        status: 'published',
         createdAt: new Date().toISOString(),
+      },
+    });
+    await prisma.quizQuestion.upsert({
+      where: { id: 'badge-quiz-question-1' },
+      update: { quizId: 'quiz-1', correctAnswer: 'A', points: 80 },
+      create: {
+        id: 'badge-quiz-question-1',
+        quizId: 'quiz-1',
+        text: 'Primary badge test question',
+        type: 'MCQ',
+        options: ['A', 'B'],
+        correctAnswer: 'A',
+        explanation: 'A is correct.',
+        points: 80,
+      },
+    });
+    await prisma.quizQuestion.upsert({
+      where: { id: 'badge-quiz-question-2' },
+      update: { quizId: 'quiz-1', correctAnswer: 'B', points: 20 },
+      create: {
+        id: 'badge-quiz-question-2',
+        quizId: 'quiz-1',
+        text: 'Secondary badge test question',
+        type: 'MCQ',
+        options: ['A', 'B'],
+        correctAnswer: 'B',
+        explanation: 'B is correct.',
+        points: 20,
       },
     });
   });
@@ -153,7 +191,7 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
       studentId: 'user-stu-1',
       score: 100,
       totalPoints: 100,
-      answers: { q1: 'A' },
+      answers: { 'badge-quiz-question-1': 'A', 'badge-quiz-question-2': 'B' },
     });
     const userBadges = await prisma.studentBadge.findMany({
       where: { studentProfileId: 'user-stu-1', badgeDefinitionId: 'bdg-def-2' },
@@ -167,14 +205,14 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
       studentId: 'user-stu-2',
       score: 80,
       totalPoints: 100,
-      answers: { q1: 'A' },
+      answers: { 'badge-quiz-question-1': 'A' },
     });
     const userBadges = await prisma.studentBadge.findMany({
       where: { studentProfileId: 'user-stu-2', badgeDefinitionId: 'bdg-def-2' },
     });
     expect(userBadges.length).toBe(0);
   });
-  it('6. submitQuiz with 0 totalPoints does NOT trigger auto-badge award', async () => {
+  it('6. submitQuiz with no correct answers does NOT trigger auto-badge award', async () => {
     await lmsDB.submitQuiz({
       quizId: 'quiz-1',
       studentId: 'user-stu-1',
@@ -209,14 +247,20 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
       studentId: 'user-stu-1',
       score: 50,
       totalPoints: 50,
-      answers: {},
+      answers: {
+        'badge-quiz-question-1': 'A',
+        'badge-quiz-question-2': 'B',
+      },
     });
     await lmsDB.submitQuiz({
       quizId: 'quiz-1',
       studentId: 'user-stu-2',
       score: 50,
       totalPoints: 50,
-      answers: {},
+      answers: {
+        'badge-quiz-question-1': 'A',
+        'badge-quiz-question-2': 'B',
+      },
     });
     const b1 = await prisma.studentBadge.findFirst({
       where: { studentProfileId: 'user-stu-1', badgeDefinitionId: 'bdg-def-2' },
@@ -233,7 +277,10 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
       studentId: 'user-stu-1',
       score: 10,
       totalPoints: 10,
-      answers: {},
+      answers: {
+        'badge-quiz-question-1': 'A',
+        'badge-quiz-question-2': 'B',
+      },
     });
     const badge = await prisma.studentBadge.findFirst({
       where: { studentProfileId: 'user-stu-1', badgeDefinitionId: 'bdg-def-2' },
@@ -273,7 +320,6 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
         userId: user.id,
         streakDays: 5,
         xpPoints: 100,
-        cohortId: 'cohort-8-a',
       },
     });
     await lmsDB.assignBadge(profile.id, 'bdg-def-1', 'user-teach-1');
@@ -293,10 +339,10 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
       studentId: 'user-stu-1',
       score: 20,
       totalPoints: 20,
-      answers: { q1: 'Correct' },
+      answers: { 'badge-quiz-question-1': 'A', 'badge-quiz-question-2': 'B' },
     });
-    expect(sub.score).toBe(20);
-    expect(sub.answers['q1']).toBe('Correct');
+    expect(sub.score).toBe(100);
+    expect(sub.answers['badge-quiz-question-2']).toBe('B');
   });
   it('17. badge definition criteria field stores JSON string metadata', async () => {
     const def = await prisma.badgeDefinition.findUnique({ where: { id: 'bdg-def-2' } });
@@ -314,14 +360,20 @@ describe('Hybrid Badge System & Auto-Trigger Engine (20 Tests)', () => {
       studentId: 'user-stu-1',
       score: 10,
       totalPoints: 10,
-      answers: {},
+      answers: {
+        'badge-quiz-question-1': 'A',
+        'badge-quiz-question-2': 'B',
+      },
     });
     await lmsDB.submitQuiz({
       quizId: 'quiz-1',
       studentId: 'user-stu-1',
       score: 10,
       totalPoints: 10,
-      answers: {},
+      answers: {
+        'badge-quiz-question-1': 'A',
+        'badge-quiz-question-2': 'B',
+      },
     });
     const count = await prisma.studentBadge.count({
       where: { studentProfileId: 'user-stu-1', badgeDefinitionId: 'bdg-def-2' },

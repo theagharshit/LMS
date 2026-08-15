@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { AppProvider, useApp } from '../../src/context/AppContext';
 
@@ -30,7 +30,7 @@ const TestBadgeConsumer: React.FC = () => {
 };
 
 describe('AppContext Badge State Suite (15 Tests)', () => {
-  it('1. provides initial badgeDefinitions from mock fallback state', () => {
+  it('1. provides badgeDefinitions from the test database bootstrap state', () => {
     render(
       <AppProvider>
         <TestBadgeConsumer />
@@ -171,7 +171,7 @@ describe('AppContext Badge State Suite (15 Tests)', () => {
     expect(Array.isArray(contextValue.activeChildList)).toBe(true);
   });
 
-  it('13. switchUser function updates active user and view', () => {
+  it('13. switchUser function updates active user and view', async () => {
     let contextValue: any = null;
     const CaptureComponent = () => {
       contextValue = useApp();
@@ -186,7 +186,7 @@ describe('AppContext Badge State Suite (15 Tests)', () => {
     act(() => {
       contextValue.switchUser('user-admin-1');
     });
-    expect(contextValue.currentUser.role).toBe('admin');
+    await waitFor(() => expect(contextValue.currentUser.role).toBe('admin'));
   });
 
   it('14. joinClassroomByCode returns false for non-existent classroom code', async () => {

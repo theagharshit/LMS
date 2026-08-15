@@ -30,7 +30,6 @@ describe('LMS Database Service (Async)', () => {
         userId: 'user-stu-1',
         streakDays: 10,
         xpPoints: 500,
-        cohortId: 'cohort-8-a',
       },
     });
     await prisma.user.upsert({
@@ -78,11 +77,11 @@ describe('LMS Database Service (Async)', () => {
   it('should add a new classroom', async () => {
     const newClassroom = {
       name: 'Test Class',
-      subject: 'Test Subject',
+      subject: 'Mathematics',
       gradeLevel: 10,
       section: 'A',
-      teacherId: 't1',
-      teacherName: 'Teacher 1',
+      teacherId: 'user-teach-1',
+      teacherName: 'Mr. Ramesh Thapa',
       teacherAvatar: 'avatar.png',
       roomNumber: '101',
       colorTheme: 'blue',
@@ -99,11 +98,9 @@ describe('LMS Database Service (Async)', () => {
     const studentId = 'user-stu-1';
     const updated = await lmsDB.updateStudentLocation(
       studentId,
-      'Aarav Sharma',
       'Library',
       'library',
-      'Mr. Ramesh',
-      'teacher',
+      'user-teach-1',
     );
     expect(updated.currentLocation).toBe('Library');
     expect(updated.category).toBe('library');

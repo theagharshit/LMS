@@ -38,31 +38,34 @@ class FileStorageDatabase {
   public async addFile(
     record: Omit<StoredFileRecord, 'id' | 'uploadedAt'> & { uploadedById?: string },
   ): Promise<StoredFileRecord> {
-    const id = `file-db-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     let validClassroomId = record.classroomId;
     if (validClassroomId) {
       const cls = await prisma.classroom.findUnique({ where: { id: validClassroomId } });
-      if (!cls) validClassroomId = undefined;
+      if (!cls) throw new Error('The selected classroom does not exist.');
     }
 
     const uploader = record.uploadedById
       ? await prisma.user.findUnique({ where: { id: record.uploadedById } })
       : null;
     if (!uploader) throw new Error('Authenticated file uploader was not found.');
+    if (validClassroomId) {
+      const classroom = await prisma.classroom.findUnique({ where: { id: validClassroomId } });
+      if (classroom?.schoolId !== uploader.schoolId)
+        throw new Error('Files cannot be attached to a classroom in another school.');
+    }
     const { uploadedBy: _uploadedBy, sizeFormatted: _sizeFormatted, ...storageRecord } = record;
     const newRecord = await prisma.storedFileRecord.create({
       data: {
         ...storageRecord,
         uploadedById: uploader.id,
         classroomId: validClassroomId,
-        id,
         uploadedAt: new Date().toISOString(),
       },
       include: { uploader: true },
     });
 
     logger.info(
-      `[FileStorageDB] Stored new file record in PostgreSQL: ${newRecord.originalName} (ID: ${id})`,
+      `[FileStorageDB] Stored new file record in PostgreSQL: ${newRecord.originalName} (ID: ${newRecord.id})`,
     );
     return toStoredFile(newRecord);
   }

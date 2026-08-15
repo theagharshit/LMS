@@ -5,6 +5,7 @@ import { TeacherMaterialsPanel } from '../teacher/TeacherMaterialsPanel';
 import { Attachment, isQuizTakeable, isQuizVisibleToStudents } from '@lms/shared';
 import { useDebouncedValue } from '../../utils/hooks';
 import { apiFetch } from '@utils/apiFetch';
+import { sha256File } from '@utils/fileChecksum';
 import { toast } from '@utils/toast';
 import {
   MessageSquare,
@@ -112,6 +113,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
 
       let fileUrl = '';
       try {
+        const checksum = await sha256File(attachFileObj);
         const res = await apiFetch('/api/upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -120,7 +122,7 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
             sizeBytes: attachFileObj.size,
             sizeFormatted: formattedSize,
             mimeType: attachFileObj.type || 'application/octet-stream',
-            uploadedBy: currentUser.name,
+            checksum,
             classroomId: currentClassroom.id,
           }),
           feedback: {
@@ -161,10 +163,6 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
 
     addStreamPost({
       classroomId: currentClassroom.id,
-      authorId: currentUser.id,
-      authorName: currentUser.name,
-      authorAvatar: currentUser.avatar,
-      authorRole: currentUser.role,
       content: newPostText.trim() || `[Attachment: ${attachFileObj?.name}]`,
       attachments: attachments.length > 0 ? attachments : undefined,
     });
@@ -298,7 +296,12 @@ export const ClassroomView: React.FC<ClassroomViewProps> = ({
           <div className="space-y-2 relative z-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[#FDEEDC] text-xs font-bold">
               <GraduationCap className="w-4 h-4" />
-              <span>Grade 8-A Enrolled Subjects • CDC Nepal Standard</span>
+              <span>
+                {currentUser.gradeLevel
+                  ? `Grade ${currentUser.gradeLevel}-${currentUser.section}`
+                  : 'Enrolled'}{' '}
+                Subjects
+              </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold font-serif">
               Enrolled Subjects & Classrooms

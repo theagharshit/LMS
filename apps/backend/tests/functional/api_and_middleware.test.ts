@@ -26,7 +26,7 @@ describe('API & Security Middleware Functional Workflows (tests/functional/api_a
       sizeFormatted: '2.00 KB',
       uploadedBy: 'Aarav Sharma',
       uploadedById: 'functional-file-uploader',
-      classroomId: 'chan-1',
+      classroomId: 'cls-math-8a',
       checksum: 'sha256-func-test-12345',
       integrityStatus: 'verified',
       downloadUrl: '/uploads/Functional_Test_Doc.pdf',
@@ -44,7 +44,7 @@ describe('API & Security Middleware Functional Workflows (tests/functional/api_a
     expect(files.length).toBeGreaterThan(0);
   });
   it('should execute verifyFileIntegrity middleware successfully', () => {
-    const req: any = {};
+    const req: any = { body: { name: 'Functional_Test_Doc.pdf', sizeBytes: 2048 } };
     const res: any = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn(),
@@ -62,7 +62,7 @@ describe('API & Security Middleware Functional Workflows (tests/functional/api_a
       sizeFormatted: '100 B',
       uploadedBy: 'Mr. Ramesh Thapa',
       uploadedById: 'functional-file-uploader',
-      classroomId: 'chan-1',
+      classroomId: 'cls-math-8a',
       checksum: 'sha256-delete-test',
       integrityStatus: 'verified',
       downloadUrl: '/uploads/To_Be_Deleted.pdf',

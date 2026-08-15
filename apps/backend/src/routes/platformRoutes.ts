@@ -6,6 +6,7 @@ import {
   calculateRubric,
   checkAccessSchedule,
   checkSimilarity,
+  createAuditLog,
   createAbsenceRequest,
   createParentVerification,
   createPayment,
@@ -42,7 +43,7 @@ export const platformRoutes = Router();
 const rolesInStrictMode =
   (...roles: Array<'student' | 'teacher' | 'parent' | 'admin'>) =>
   (req: Request, res: Response, next: NextFunction) => {
-    if (!isStrictAuthMode()) return next();
+    if (!isStrictAuthMode()) return requireRoles(...roles)(req, res, next);
     authenticateJwt(req, res, (error?: unknown) => {
       if (error) return next(error);
       return requireRoles(...roles)(req, res, next);
@@ -54,7 +55,6 @@ const attendanceSchema = z.object({
     .array(
       z.object({
         studentId: z.string().min(1),
-        studentName: z.string().min(1).max(120),
         date: z.iso.date(),
         status: z.enum(['present', 'absent', 'late', 'excused']),
         remarks: z.string().max(500).optional(),
@@ -148,6 +148,19 @@ platformRoutes.get(
   exportClassroom,
 );
 platformRoutes.get('/db/audit-logs', rolesInStrictMode('admin'), getAuditLogs);
+platformRoutes.post(
+  '/db/audit-logs',
+  rolesInStrictMode('admin'),
+  validateBody(
+    z.object({
+      action: z.string().trim().min(1).max(120),
+      category: z.string().trim().min(1).max(80),
+      details: z.string().trim().min(1).max(2_000),
+      tableName: z.string().trim().min(1).max(80).optional(),
+    }),
+  ),
+  createAuditLog,
+);
 platformRoutes.get('/system/config', rolesInStrictMode('admin'), getSystemConfig);
 platformRoutes.put(
   '/system/config/:key',
@@ -167,7 +180,7 @@ platformRoutes.post(
   validateBody(
     z.object({
       studentIds: z.array(z.string()).min(1).max(100),
-      title: z.string().max(120).optional(),
+      title: z.string().trim().min(1).max(120),
       feedback: z.string().min(1).max(2_000),
     }),
   ),
@@ -222,13 +235,19 @@ platformRoutes.post(
   validateBody(
     z.object({
       studentId: z.string(),
-      studentName: z.string(),
       latitude: z.number().min(-90).max(90),
       longitude: z.number().min(-180).max(180),
       location: z.string(),
-      category: z.string(),
-      updatedBy: z.string(),
-      updatedByRole: z.enum(['teacher', 'admin']),
+      category: z.enum([
+        'in_class',
+        'canteen_lunch',
+        'en_route_bus',
+        'library',
+        'sports_ground',
+        'assembly_hall',
+        'dismissed_home',
+        'laboratory',
+      ]),
       busNumber: z.string().optional(),
       notes: z.string().max(500).optional(),
     }),
@@ -240,7 +259,7 @@ platformRoutes.post(
   rolesInStrictMode('teacher', 'admin'),
   validateBody(
     z.object({
-      studentName: z.string().optional(),
+      studentId: z.string().min(1),
       latitude: z.number(),
       longitude: z.number(),
       schoolLatitude: z.number(),

@@ -2,32 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { apiFetch } from '@utils/apiFetch';
 import { toast } from '@utils/toast';
 import { useApp } from '../../context/AppContext';
-import {
-  X,
-  Sparkles,
-  Send,
-  Bot,
-  User as UserIcon,
-  BookOpen,
-  Lightbulb,
-  RefreshCw,
-  Volume2,
-} from 'lucide-react';
+import { X, Sparkles, Send, Bot, User as UserIcon, RefreshCw } from 'lucide-react';
 
 export const AITutorModal: React.FC = () => {
-  const { isAiTutorOpen, setIsAiTutorOpen, aiTutorInitialPrompt, currentUser } = useApp();
+  const { isAiTutorOpen, setIsAiTutorOpen, aiTutorInitialPrompt, currentUser, classrooms } =
+    useApp();
 
   const [messages, setMessages] = useState<{ sender: 'ai' | 'user'; text: string; time: string }[]>(
     [
       {
         sender: 'ai',
-        text: `Namaste ${currentUser.name}! 🙏 I am Sikshya AI, your personal 24/7 learning tutor. Ask me any question from your Mathematics, Science, Nepali, English, or Social Studies textbooks!`,
+        text: `Namaste ${currentUser.name}! Ask me about any subject in your enrolled classrooms.`,
         time: 'Just now',
       },
     ],
   );
   const [prompt, setPrompt] = useState('');
-  const [subject, setSubject] = useState('Mathematics');
+  const [subject, setSubject] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -38,24 +29,7 @@ export const AITutorModal: React.FC = () => {
 
   if (!isAiTutorOpen) return null;
 
-  const quickPrompts = [
-    {
-      title: '📐 Step-by-Step Math',
-      text: 'Explain how to solve quadratic equation x² + 5x + 6 = 0 step by step with rules.',
-    },
-    {
-      title: '🔬 Refraction of Light',
-      text: "Explain Snell's law of refraction with a simple everyday example.",
-    },
-    {
-      title: '🇳🇵 Unification of Nepal',
-      text: "What were the major factors during King Prithvi Narayan Shah's unification campaign?",
-    },
-    {
-      title: '✍️ Nepali Grammar Help',
-      text: 'नेपाली व्याकरणमा कारक र विभक्तिका प्रकारहरू उदाहरणसहित बुझाइदेऊ।',
-    },
-  ];
+  const subjects = Array.from(new Set(classrooms.map((classroom) => classroom.subject)));
 
   const handleSend = async (queryText?: string) => {
     const textToSend = queryText || prompt;
@@ -78,7 +52,7 @@ export const AITutorModal: React.FC = () => {
         body: JSON.stringify({
           prompt: textToSend,
           subject,
-          gradeLevel: currentUser.gradeLevel || 8,
+          gradeLevel: currentUser.gradeLevel,
           language: 'English/Nepali',
         }),
         feedback: false,
@@ -97,15 +71,15 @@ export const AITutorModal: React.FC = () => {
         },
       ]);
     } catch (err) {
-      toast.warning('The AI tutor is temporarily unavailable, so a guided fallback was provided.', {
-        title: 'Fallback guidance',
-        id: 'ai-tutor-fallback',
+      toast.warning('The AI tutor is temporarily unavailable.', {
+        title: 'Tutor unavailable',
+        id: 'ai-tutor-unavailable',
       });
       setMessages((prev) => [
         ...prev,
         {
           sender: 'ai',
-          text: 'Namaste! Here is a helpful guidance breakdown:\n1. Review the key formula in your textbook.\n2. Write down the given values.\n3. Substitute values and solve step-by-step.',
+          text: 'The tutor could not respond. Please try again later or contact your teacher.',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -140,7 +114,8 @@ export const AITutorModal: React.FC = () => {
                 </span>
               </h3>
               <p className="text-xs text-[#F9F7F2]/90">
-                Grade {currentUser.gradeLevel || 8} • AI Homework & Concept Assistant
+                {currentUser.gradeLevel ? `Grade ${currentUser.gradeLevel} • ` : ''}AI Homework &
+                Concept Assistant
               </p>
             </div>
           </div>
@@ -155,14 +130,7 @@ export const AITutorModal: React.FC = () => {
         {/* Subject Filter Bar */}
         <div className="px-4 py-2 bg-[#F9F7F2] border-b border-[#EDEAE2] flex items-center gap-2 overflow-x-auto text-xs">
           <span className="font-bold text-[#7A7A72] shrink-0">Subject:</span>
-          {[
-            'Mathematics',
-            'Science & Tech',
-            'नेपाली (Nepali)',
-            'English',
-            'Social Studies',
-            'Computer Science',
-          ].map((sub) => (
+          {subjects.map((sub) => (
             <button
               key={sub}
               onClick={() => setSubject(sub)}
@@ -219,24 +187,6 @@ export const AITutorModal: React.FC = () => {
               </div>
             </div>
           )}
-        </div>
-
-        {/* Quick Suggestion Chips */}
-        <div className="px-4 py-2 border-t border-[#EDEAE2] bg-white">
-          <p className="text-[11px] font-bold text-[#7A7A72] mb-1 flex items-center gap-1">
-            <Lightbulb className="w-3.5 h-3.5 text-[#E88D67]" /> Suggested Quick Prompts:
-          </p>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {quickPrompts.map((qp, i) => (
-              <button
-                key={i}
-                onClick={() => handleSend(qp.text)}
-                className="text-[11px] px-2.5 py-1 rounded-xl bg-[#EBF1E8] border border-[#88A070]/30 text-[#4A6741] font-medium whitespace-nowrap hover:bg-[#EBF1E8]/80 transition-colors"
-              >
-                {qp.title}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Input Bar */}

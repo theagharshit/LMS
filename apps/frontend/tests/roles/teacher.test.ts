@@ -5,10 +5,11 @@ import { AppProvider, useApp } from '../../src/context/AppContext';
 import { TeacherDashboard } from '../../src/components/teacher/TeacherDashboard';
 
 const TeacherTestWrapper = () => {
-  const { switchUser } = useApp();
+  const { allUsers, establishSession } = useApp();
   useEffect(() => {
-    switchUser('user-teach-1');
-  }, [switchUser]);
+    const teacher = allUsers.find((user) => user.id === 'user-teach-1');
+    if (teacher) establishSession(teacher, 'database-test-token-user-teach-1');
+  }, [allUsers, establishSession]);
 
   return React.createElement(TeacherDashboard, {
     onOpenGradeModal: vi.fn(),
@@ -20,7 +21,7 @@ describe('Role 2: Teacher Permissions & Workflows (tests/roles/teacher.test.ts)'
   it('allows teacher to review homework queue and manage weekly timetable', () => {
     render(React.createElement(AppProvider, null, React.createElement(TeacherTestWrapper)));
 
-    expect(screen.getByText(/Class Teacher & Mathematics Faculty/i)).toBeInTheDocument();
+    expect(screen.getByText(/Faculty • Mathematics, Computer Science/i)).toBeInTheDocument();
     expect(screen.getByText(/Homework Submissions Queue/i)).toBeInTheDocument();
   });
 });

@@ -13,13 +13,7 @@ import {
 } from 'lucide-react';
 
 export const AIParentSummaryModal: React.FC = () => {
-  const {
-    isAiParentSummaryOpen,
-    setIsAiParentSummaryOpen,
-    activeChild,
-    submissions,
-    attendanceRecords,
-  } = useApp();
+  const { isAiParentSummaryOpen, setIsAiParentSummaryOpen, activeChild } = useApp();
 
   const [isLoading, setIsLoading] = useState(false);
   const [summaryData, setSummaryData] = useState<{
@@ -27,21 +21,9 @@ export const AIParentSummaryModal: React.FC = () => {
     nepaliSummary: string;
     highlights: string[];
     actionPointsForParents: string[];
-  } | null>({
-    englishSummary: `${activeChild.name} has demonstrated excellent dedication this week in Grade ${activeChild.gradeLevel}! Attendance stands strong at ${activeChild.attendancePercentage}%. Aarav scored 19/20 in Grade 8 Mathematics Homework and achieved a 14-day study streak.`,
-    nepaliSummary: `${activeChild.name} ले यस हप्ता कक्षा ${activeChild.gradeLevel} मा उत्कृष्ट प्रगति देखाउनुभएको छ। गणित विषयको गृहकार्यमा उत्कृष्ट अंक प्राप्त गर्नुभएको छ र उपस्थिती दर ${activeChild.attendancePercentage}% रहेको छ।`,
-    highlights: [
-      `14-Day Continuous LMS Login Streak 🔥`,
-      `Scored 19/20 in Math Unit 4 Homework`,
-      `Perfect attendance in all 6 routine periods today`,
-    ],
-    actionPointsForParents: [
-      `Encourage Aarav to revise Science Light chapter before Tuesday's lab experiment.`,
-      `Congratulate him on earning the 'Math Genius' badge!`,
-    ],
-  });
+  } | null>(null);
 
-  if (!isAiParentSummaryOpen) return null;
+  if (!isAiParentSummaryOpen || !activeChild) return null;
 
   const handleGenerateFresh = async () => {
     setIsLoading(true);
@@ -50,12 +32,7 @@ export const AIParentSummaryModal: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          studentName: activeChild.name,
-          gradeLevel: activeChild.gradeLevel,
-          attendanceRate: activeChild.attendancePercentage,
-          recentGrades: 'Mathematics: 19/20 (A+), Science: 88%',
-          pendingHomeworkCount: 2,
-          teacherNotes: 'Active participant, completes homework punctually.',
+          studentId: activeChild.id,
           language: 'English & Nepali',
         }),
         feedback: {
@@ -118,68 +95,70 @@ export const AIParentSummaryModal: React.FC = () => {
                 Synthesizing CDC grades, attendance records & teacher feedback in English & Nepali
               </p>
             </div>
+          ) : summaryData ? (
+            <>
+              {/* English Summary Card */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-bold mb-2">
+                  <BookOpen className="w-4 h-4" />
+                  <span>English Digest</span>
+                </div>
+                <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-sans">
+                  {summaryData.englishSummary}
+                </p>
+              </div>
+
+              {/* Nepali Devanagari Card */}
+              <div className="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60">
+                <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold mb-2">
+                  <Heart className="w-4 h-4 text-amber-600 fill-amber-500" />
+                  <span>नेपालीमा अभिभावक विवरण (Nepali Digest)</span>
+                </div>
+                <p className="text-amber-950 dark:text-amber-100 leading-relaxed font-sans text-sm">
+                  {summaryData.nepaliSummary}
+                </p>
+              </div>
+
+              {/* Key Highlights */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
+                  <Award className="w-4 h-4 text-amber-500" /> Weekly Key Achievements:
+                </h4>
+                <div className="space-y-1.5">
+                  {summaryData.highlights.map((h, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-2 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>{h}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Items for Parents */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-blue-500" /> Action Items for Parents at
+                  Home:
+                </h4>
+                <div className="space-y-1.5">
+                  {summaryData.actionPointsForParents.map((act, i) => (
+                    <div
+                      key={i}
+                      className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-blue-900 dark:text-blue-200"
+                    >
+                      • {act}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           ) : (
-            summaryData && (
-              <>
-                {/* English Summary Card */}
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
-                  <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-bold mb-2">
-                    <BookOpen className="w-4 h-4" />
-                    <span>English Digest</span>
-                  </div>
-                  <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-sans">
-                    {summaryData.englishSummary}
-                  </p>
-                </div>
-
-                {/* Nepali Devanagari Card */}
-                <div className="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60">
-                  <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold mb-2">
-                    <Heart className="w-4 h-4 text-amber-600 fill-amber-500" />
-                    <span>नेपालीमा अभिभावक विवरण (Nepali Digest)</span>
-                  </div>
-                  <p className="text-amber-950 dark:text-amber-100 leading-relaxed font-sans text-sm">
-                    {summaryData.nepaliSummary}
-                  </p>
-                </div>
-
-                {/* Key Highlights */}
-                <div className="space-y-2">
-                  <h4 className="font-bold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
-                    <Award className="w-4 h-4 text-amber-500" /> Weekly Key Achievements:
-                  </h4>
-                  <div className="space-y-1.5">
-                    {summaryData.highlights.map((h, i) => (
-                      <div
-                        key={i}
-                        className="flex items-start gap-2 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200"
-                      >
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span>{h}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Action Items for Parents */}
-                <div className="space-y-2">
-                  <h4 className="font-bold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
-                    <AlertCircle className="w-4 h-4 text-blue-500" /> Action Items for Parents at
-                    Home:
-                  </h4>
-                  <div className="space-y-1.5">
-                    {summaryData.actionPointsForParents.map((act, i) => (
-                      <div
-                        key={i}
-                        className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-blue-900 dark:text-blue-200"
-                      >
-                        • {act}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )
+            <div className="py-12 text-center text-slate-500">
+              Generate a bilingual digest from the latest attendance, marks, and teacher feedback.
+            </div>
           )}
         </div>
 

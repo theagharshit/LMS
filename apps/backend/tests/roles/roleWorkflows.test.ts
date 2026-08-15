@@ -9,16 +9,46 @@ const prisma = new PrismaClient({ adapter });
 describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
   beforeEach(async () => {
     // Teardown and setup seeded state for role tests
+    await prisma.studentReportCardSubject.deleteMany();
+    await prisma.studentReportCard.deleteMany();
+    await prisma.examMark.deleteMany();
+    await prisma.examSubject.deleteMany();
+    await prisma.exam.deleteMany();
+    await prisma.timetableSlot.deleteMany();
+    await prisma.teachingAssignment.deleteMany();
+    await prisma.studentLifecycleEvent.deleteMany();
+    await prisma.moduleCompletion.deleteMany();
+    await prisma.classroomSubstitute.deleteMany();
+    await prisma.teacherAssignmentAuditLog.deleteMany();
+    await prisma.teacherSubject.deleteMany();
+    await prisma.parentStudent.deleteMany();
+    await prisma.refreshToken.deleteMany();
+    await prisma.tokenRevocation.deleteMany();
+    await prisma.securityAudit.deleteMany();
+    await prisma.auditTrail.deleteMany();
+    await prisma.homeworkVersion.deleteMany();
+    await prisma.quizAttemptSession.deleteMany();
+    await prisma.notificationRecord.deleteMany();
+    await prisma.notificationPreference.deleteMany();
     await prisma.classroomEnrollment.deleteMany();
     await prisma.submission.deleteMany();
+    await prisma.assignment.deleteMany();
     await prisma.quizSubmission.deleteMany();
+    await prisma.quizQuestion.deleteMany();
+    await prisma.quiz.deleteMany();
     await prisma.attendanceRecord.deleteMany();
     await prisma.directMessage.deleteMany();
     await prisma.studentLocationRecord.deleteMany();
+    await prisma.externalLocationReporter.deleteMany();
     await prisma.storedFileRecord.deleteMany();
     await prisma.paymentRecord.deleteMany();
     await prisma.absenceRequest.deleteMany();
+    await prisma.postComment.deleteMany();
+    await prisma.attachment.deleteMany();
+    await prisma.streamPost.deleteMany();
+    await prisma.moduleItem.deleteMany();
     await prisma.classroom.deleteMany();
+    await prisma.studentAcademicEnrollment.deleteMany();
     await prisma.studentProfile.deleteMany();
     await prisma.parentControlSettings.deleteMany();
     await prisma.user.deleteMany();
@@ -62,6 +92,18 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
     await prisma.parentStudent.create({
       data: { parentId: 'u-prt-role-1', studentId: 'u-stu-role-1', isPrimary: true },
     });
+    await prisma.parentControlSettings.create({
+      data: {
+        studentId: 'u-stu-role-1',
+        allowTeacherDirectChat: true,
+        allowPeerDiscussion: true,
+        missingHomeworkAlerts: true,
+        lowAttendanceAlerts: true,
+        weeklyDigestEmail: true,
+        screenTimeLimitMinutes: 120,
+        requireApprovalForOutboundMsgs: false,
+      },
+    });
     await prisma.teacherSubject.create({
       data: { teacherId: 'u-tch-role-1', subjectId: 'subject-mathematics' },
     });
@@ -83,7 +125,14 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
           userId: 'u-stu-role-1',
           streakDays: 14,
           xpPoints: 1200,
+        },
+      });
+      await prisma.studentAcademicEnrollment.create({
+        data: {
+          studentId: 'u-stu-role-1',
           cohortId: 'cohort-8-a',
+          academicYearId: 'academic-year-2026',
+          rollNumber: 901,
         },
       });
       const profiles = await lmsDB.getStudentProfiles();
@@ -109,14 +158,18 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
         data: {
           id: 'asg-role-1',
           classroomId: cls.id,
+          createdById: 'u-tch-role-1',
           title: 'HW 1',
           instructions: 'Inst',
-          dueDate: '2026-08-10',
+          dueDate: '2026-08-20',
           dueTime: '12:00',
           totalPoints: 100,
           rubric: [],
           createdAt: '10:00',
         },
+      });
+      await prisma.classroomEnrollment.create({
+        data: { classroomId: cls.id, studentId: 'u-stu-role-1' },
       });
       const sub = await lmsDB.submitHomework(
         asg.id,
@@ -147,12 +200,18 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
         data: {
           id: 'q-role-1',
           classroomId: cls.id,
+          createdById: 'u-tch-role-1',
           title: 'Q1',
           description: 'D1',
           durationMinutes: 15,
           dueDate: '2026-08-10',
+          published: true,
+          status: 'published',
           createdAt: '10:00',
         },
+      });
+      await prisma.classroomEnrollment.create({
+        data: { classroomId: cls.id, studentId: 'u-stu-role-1' },
       });
       const qsub = await lmsDB.submitQuiz({
         quizId: quiz.id,
@@ -167,11 +226,9 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
       await prisma.studentLocationRecord.create({
         data: {
           studentId: 'u-stu-role-1',
-          studentName: 'Aarav Student',
           currentLocation: 'Library',
           category: 'library',
-          updatedBy: 'Staff',
-          updatedByRole: 'teacher',
+          updatedById: 'u-tch-role-1',
           updatedAt: '10:00',
         },
       });
@@ -253,37 +310,49 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
       const post = await lmsDB.addStreamPost({
         classroomId: cls.id,
         authorId: 'u-tch-role-1',
-        authorName: 'Ramesh Teacher',
-        authorAvatar: 'a.png',
-        authorRole: 'teacher',
         content: 'Exam announced for next week',
         pinned: true,
       });
-      const comment = await lmsDB.addCommentToPost(post.id, {
-        authorName: 'Ramesh Teacher',
-        authorAvatar: 'a.png',
-        content: 'Revision notes attached.',
-      });
+      const comment = await lmsDB.addCommentToPost(
+        post.id,
+        'u-tch-role-1',
+        'Revision notes attached.',
+      );
       expect(comment.content).toContain('Revision');
     });
     it('10. Teacher role can mark student attendance', async () => {
+      const classroom = await prisma.classroom.create({
+        data: {
+          id: 'c-role-attendance',
+          name: 'Attendance Class',
+          teacherId: 'u-tch-role-1',
+          roomNumber: '1',
+          colorTheme: 'blue',
+          bannerImage: 'b.png',
+          code: 'C_ROLE_ATTENDANCE',
+          schoolId: 'school-everest',
+          subjectId: 'subject-mathematics',
+          cohortId: 'cohort-8-a',
+        },
+      });
+      await prisma.classroomEnrollment.create({
+        data: { classroomId: classroom.id, studentId: 'u-stu-role-1' },
+      });
       const record = await lmsDB.markAttendance(
         'u-stu-role-1',
-        'Aarav Student',
         '2026-08-07',
         'present',
         'On time',
+        'u-tch-role-1',
       );
       expect(record.status).toBe('present');
     });
     it('11. Teacher role can update student real-time location', async () => {
       const loc = await lmsDB.updateStudentLocation(
         'u-stu-role-1',
-        'Aarav Student',
         'Science Lab',
         'in_class',
-        'Ramesh Teacher',
-        'teacher',
+        'u-tch-role-1',
       );
       expect(loc.currentLocation).toBe('Science Lab');
     });
@@ -357,11 +426,7 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
     it('15. Parent role can send direct message to teacher', async () => {
       const msg = await lmsDB.addDirectMessage({
         senderId: 'u-prt-role-1',
-        senderName: 'Bina Parent',
-        senderRole: 'parent',
-        senderAvatar: 'a.png',
         receiverId: 'u-tch-role-1',
-        receiverName: 'Ramesh Teacher',
         content: 'Regarding Aarav absence tomorrow.',
         read: false,
       });
@@ -370,11 +435,7 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
     it('16. Parent role can read messages from teacher', async () => {
       await lmsDB.addDirectMessage({
         senderId: 'u-tch-role-1',
-        senderName: 'Ramesh Teacher',
-        senderRole: 'teacher',
-        senderAvatar: 'a.png',
         receiverId: 'u-prt-role-1',
-        receiverName: 'Bina Parent',
         content: 'Aarav is doing great in Math.',
         read: false,
       });
@@ -419,7 +480,6 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
           userId: 'u-stu-role-1',
           streakDays: 14,
           xpPoints: 1200,
-          cohortId: 'cohort-8-a',
         },
       });
       const badge = await lmsDB.assignBadge(
@@ -434,11 +494,9 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
       await prisma.studentLocationRecord.create({
         data: {
           studentId: 'u-stu-role-1',
-          studentName: 'Aarav Student',
           currentLocation: 'Grounds',
           category: 'sports_ground',
-          updatedBy: 'Admin',
-          updatedByRole: 'admin',
+          updatedById: 'u-adm-role-1',
           updatedAt: '10:00',
         },
       });
@@ -448,11 +506,9 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
     it('21. Admin role can update student location with admin role metadata', async () => {
       const loc = await lmsDB.updateStudentLocation(
         'u-stu-role-1',
-        'Aarav Student',
         'Assembly Hall',
         'assembly_hall',
-        'Principal Admin',
-        'admin',
+        'u-adm-role-1',
       );
       expect(loc.updatedByRole).toBe('admin');
     });
@@ -497,7 +553,21 @@ describe('Role-Based Authorization & Workflow Security (25 Tests)', () => {
         userId: 'user-stu-1',
         streakDays: 10,
         xpPoints: 500,
+      },
+    });
+    await prisma.studentAcademicEnrollment.upsert({
+      where: {
+        studentId_academicYearId: {
+          studentId: 'user-stu-1',
+          academicYearId: 'academic-year-2026',
+        },
+      },
+      update: { cohortId: 'cohort-8-a', rollNumber: 1, status: 'active', endedAt: null },
+      create: {
+        studentId: 'user-stu-1',
         cohortId: 'cohort-8-a',
+        academicYearId: 'academic-year-2026',
+        rollNumber: 1,
       },
     });
     await prisma.user.upsert({

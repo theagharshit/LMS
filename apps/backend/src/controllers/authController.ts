@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import { authService } from '@db/services/authService';
 import { passwordHashService } from '@utils/passwordHashService';
 import { prisma } from '@db/services/prismaClient';
+import { isStrictAuthMode } from '@middlewares/authMiddleware';
 
 const getFingerprint = (req: Request) =>
   String(
@@ -32,6 +33,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId, email, password } = req.body;
 
+    if (userId && isStrictAuthMode()) {
+      res.status(400).json({ status: 'error', message: 'Email and password are required.' });
+      return;
+    }
+
     const allUsers = await lmsDB.getUsers();
     const user = allUsers.find((u) => (userId && u.id === userId) || (email && u.email === email));
 
@@ -49,6 +55,13 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
     if (credential?.isArchived) {
       res.status(403).json({ status: 'error', message: 'This account is archived.' });
+      return;
+    }
+    if (isStrictAuthMode() && !credential?.passwordHash) {
+      res.status(403).json({
+        status: 'error',
+        message: 'This account has no password credential. Contact an administrator.',
+      });
       return;
     }
     const maintenance = await prisma.systemConfig.findUnique({
@@ -162,8 +175,10 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  res.json({
-    status: 'success',
-    user: req.user,
-  });
+  const user = (await lmsDB.getUsers()).find((candidate) => candidate.id === req.user!.id);
+  if (!user) {
+    res.status(404).json({ status: 'error', message: 'Active user account not found.' });
+    return;
+  }
+  res.json({ status: 'success', user });
 };

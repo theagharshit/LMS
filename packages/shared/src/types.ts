@@ -13,6 +13,8 @@ export interface User {
   schoolName: string;
   phone?: string;
   secondaryPhone?: string;
+  address?: string;
+  occupation?: string;
   gradeLevel?: number; // e.g. 8 for Grade 8
   section?: string; // e.g. 'A'
   rollNumber?: number;
@@ -22,6 +24,13 @@ export interface User {
   childrenIds?: string[];
   // Teacher specific
   subjectsTaught?: string[];
+  employeeNumber?: string;
+  joinedAt?: string;
+  employmentStatus?: 'active' | 'on_leave' | 'left';
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  qualification?: string;
+  specialization?: string;
 }
 
 export interface StudentProfile extends User {
@@ -44,6 +53,9 @@ export interface StudentProfile extends User {
   gender?: string;
   bloodGroup?: string;
   medicalNotes?: string;
+  admissionNumber?: string;
+  admittedAt?: string;
+  leftAt?: string;
 }
 
 export interface BadgeDefinition {
@@ -337,9 +349,11 @@ export interface StudentLocationRecord {
   category: LocationStatusCategory;
   busNumber?: string;
   updatedBy: string;
-  updatedByRole: 'teacher' | 'admin';
+  updatedByRole: 'teacher' | 'admin' | 'staff';
   updatedAt: string;
   notes?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface TermProgress {
@@ -401,6 +415,8 @@ export interface NotificationItem {
   category: NotificationCategory;
   severity: NotificationSeverity;
   type: NotificationType;
+  broadcastId?: string;
+  targetAudience?: string;
   read: boolean;
   createdAt: string;
   time?: string;
@@ -492,3 +508,75 @@ export interface TeacherAssignmentAuditLog {
   reason?: string;
   createdAt: string;
 }
+
+export interface TimetableSlot {
+  id: string;
+  schoolId?: string;
+  academicYearId?: string;
+  classroomId: string;
+  cohortId: string;
+  subjectId: string;
+  teacherId: string;
+  dayOfWeek: number; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  periodNumber: number;
+  startTime: string; // "09:00"
+  endTime: string; // "09:45"
+  roomNumber: string;
+  requiredBooks?: string;
+  isArchived?: boolean;
+  subject?: { id: string; name: string; code?: string };
+  teacher?: { id: string; name: string; avatar?: string };
+  classroom?: { id: string; name: string; roomNumber?: string };
+  cohort?: { id: string; name: string; gradeLevel: number; section: string };
+}
+
+export interface BellScheduleBreak {
+  id: string;
+  name: string;
+  type: 'assembly' | 'snack' | 'lunch' | 'homeroom' | 'dismissal' | 'other';
+  startTime: string;
+  endTime?: string;
+  afterPeriod?: number;
+  sequence: number;
+  isArchived?: boolean;
+}
+
+export interface SchoolTimingConfig {
+  schoolStartTime: string;
+  schoolEndTime: string;
+  periodDurationMinutes: number;
+  periodsPerDay: number;
+  breaks: BellScheduleBreak[];
+}
+
+export interface AcademicTerm {
+  id: string;
+  schoolId: string;
+  academicYearId: string;
+  name: string;
+  sequence: number;
+  startsAt?: string;
+  endsAt?: string;
+  isArchived?: boolean;
+}
+
+export interface SchoolHoliday {
+  id: string;
+  schoolId: string;
+  academicYearId: string;
+  name: string;
+  date: string;
+  description?: string;
+  isArchived?: boolean;
+}
+
+export interface AcademicYear {
+  id: string;
+  schoolId: string;
+  name: string;
+  startsAt: string;
+  endsAt: string;
+  isActive: boolean;
+  isArchived?: boolean;
+}
+

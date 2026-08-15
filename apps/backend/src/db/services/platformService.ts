@@ -343,8 +343,6 @@ export class PlatformService {
                 data: {
                   assignmentId: fullAssignment.id,
                   studentId: enrollment.studentId,
-                  studentName: enrollment.student.name,
-                  studentAvatar: enrollment.student.avatar,
                   status: 'overdue',
                   submittedAt: dueAt.toISOString(),
                 },
@@ -514,7 +512,12 @@ export class PlatformService {
           name: true,
           email: true,
           role: true,
-          studentProfile: { select: { cohortRef: true } },
+          studentAcademicEnrollments: {
+            where: { status: 'active' },
+            select: { cohort: true },
+            orderBy: { enrolledAt: 'desc' },
+            take: 1,
+          },
         },
       }),
       prisma.classroom.findMany({
@@ -537,10 +540,10 @@ export class PlatformService {
       }),
     ]);
     return {
-      users: users.map(({ studentProfile, ...user }) => ({
+      users: users.map(({ studentAcademicEnrollments, ...user }) => ({
         ...user,
-        gradeLevel: studentProfile?.cohortRef.gradeLevel,
-        section: studentProfile?.cohortRef.section,
+        gradeLevel: studentAcademicEnrollments[0]?.cohort.gradeLevel,
+        section: studentAcademicEnrollments[0]?.cohort.section,
       })),
       classrooms: classrooms.map(({ subjectRef, cohortRef, ...classroom }) => ({
         ...classroom,
@@ -582,9 +585,12 @@ export class PlatformService {
     const header = ['Student ID', 'Student Name', 'Roll Number', 'Attendance %', 'Average Quiz %'];
     const rows = await Promise.all(
       classroom.enrollments.map(async ({ student }) => {
-        const [attendance, profile] = await Promise.all([
+        const [attendance, placement] = await Promise.all([
           prisma.attendanceRecord.findMany({ where: { studentId: student.id } }),
-          prisma.studentProfile.findUnique({ where: { userId: student.id } }),
+          prisma.studentAcademicEnrollment.findFirst({
+            where: { studentId: student.id, status: 'active' },
+            orderBy: { enrolledAt: 'desc' },
+          }),
         ]);
         const submissions = classroom.quizzes
           .flatMap((quiz) => quiz.submissions)
@@ -600,7 +606,7 @@ export class PlatformService {
         return [
           student.id,
           student.name,
-          profile?.normalizedRollNumber || '',
+          placement?.rollNumber || '',
           attendance.length
             ? (attendance.filter((item) => ['present', 'late'].includes(item.status)).length /
                 attendance.length) *

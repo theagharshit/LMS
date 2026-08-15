@@ -2,98 +2,109 @@ import { Request, Response } from 'express';
 import { prisma } from '@db/services/prismaClient';
 import { sendToUser, isUserOnline } from '@utils/realtime';
 import { logger } from '@utils/logger';
+import { communicationService } from '@db/services/communicationService';
+import { notificationService } from '@db/services/notificationService';
+
+export const getAllowedContactIds = async (userId: string) => {
+  const actor = await prisma.user.findFirst({
+    where: { id: userId, isArchived: false },
+    select: { id: true, role: true, schoolId: true },
+  });
+  if (!actor) throw new Error('Active account not found.');
+  if (actor.role === 'admin') {
+    const users = await prisma.user.findMany({
+      where: { schoolId: actor.schoolId, isArchived: false, id: { not: actor.id } },
+      select: { id: true },
+    });
+    return { actor, contactIds: users.map(({ id }) => id) };
+  }
+
+  if (actor.role === 'teacher') {
+    const classrooms = await prisma.classroom.findMany({
+      where: {
+        schoolId: actor.schoolId,
+        isArchived: false,
+        OR: [
+          { teacherId: actor.id },
+          { teachingAssignments: { some: { teacherId: actor.id, isActive: true } } },
+        ],
+      },
+      include: { enrollments: { where: { isActive: true }, select: { studentId: true } } },
+    });
+    const studentIds = classrooms.flatMap((classroom) =>
+      classroom.enrollments.map(({ studentId }) => studentId),
+    );
+    const parents = await prisma.parentStudent.findMany({
+      where: { studentId: { in: studentIds }, isActive: true, parent: { isArchived: false } },
+      select: { parentId: true },
+    });
+    const staff = await prisma.user.findMany({
+      where: {
+        schoolId: actor.schoolId,
+        role: { in: ['teacher', 'admin'] },
+        isArchived: false,
+        id: { not: actor.id },
+      },
+      select: { id: true },
+    });
+    return {
+      actor,
+      contactIds: [
+        ...new Set([
+          ...studentIds,
+          ...parents.map(({ parentId }) => parentId),
+          ...staff.map(({ id }) => id),
+        ]),
+      ],
+    };
+  }
+
+  const studentIds =
+    actor.role === 'parent'
+      ? (
+          await prisma.parentStudent.findMany({
+            where: { parentId: actor.id, isActive: true, student: { isArchived: false } },
+            select: { studentId: true },
+          })
+        ).map(({ studentId }) => studentId)
+      : [actor.id];
+  const classrooms = await prisma.classroom.findMany({
+    where: {
+      schoolId: actor.schoolId,
+      isArchived: false,
+      enrollments: { some: { studentId: { in: studentIds }, isActive: true } },
+    },
+    include: {
+      teachingAssignments: {
+        where: { isActive: true, teacher: { isArchived: false } },
+        select: { teacherId: true },
+      },
+    },
+  });
+  return {
+    actor,
+    contactIds: [
+      ...new Set(
+        classrooms.flatMap((classroom) => [
+          classroom.teacherId,
+          ...classroom.teachingAssignments.map(({ teacherId }) => teacherId),
+        ]),
+      ),
+    ],
+  };
+};
 
 export const getContacts = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    const userRole = req.user?.role;
-    let schoolId = (req.user as any)?.schoolId;
-
-    if (!schoolId && userId) {
-      const user = await prisma.user.findUnique({ where: { id: userId } });
-      schoolId = user?.schoolId;
-    }
-
-    if (!userId || !userRole || !schoolId) {
+    if (!userId) {
       return res.status(401).json({ status: 'error', message: 'Unauthorized' });
     }
-
-    let contacts: any[] = [];
-
-    if (userRole === 'admin') {
-      contacts = await prisma.user.findMany({
-        where: { schoolId, isArchived: false, id: { not: userId } },
-        select: { id: true, name: true, role: true, avatar: true },
-      });
-    } else if (userRole === 'teacher') {
-      const classrooms = await prisma.classroom.findMany({
-        where: { teacherId: userId },
-        include: { enrollments: true },
-      });
-      const studentIds = classrooms.flatMap((c) => c.enrollments.map((e) => e.studentId));
-
-      const parents = await prisma.parentStudent.findMany({
-        where: { studentId: { in: studentIds } },
-        select: { parentId: true },
-      });
-      const parentIds = parents.map((p) => p.parentId);
-
-      contacts = await prisma.user.findMany({
-        where: {
-          OR: [
-            { id: { in: [...new Set([...studentIds, ...parentIds])] } },
-            { role: { in: ['teacher', 'admin'] } },
-          ],
-          isArchived: false,
-          id: { not: userId },
-        },
-        select: { id: true, name: true, role: true, avatar: true },
-      });
-    } else if (userRole === 'student') {
-      const enrollments = await prisma.classroomEnrollment.findMany({
-        where: { studentId: userId },
-        select: { classroomId: true },
-      });
-      const classroomIds = enrollments.map((e) => e.classroomId);
-
-      const classrooms = await prisma.classroom.findMany({
-        where: { id: { in: classroomIds } },
-      });
-      const teacherIds = classrooms.map((c) => c.teacherId).filter(Boolean) as string[];
-
-      contacts = await prisma.user.findMany({
-        where: {
-          id: { in: [...new Set(teacherIds)] },
-          isArchived: false,
-        },
-        select: { id: true, name: true, role: true, avatar: true },
-      });
-    } else if (userRole === 'parent') {
-      const children = await prisma.parentStudent.findMany({
-        where: { parentId: userId },
-        select: { studentId: true },
-      });
-      const studentIds = children.map((c) => c.studentId);
-
-      const enrollments = await prisma.classroomEnrollment.findMany({
-        where: { studentId: { in: studentIds } },
-        select: { classroomId: true },
-      });
-      const classroomIds = enrollments.map((e) => e.classroomId);
-
-      const classrooms = await prisma.classroom.findMany({
-        where: { id: { in: classroomIds } },
-      });
-      const teacherIds = classrooms.map((c) => c.teacherId).filter(Boolean) as string[];
-
-      contacts = await prisma.user.findMany({
-        where: {
-          id: { in: [...new Set(teacherIds)] },
-          isArchived: false,
-        },
-        select: { id: true, name: true, role: true, avatar: true },
-      });
-    }
+    const { actor, contactIds } = await getAllowedContactIds(userId);
+    const contacts = await prisma.user.findMany({
+      where: { id: { in: contactIds }, schoolId: actor.schoolId, isArchived: false },
+      select: { id: true, name: true, role: true, avatar: true },
+    });
 
     // Map online status, unread counts, and latest message timestamps
     const unreadCounts = await prisma.directMessage.groupBy({
@@ -107,18 +118,7 @@ export const getContacts = async (req: Request, res: Response) => {
       unreadMap.set(u.senderId, u._count.id);
     }
 
-    const directMessages = await prisma.directMessage.findMany({
-      where: {
-        OR: [{ senderId: userId }, { receiverId: userId }],
-      },
-      select: {
-        senderId: true,
-        receiverId: true,
-        content: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const directMessages = await communicationService.getMessagesForUser(userId);
 
     const lastMsgMap = new Map<string, { content: string; createdAt: string }>();
     for (const msg of directMessages) {
@@ -162,22 +162,8 @@ export const getChatHistory = async (req: Request, res: Response) => {
 
     if (!userId) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
 
-    const messages = await prisma.directMessage.findMany({
-      where: {
-        OR: [
-          { senderId: userId, receiverId: contactId },
-          { senderId: contactId, receiverId: userId },
-        ],
-      },
-      orderBy: { createdAt: 'asc' },
-    });
-
-    const formattedMessages = messages.map((m) => ({
-      ...m,
-      createdAt: m.createdAt,
-    }));
-
-    res.json({ status: 'success', messages: formattedMessages });
+    const messages = await communicationService.getConversation(userId, contactId);
+    res.json({ status: 'success', messages });
   } catch (error) {
     logger.error('Error fetching chat history', error);
     res.status(500).json({ status: 'error', message: 'Failed to load chat history' });
@@ -194,7 +180,12 @@ export const markAsRead = async (req: Request, res: Response) => {
     }
 
     await prisma.directMessage.updateMany({
-      where: { senderId: contactId, receiverId: userId, read: false },
+      where: {
+        senderId: contactId,
+        receiverId: userId,
+        read: false,
+        OR: [{ approvedByParent: null }, { approvedByParent: true }],
+      },
       data: { read: true },
     });
 
@@ -212,37 +203,81 @@ export const sendMessage = async (req: Request, res: Response) => {
     const { content } = req.body;
 
     if (!senderId) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
-    if (!content?.trim())
+    if (!content?.trim() || content.trim().length > 10_000)
       return res.status(400).json({ status: 'error', message: 'Content required' });
 
-    const sender = await prisma.user.findUnique({ where: { id: senderId } });
-    const receiver = await prisma.user.findUnique({ where: { id: contactId } });
+    const sender = await prisma.user.findUnique({
+      where: { id: senderId },
+      include: {
+        studentProfile: true,
+        studentAcademicEnrollments: {
+          where: { status: 'active' },
+          include: { cohort: true },
+          orderBy: { enrolledAt: 'desc' },
+          take: 1,
+        },
+        parentControlSettings: true,
+      },
+    });
+    const { actor, contactIds } = await getAllowedContactIds(senderId);
+    const receiver = await prisma.user.findFirst({
+      where: { id: contactId, schoolId: actor.schoolId, isArchived: false },
+    });
 
-    if (!sender || !receiver) {
+    if (!sender || !receiver || !contactIds.includes(contactId)) {
       return res.status(404).json({ status: 'error', message: 'User not found' });
     }
 
-    const message = await prisma.directMessage.create({
-      data: {
-        senderId,
-        senderName: sender.name,
-        senderRole: sender.role,
-        senderAvatar: sender.avatar,
-        receiverId: contactId,
-        receiverName: receiver.name,
-        content: content.trim(),
-        read: false,
-        createdAt: new Date().toISOString(),
-      },
+    const requiresParentApproval = Boolean(
+      sender.role === 'student' &&
+      sender.studentProfile &&
+      sender.studentAcademicEnrollments[0]?.cohort.gradeLevel < 7 &&
+      sender.parentControlSettings?.requireApprovalForOutboundMsgs,
+    );
+    const guardians = requiresParentApproval
+      ? await prisma.parentStudent.findMany({
+          where: { studentId: sender.id, isActive: true, parent: { isArchived: false } },
+          select: { parentId: true },
+        })
+      : [];
+    if (requiresParentApproval && !guardians.length)
+      return res.status(409).json({
+        status: 'error',
+        message: 'An active guardian is required before this student can send messages.',
+      });
+    const message = await communicationService.addDirectMessage({
+      senderId,
+      receiverId: contactId,
+      content: content.trim(),
+      read: false,
+      approvedByParent: requiresParentApproval ? false : undefined,
     });
-
-    const formattedMessage = { ...message, createdAt: message.createdAt };
-
-    sendToUser(contactId, 'chatMessage', formattedMessage);
-
-    res.status(201).json({ status: 'success', message: formattedMessage });
+    if (requiresParentApproval) {
+      await Promise.all(
+        guardians.map(({ parentId }) =>
+          notificationService.dispatchNotification({
+            recipientId: parentId,
+            senderId: sender.id,
+            senderName: sender.name,
+            senderRole: sender.role,
+            title: 'Student message awaiting approval',
+            body: `${sender.name} drafted a message to ${receiver.name}. Review it in the parent dashboard.`,
+            category: 'COMMUNICATION',
+            severity: 'high',
+            type: 'message',
+          }),
+        ),
+      );
+    } else {
+      sendToUser(contactId, 'chatMessage', message);
+    }
+    res.status(requiresParentApproval ? 202 : 201).json({
+      status: 'success',
+      message,
+      pendingParentApproval: requiresParentApproval,
+    });
   } catch (error) {
     logger.error('Error sending message', error);
-    res.status(500).json({ status: 'error', message: 'Failed to send message' });
+    res.status(400).json({ status: 'error', message: (error as Error).message });
   }
 };

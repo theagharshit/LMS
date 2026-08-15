@@ -13,6 +13,14 @@ import { notificationService } from './notificationService';
 import { logger } from '@utils/logger';
 
 export class TeacherAssignmentService {
+  private async requireAdmin(actorId: string) {
+    const actor = await prisma.user.findFirst({
+      where: { id: actorId, role: 'admin', isArchived: false },
+    });
+    if (!actor) throw new Error('An active administrator account is required.');
+    return actor;
+  }
+
   /**
    * Submit a teacher absence / leave request
    */
@@ -21,9 +29,22 @@ export class TeacherAssignmentService {
     startDate: string,
     endDate: string,
     reason: string,
+    actorId = teacherId,
   ): Promise<TeacherAbsenceRequest> {
+    const actor = await prisma.user.findFirst({
+      where: { id: actorId, role: { in: ['teacher', 'admin'] }, isArchived: false },
+      select: { id: true, role: true, schoolId: true },
+    });
+    if (!actor) throw new Error('An active teacher or administrator account is required.');
+    if (actor.role === 'teacher' && actor.id !== teacherId)
+      throw new Error('Teachers may only submit their own leave requests.');
     const teacher = await prisma.user.findFirst({
-      where: { id: teacherId, role: 'teacher', isArchived: false },
+      where: {
+        id: teacherId,
+        role: 'teacher',
+        schoolId: actor.schoolId,
+        isArchived: false,
+      },
     });
     if (!teacher) throw new Error('Teacher not found or inactive.');
 
@@ -41,7 +62,7 @@ export class TeacherAssignmentService {
         teacherId,
         startDate: start,
         endDate: end,
-        reason: reason.trim() || 'Personal / Sick Leave',
+        reason: reason.trim(),
         status: 'pending',
       },
       include: {
@@ -63,7 +84,7 @@ export class TeacherAssignmentService {
 
     // Notify administrators
     const admins = await prisma.user.findMany({
-      where: { role: 'admin', isArchived: false },
+      where: { role: 'admin', schoolId: teacher.schoolId, isArchived: false },
       select: { id: true },
     });
     for (const admin of admins) {
@@ -103,15 +124,15 @@ export class TeacherAssignmentService {
     status: 'approved' | 'rejected',
     actorId: string,
   ): Promise<TeacherAbsenceRequest> {
-    const admin = await prisma.user.findUnique({ where: { id: actorId } });
-    if (!admin || admin.role !== 'admin')
-      throw new Error('Only administrators can review teacher absence requests.');
+    const admin = await this.requireAdmin(actorId);
 
     const req = await prisma.teacherAbsenceRequest.findUnique({
       where: { id: requestId },
       include: { teacher: true },
     });
     if (!req) throw new Error('Teacher absence request not found.');
+    if (req.teacher.schoolId !== admin.schoolId)
+      throw new Error("You cannot review another school's absence request.");
 
     const updated = await prisma.teacherAbsenceRequest.update({
       where: { id: requestId },
@@ -148,26 +169,35 @@ export class TeacherAssignmentService {
 
     // If approved, automatically create substitute teacher requests for all classrooms assigned to this teacher
     if (status === 'approved') {
-      const teacherClassrooms = await prisma.classroom.findMany({
-        where: { teacherId: req.teacherId },
+      const timetableSlots = await prisma.timetableSlot.findMany({
+        where: { teacherId: req.teacherId, isArchived: false },
       });
-      for (const cls of teacherClassrooms) {
-        try {
-          await this.createSubstituteRequest({
-            classroomId: cls.id,
-            subjectId: cls.subjectId,
-            date: req.startDate.toISOString().split('T')[0],
-            timeSlot: '10:00 AM - 10:45 AM',
-            originalTeacherId: req.teacherId,
-            reason: `Teacher on approved leave: ${req.reason}`,
-            teacherAbsenceRequestId: req.id,
-            createdByAdminId: actorId,
-          });
-        } catch (e: any) {
-          logger.warn(
-            `Could not auto-create substitute request for classroom ${cls.id}:`,
-            e?.message || e,
-          );
+      for (
+        let absenceDate = new Date(req.startDate);
+        absenceDate <= req.endDate;
+        absenceDate = new Date(absenceDate.getTime() + 86_400_000)
+      ) {
+        const daySlots = timetableSlots.filter(
+          (slot) => slot.dayOfWeek === absenceDate.getUTCDay(),
+        );
+        for (const slot of daySlots) {
+          try {
+            await this.createSubstituteRequest({
+              classroomId: slot.classroomId,
+              subjectId: slot.subjectId,
+              date: absenceDate.toISOString().split('T')[0],
+              timeSlot: `${slot.startTime} - ${slot.endTime}`,
+              originalTeacherId: req.teacherId,
+              reason: `Teacher on approved leave: ${req.reason}`,
+              teacherAbsenceRequestId: req.id,
+              createdByAdminId: actorId,
+            });
+          } catch (e: any) {
+            logger.warn(
+              `Could not auto-create substitute request for timetable slot ${slot.id}:`,
+              e?.message || e,
+            );
+          }
         }
       }
     }
@@ -193,21 +223,27 @@ export class TeacherAssignmentService {
   public async assignSubjectToTeacher(
     teacherId: string,
     subjectId: string,
-    classroomId?: string,
-    actorId: string = 'user-admin-1',
+    classroomId: string | undefined,
+    actorId: string,
     reason?: string,
   ) {
-    const actor = await prisma.user.findUnique({ where: { id: actorId } });
+    const actor = await this.requireAdmin(actorId);
     const teacher = await prisma.user.findFirst({
-      where: { id: teacherId, role: 'teacher', isArchived: false },
+      where: { id: teacherId, role: 'teacher', schoolId: actor.schoolId, isArchived: false },
     });
     if (!teacher) throw new Error('Teacher not found or is inactive.');
 
-    let subject = await prisma.subject.findUnique({ where: { id: subjectId } });
+    let subject = await prisma.subject.findFirst({
+      where: { id: subjectId, schoolId: actor.schoolId, isArchived: false },
+    });
     if (!subject) {
       // Allow subject lookup by name if subjectId passed is a name
       subject = await prisma.subject.findFirst({
-        where: { name: { equals: subjectId, mode: 'insensitive' } },
+        where: {
+          schoolId: actor.schoolId,
+          isArchived: false,
+          name: { equals: subjectId, mode: 'insensitive' },
+        },
       });
     }
     if (!subject) throw new Error(`Subject record for '${subjectId}' not found.`);
@@ -224,22 +260,72 @@ export class TeacherAssignmentService {
 
     let classroomName: string | undefined;
     if (classroomId) {
-      const cls = await prisma.classroom.findUnique({ where: { id: classroomId } });
+      const cls = await prisma.classroom.findFirst({
+        where: { id: classroomId, schoolId: actor.schoolId, isArchived: false },
+      });
       if (!cls) throw new Error('Classroom not found.');
       if (cls.teacherId === teacherId) {
         throw new Error(`Teacher ${teacher.name} is already assigned to classroom ${cls.name}.`);
       }
       classroomName = cls.name;
-      await prisma.classroom.update({
-        where: { id: classroomId },
-        data: { teacherId, subjectId: subject.id },
+      await prisma.$transaction(async (tx) => {
+        const academicYear = cls.academicYearId
+          ? await tx.academicYear.findUnique({ where: { id: cls.academicYearId } })
+          : await tx.academicYear.findFirst({
+              where: { schoolId: cls.schoolId, isActive: true, isArchived: false },
+            });
+        if (!academicYear) throw new Error('An active academic year is required.');
+        const slots = await tx.timetableSlot.findMany({
+          where: { classroomId, isArchived: false },
+        });
+        for (const slot of slots) {
+          const conflict = await tx.timetableSlot.findFirst({
+            where: {
+              id: { not: slot.id },
+              teacherId,
+              academicYearId: slot.academicYearId,
+              dayOfWeek: slot.dayOfWeek,
+              periodNumber: slot.periodNumber,
+              isArchived: false,
+            },
+          });
+          if (conflict) throw new Error('Teacher has a timetable clash for this classroom.');
+        }
+        await tx.teachingAssignment.updateMany({
+          where: { classroomId, isActive: true },
+          data: { isActive: false, endsAt: new Date() },
+        });
+        await tx.teachingAssignment.upsert({
+          where: {
+            teacherId_classroomId_academicYearId: {
+              teacherId,
+              classroomId,
+              academicYearId: academicYear.id,
+            },
+          },
+          create: {
+            teacherId,
+            classroomId,
+            subjectId: subject.id,
+            academicYearId: academicYear.id,
+          },
+          update: { subjectId: subject.id, isActive: true, startsAt: new Date(), endsAt: null },
+        });
+        await tx.classroom.update({
+          where: { id: classroomId },
+          data: { teacherId, subjectId: subject.id, academicYearId: academicYear.id },
+        });
+        await tx.timetableSlot.updateMany({
+          where: { classroomId, isArchived: false },
+          data: { teacherId, subjectId: subject.id },
+        });
       });
     }
 
     await this.logAudit({
       actorId,
-      actorName: actor?.name || 'Administrator',
-      actorRole: actor?.role || 'admin',
+      actorName: actor.name,
+      actorRole: actor.role,
       targetTeacherId: teacherId,
       targetTeacherName: teacher.name,
       action: 'ASSIGN_SUBJECT',
@@ -261,43 +347,39 @@ export class TeacherAssignmentService {
   public async deassignSubjectFromTeacher(
     teacherId: string,
     subjectId: string,
-    classroomId?: string,
-    actorId: string = 'user-admin-1',
+    classroomId: string | undefined,
+    actorId: string,
     reason?: string,
   ) {
-    const actor = await prisma.user.findUnique({ where: { id: actorId } });
-    const teacher = await prisma.user.findUnique({ where: { id: teacherId } });
+    const actor = await this.requireAdmin(actorId);
+    const teacher = await prisma.user.findFirst({
+      where: { id: teacherId, role: 'teacher', schoolId: actor.schoolId },
+    });
     if (!teacher) throw new Error('Teacher not found.');
 
-    const subject = await prisma.subject.findUnique({ where: { id: subjectId } });
+    const subject = await prisma.subject.findFirst({
+      where: { id: subjectId, schoolId: actor.schoolId },
+    });
     const subjectName = subject?.name || subjectId;
+
+    if (classroomId) {
+      const cls = await prisma.classroom.findFirst({
+        where: { id: classroomId, schoolId: actor.schoolId, isArchived: false },
+      });
+      if (cls)
+        throw new Error('Use classroom reassignment and select a qualified replacement teacher.');
+    }
 
     await prisma.teacherSubject.deleteMany({
       where: { teacherId, subjectId },
     });
 
     let classroomName: string | undefined;
-    if (classroomId) {
-      const cls = await prisma.classroom.findUnique({ where: { id: classroomId } });
-      if (cls) {
-        classroomName = cls.name;
-        // Fallback classroom teacher assignment if deassigned
-        const fallbackTeacher = await prisma.user.findFirst({
-          where: { role: 'teacher', isArchived: false, id: { not: teacherId } },
-        });
-        if (fallbackTeacher) {
-          await prisma.classroom.update({
-            where: { id: classroomId },
-            data: { teacherId: fallbackTeacher.id },
-          });
-        }
-      }
-    }
 
     await this.logAudit({
       actorId,
-      actorName: actor?.name || 'Administrator',
-      actorRole: actor?.role || 'admin',
+      actorName: actor.name,
+      actorRole: actor.role,
       targetTeacherId: teacherId,
       targetTeacherName: teacher.name,
       action: 'DEASSIGN_SUBJECT',
@@ -321,24 +403,26 @@ export class TeacherAssignmentService {
     classroomId: string,
     fromTeacherId: string,
     toTeacherId: string,
-    actorId: string = 'user-admin-1',
+    actorId: string,
     reason?: string,
   ) {
     if (fromTeacherId === toTeacherId) {
       throw new Error('Source teacher and target teacher cannot be the same person.');
     }
 
-    const actor = await prisma.user.findUnique({ where: { id: actorId } });
-    const fromTeacher = await prisma.user.findUnique({ where: { id: fromTeacherId } });
+    const actor = await this.requireAdmin(actorId);
+    const fromTeacher = await prisma.user.findFirst({
+      where: { id: fromTeacherId, role: 'teacher', schoolId: actor.schoolId },
+    });
     const toTeacher = await prisma.user.findFirst({
-      where: { id: toTeacherId, role: 'teacher', isArchived: false },
+      where: { id: toTeacherId, role: 'teacher', schoolId: actor.schoolId, isArchived: false },
     });
     if (!fromTeacher || !toTeacher) {
       throw new Error('One or both specified teachers could not be found.');
     }
 
-    const classroom = await prisma.classroom.findUnique({
-      where: { id: classroomId },
+    const classroom = await prisma.classroom.findFirst({
+      where: { id: classroomId, schoolId: actor.schoolId, isArchived: false },
       include: { subjectRef: true },
     });
     if (!classroom) throw new Error('Target classroom not found.');
@@ -354,16 +438,65 @@ export class TeacherAssignmentService {
       update: {},
     });
 
-    // Reassign classroom
-    await prisma.classroom.update({
-      where: { id: classroomId },
-      data: { teacherId: toTeacherId, subjectId: targetSubjectId },
+    await prisma.$transaction(async (tx) => {
+      const academicYear = classroom.academicYearId
+        ? await tx.academicYear.findUnique({ where: { id: classroom.academicYearId } })
+        : await tx.academicYear.findFirst({
+            where: { schoolId: classroom.schoolId, isActive: true, isArchived: false },
+          });
+      if (!academicYear) throw new Error('An active academic year is required.');
+      const slots = await tx.timetableSlot.findMany({ where: { classroomId, isArchived: false } });
+      for (const slot of slots) {
+        const conflict = await tx.timetableSlot.findFirst({
+          where: {
+            id: { not: slot.id },
+            teacherId: toTeacherId,
+            academicYearId: slot.academicYearId,
+            dayOfWeek: slot.dayOfWeek,
+            periodNumber: slot.periodNumber,
+            isArchived: false,
+          },
+        });
+        if (conflict) throw new Error('Target teacher has a timetable clash.');
+      }
+      await tx.teachingAssignment.updateMany({
+        where: { classroomId, isActive: true },
+        data: { isActive: false, endsAt: new Date() },
+      });
+      await tx.teachingAssignment.upsert({
+        where: {
+          teacherId_classroomId_academicYearId: {
+            teacherId: toTeacherId,
+            classroomId,
+            academicYearId: academicYear.id,
+          },
+        },
+        create: {
+          teacherId: toTeacherId,
+          classroomId,
+          subjectId: targetSubjectId,
+          academicYearId: academicYear.id,
+        },
+        update: { subjectId: targetSubjectId, isActive: true, startsAt: new Date(), endsAt: null },
+      });
+      await tx.classroom.update({
+        where: { id: classroomId },
+        data: {
+          teacherId: toTeacherId,
+          subjectId: targetSubjectId,
+          academicYearId: academicYear.id,
+        },
+      });
+      await tx.timetableSlot.updateMany({
+        where: { classroomId, isArchived: false },
+        data: { teacherId: toTeacherId, subjectId: targetSubjectId },
+      });
     });
 
     await this.logAudit({
       actorId,
-      actorName: actor?.name || 'Administrator',
-      actorRole: actor?.role || 'admin',
+      actorName: actor.name,
+      actorRole: actor.role,
       targetTeacherId: toTeacherId,
       targetTeacherName: toTeacher.name,
       action: 'REASSIGN_SUBJECT',
@@ -379,7 +512,7 @@ export class TeacherAssignmentService {
     await notificationService.dispatchNotification({
       recipientId: fromTeacherId,
       senderId: actorId,
-      senderName: actor?.name || 'Admin',
+      senderName: actor.name,
       senderRole: 'admin',
       title: 'Subject Reassigned',
       body: `Your assignment for ${subjectName} in ${classroom.name} has been reassigned to ${toTeacher.name}.`,
@@ -391,7 +524,7 @@ export class TeacherAssignmentService {
     await notificationService.dispatchNotification({
       recipientId: toTeacherId,
       senderId: actorId,
-      senderName: actor?.name || 'Admin',
+      senderName: actor.name,
       senderRole: 'admin',
       title: 'New Subject Classroom Assigned',
       body: `You have been assigned as the lead teacher for ${subjectName} in ${classroom.name} (previously taught by ${fromTeacher.name}).`,
@@ -411,15 +544,34 @@ export class TeacherAssignmentService {
    * 3. Workload (number of active duties/classrooms on that date)
    */
   public async getEligibleSubstitutes(
+    actorId: string,
     classroomId: string,
     subjectId: string,
     date: string,
     timeSlot: string,
   ): Promise<EligibleSubstituteTeacher[]> {
-    const classroom = await prisma.classroom.findUnique({
-      where: { id: classroomId },
+    const actor = await this.requireAdmin(actorId);
+    const classroom = await prisma.classroom.findFirst({
+      where: { id: classroomId, schoolId: actor.schoolId, isArchived: false },
       include: { subjectRef: true },
     });
+    if (!classroom) throw new Error('Classroom not found in your school.');
+    const dutyDate = new Date(`${date}T00:00:00`);
+    if (Number.isNaN(dutyDate.getTime())) throw new Error('A valid duty date is required.');
+    const [startTime, endTime] = timeSlot.split(' - ').map((value) => value.trim());
+    if (!startTime || !endTime) throw new Error('Time slot must match a scheduled period.');
+    const scheduledPeriod = await prisma.timetableSlot.findFirst({
+      where: {
+        classroomId,
+        schoolId: actor.schoolId,
+        dayOfWeek: dutyDate.getDay(),
+        startTime,
+        endTime,
+        isArchived: false,
+      },
+    });
+    if (!scheduledPeriod)
+      throw new Error('The selected period is not in this classroom timetable.');
     const targetSubjectId = subjectId || classroom?.subjectId;
     const subject = targetSubjectId
       ? await prisma.subject.findUnique({ where: { id: targetSubjectId } })
@@ -428,7 +580,7 @@ export class TeacherAssignmentService {
 
     // Fetch all active teachers
     const teachers = await prisma.user.findMany({
-      where: { role: 'teacher', isArchived: false },
+      where: { role: 'teacher', schoolId: actor.schoolId, isArchived: false },
       include: {
         teacherSubjects: { include: { subject: true } },
         taughtClassrooms: true,
@@ -437,6 +589,15 @@ export class TeacherAssignmentService {
         },
         teacherAbsencesSubmitted: {
           where: { status: { in: ['approved', 'pending'] } },
+        },
+        timetableSlots: {
+          where: {
+            academicYearId: scheduledPeriod.academicYearId,
+            dayOfWeek: scheduledPeriod.dayOfWeek,
+            periodNumber: scheduledPeriod.periodNumber,
+            isArchived: false,
+          },
+          select: { id: true },
         },
       },
     });
@@ -469,6 +630,10 @@ export class TeacherAssignmentService {
       if (isAvailable && hasConflictDuty) {
         isAvailable = false;
         rejectionReason = `Schedule conflict on ${date} at ${timeSlot}`;
+      }
+      if (isAvailable && teacher.timetableSlots.length > 0) {
+        isAvailable = false;
+        rejectionReason = `Teacher already has a scheduled class during period ${scheduledPeriod.periodNumber}`;
       }
 
       // 3. Workload Score
@@ -505,28 +670,41 @@ export class TeacherAssignmentService {
     suggestedSubstituteId?: string;
     reason: string;
     teacherAbsenceRequestId?: string;
-    createdByAdminId?: string;
+    createdByAdminId: string;
   }): Promise<SubstituteRequest> {
-    const adminId = data.createdByAdminId || 'user-admin-1';
-    const admin = await prisma.user.findUnique({ where: { id: adminId } });
-    const classroom = await prisma.classroom.findUnique({
-      where: { id: data.classroomId },
+    const adminId = data.createdByAdminId;
+    const admin = await this.requireAdmin(adminId);
+    const classroom = await prisma.classroom.findFirst({
+      where: { id: data.classroomId, schoolId: admin.schoolId, isArchived: false },
       include: { subjectRef: true },
     });
     if (!classroom) throw new Error('Classroom not found.');
 
-    const subject = await prisma.subject.findUnique({
-      where: { id: data.subjectId || classroom.subjectId },
+    const subject = await prisma.subject.findFirst({
+      where: {
+        id: data.subjectId || classroom.subjectId,
+        schoolId: admin.schoolId,
+        isArchived: false,
+      },
     });
-    const originalTeacher = await prisma.user.findUnique({
-      where: { id: data.originalTeacherId || classroom.teacherId },
+    const originalTeacher = await prisma.user.findFirst({
+      where: {
+        id: data.originalTeacherId || classroom.teacherId,
+        role: 'teacher',
+        schoolId: admin.schoolId,
+      },
     });
     if (!originalTeacher) throw new Error('Original teacher not found.');
 
     let suggestedSubstitute: { id: string; name: string } | null = null;
     if (data.suggestedSubstituteId) {
-      suggestedSubstitute = await prisma.user.findUnique({
-        where: { id: data.suggestedSubstituteId },
+      suggestedSubstitute = await prisma.user.findFirst({
+        where: {
+          id: data.suggestedSubstituteId,
+          role: 'teacher',
+          schoolId: admin.schoolId,
+          isArchived: false,
+        },
         select: { id: true, name: true },
       });
     }
@@ -597,7 +775,7 @@ export class TeacherAssignmentService {
 
     await this.logAudit({
       actorId: adminId,
-      actorName: admin?.name || 'Administrator',
+      actorName: admin.name,
       actorRole: admin?.role || 'admin',
       targetTeacherId: originalTeacher.id,
       targetTeacherName: originalTeacher.name,
@@ -615,7 +793,7 @@ export class TeacherAssignmentService {
       await notificationService.dispatchNotification({
         recipientId: suggestedSubstitute.id,
         senderId: adminId,
-        senderName: admin?.name || 'Admin',
+        senderName: admin.name,
         senderRole: 'admin',
         title: '📍 Substitute Duty Requested',
         body: `You are requested as substitute teacher for ${created.classroom.name} (${created.subject.name}) on ${data.date} at ${data.timeSlot}.`,
@@ -634,9 +812,9 @@ export class TeacherAssignmentService {
   public async updateSubstituteRequestStatus(
     requestId: string,
     status: SubstituteRequestStatus,
+    actorId: string,
     responseNotes?: string,
     assignedSubstituteId?: string,
-    actorId: string = 'user-admin-1',
   ): Promise<SubstituteRequest> {
     const actor = await prisma.user.findUnique({ where: { id: actorId } });
     const currentReq = await prisma.substituteRequest.findUnique({
@@ -644,9 +822,19 @@ export class TeacherAssignmentService {
       include: { classroom: true, subject: true, originalTeacher: true },
     });
     if (!currentReq) throw new Error('Substitute request not found.');
+    if (!actor || actor.isArchived || !['admin', 'teacher'].includes(actor.role))
+      throw new Error('An active administrator or teacher account is required.');
+    if (currentReq.classroom.schoolId !== actor.schoolId)
+      throw new Error("You cannot update another school's substitute request.");
 
     const targetSubId =
       assignedSubstituteId || currentReq.suggestedSubstituteId || currentReq.assignedSubstituteId;
+    if (actor.role === 'teacher') {
+      if (targetSubId !== actor.id)
+        throw new Error('Teachers may only respond to substitute requests assigned to them.');
+      if (!['APPROVED', 'REJECTED'].includes(status))
+        throw new Error('Teachers may only accept or reject a substitute request.');
+    }
 
     const updated = await prisma.substituteRequest.update({
       where: { id: requestId },
@@ -670,8 +858,8 @@ export class TeacherAssignmentService {
 
     await this.logAudit({
       actorId,
-      actorName: actor?.name || 'Administrator',
-      actorRole: actor?.role || 'admin',
+      actorName: actor.name,
+      actorRole: actor.role,
       targetTeacherId: updated.originalTeacherId,
       targetTeacherName: updated.originalTeacher.name,
       action,
@@ -687,8 +875,8 @@ export class TeacherAssignmentService {
     await notificationService.dispatchNotification({
       recipientId: updated.originalTeacherId,
       senderId: actorId,
-      senderName: actor?.name || 'Admin',
-      senderRole: actor?.role || 'admin',
+      senderName: actor.name,
+      senderRole: actor.role,
       title: `Substitute Request ${status}`,
       body: `Your substitute request for ${updated.classroom.name} on ${updated.date} is now ${status}. Substitute Teacher: ${assignedSubName}.`,
       category: 'ACADEMIC',
@@ -700,8 +888,8 @@ export class TeacherAssignmentService {
       await notificationService.dispatchNotification({
         recipientId: updated.assignedSubstituteId,
         senderId: actorId,
-        senderName: actor?.name || 'Admin',
-        senderRole: actor?.role || 'admin',
+        senderName: actor.name,
+        senderRole: actor.role,
         title: `Substitute Duty ${status}`,
         body: `You are confirmed as substitute teacher for ${updated.classroom.name} (${updated.subject.name}) on ${updated.date} at ${updated.timeSlot}.`,
         category: 'ACADEMIC',
@@ -716,13 +904,24 @@ export class TeacherAssignmentService {
   /**
    * Fetch list of substitute requests
    */
-  public async getSubstituteRequests(teacherId?: string): Promise<SubstituteRequest[]> {
-    const where: any = {};
-    if (teacherId) {
+  public async getSubstituteRequests(
+    actorId: string,
+    teacherId?: string,
+  ): Promise<SubstituteRequest[]> {
+    const actor = await prisma.user.findFirst({
+      where: { id: actorId, role: { in: ['teacher', 'admin'] }, isArchived: false },
+      select: { id: true, role: true, schoolId: true },
+    });
+    if (!actor) throw new Error('An active teacher or administrator account is required.');
+    const scopedTeacherId = actor.role === 'teacher' ? actor.id : teacherId;
+    if (teacherId && actor.role === 'teacher' && teacherId !== actor.id)
+      throw new Error("Teachers cannot view another teacher's substitute requests.");
+    const where: any = { classroom: { schoolId: actor.schoolId } };
+    if (scopedTeacherId) {
       where.OR = [
-        { originalTeacherId: teacherId },
-        { assignedSubstituteId: teacherId },
-        { suggestedSubstituteId: teacherId },
+        { originalTeacherId: scopedTeacherId },
+        { assignedSubstituteId: scopedTeacherId },
+        { suggestedSubstituteId: scopedTeacherId },
       ];
     }
 
@@ -745,9 +944,23 @@ export class TeacherAssignmentService {
   /**
    * Fetch list of teacher absence requests
    */
-  public async getTeacherAbsenceRequests(teacherId?: string): Promise<TeacherAbsenceRequest[]> {
-    const where: any = {};
-    if (teacherId) where.teacherId = teacherId;
+  public async getTeacherAbsenceRequests(
+    actorId: string,
+    teacherId?: string,
+  ): Promise<TeacherAbsenceRequest[]> {
+    const actor = await prisma.user.findFirst({
+      where: { id: actorId, role: { in: ['teacher', 'admin'] }, isArchived: false },
+      select: { id: true, role: true, schoolId: true },
+    });
+    if (!actor) throw new Error('An active teacher or administrator account is required.');
+    if (teacherId && actor.role === 'teacher' && teacherId !== actor.id)
+      throw new Error("Teachers cannot view another teacher's leave requests.");
+    const where: any = {
+      teacher: { schoolId: actor.schoolId },
+      ...(actor.role === 'teacher' || teacherId
+        ? { teacherId: actor.role === 'teacher' ? actor.id : teacherId }
+        : {}),
+    };
 
     const list = await prisma.teacherAbsenceRequest.findMany({
       where,
@@ -774,24 +987,35 @@ export class TeacherAssignmentService {
    * Fetch assignment audit history logs
    */
   public async getAssignmentAuditLogs(
+    actorId: string,
     targetTeacherId?: string,
   ): Promise<TeacherAssignmentAuditLog[]> {
-    const where: any = {};
-    if (targetTeacherId) where.targetTeacherId = targetTeacherId;
+    const actor = await this.requireAdmin(actorId);
+    if (targetTeacherId) {
+      const target = await prisma.user.findFirst({
+        where: { id: targetTeacherId, role: 'teacher', schoolId: actor.schoolId },
+        select: { id: true },
+      });
+      if (!target) throw new Error('Teacher was not found in your school.');
+    }
+    const where: any = {
+      actor: { schoolId: actor.schoolId },
+      ...(targetTeacherId ? { targetTeacherId } : {}),
+    };
 
     const list = await prisma.teacherAssignmentAuditLog.findMany({
       where,
-      include: { subject: true, classroom: true },
+      include: { actor: true, targetTeacher: true, subject: true, classroom: true },
       orderBy: { createdAt: 'desc' },
     });
 
     return list.map((log) => ({
       id: log.id,
       actorId: log.actorId,
-      actorName: log.actorName,
-      actorRole: log.actorRole,
+      actorName: log.actor.name,
+      actorRole: log.actor.role,
       targetTeacherId: log.targetTeacherId,
-      targetTeacherName: log.targetTeacherName,
+      targetTeacherName: log.targetTeacher.name,
       action: log.action as AssignmentAuditLogAction,
       subjectId: log.subjectId || undefined,
       subjectName: log.subject?.name || undefined,
@@ -821,10 +1045,7 @@ export class TeacherAssignmentService {
       await prisma.teacherAssignmentAuditLog.create({
         data: {
           actorId: data.actorId,
-          actorName: data.actorName,
-          actorRole: data.actorRole,
           targetTeacherId: data.targetTeacherId,
-          targetTeacherName: data.targetTeacherName,
           action: data.action,
           subjectId: data.subjectId || null,
           classroomId: data.classroomId || null,

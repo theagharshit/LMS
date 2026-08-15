@@ -13,15 +13,22 @@ import { useTrackingState } from './hooks/useTrackingState';
 import { useCommunicationState } from './hooks/useCommunicationState';
 import { useAdminState } from './hooks/useAdminState';
 import { useSyncState } from './hooks/useSyncState';
+import { useTimetableAndLifecycleState } from './hooks/useTimetableAndLifecycleState';
+import { readDatabaseBootstrap } from './databaseBootstrap';
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const authState = useAuthState();
+  const bootstrap = readDatabaseBootstrap();
+  const authState = useAuthState(bootstrap);
   const uiState = useUIState();
-  const academicState = useAcademicState(authState.currentUser);
-  const trackingState = useTrackingState(authState.currentUser);
-  const communicationState = useCommunicationState(authState.currentUser, authState.authReady);
+  const academicState = useAcademicState(authState.currentUser, bootstrap);
+  const trackingState = useTrackingState(authState.currentUser, bootstrap);
+  const communicationState = useCommunicationState(
+    authState.currentUser,
+    authState.authReady,
+    bootstrap,
+  );
 
   const adminState = useAdminState(
     authState.currentUser,
@@ -33,7 +40,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     authState.allUsers,
     academicState.badgeDefinitions,
     academicState.classrooms,
+    bootstrap,
   );
+
+  const timetableState = useTimetableAndLifecycleState(authState.currentUser);
 
   useSyncState(
     authState.authReady,
@@ -60,6 +70,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     adminState.setTeacherAbsenceRequests,
     adminState.setSubstituteRequests,
     adminState.setTeacherAssignmentAuditLogs,
+    trackingState.setWeeklySchedule,
+    trackingState.setSchedule,
+    trackingState.setCalendarEvents,
+    adminState.setAdminAuditLogs,
+    adminState.setSchoolAnnouncements,
   );
 
   useEffect(() => {
@@ -171,7 +186,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const switchUser = (userId: string) => {
     const target = authState.allUsers.find((u) => u.id === userId);
     if (target) {
-      authState.setCurrentUser(target);
+      void authState.switchUserSession(target);
       if (target.role === 'parent' && target.childrenIds && target.childrenIds.length > 0) {
         authState.setActiveChildId(target.childrenIds[0]);
       }
@@ -281,6 +296,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     currentUser: authState.currentUser,
     allUsers: authState.allUsers,
     switchUser,
+    establishSession: authState.establishSession,
+    logout: authState.clearSession,
     activeChild: authState.activeChild,
     setActiveChildId: authState.setActiveChildId,
     activeChildList: authState.activeChildList,
@@ -372,6 +389,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addStudentProfile: adminState.addStudentProfile,
     updateStudentProfile: adminState.updateStudentProfile,
     deleteStudentProfile: adminState.deleteStudentProfile,
+    promoteStudentProfile: adminState.promoteStudentProfile,
+    restoreStudentProfile: adminState.restoreStudentProfile,
     addTeacherProfile: adminState.addTeacherProfile,
     updateTeacherProfile: adminState.updateTeacherProfile,
     deleteTeacherProfile: adminState.deleteTeacherProfile,
@@ -397,6 +416,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     updateSubstituteStatus: adminState.updateSubstituteStatus,
     submitTeacherAbsenceRequest: adminState.submitTeacherAbsenceRequest,
     reviewTeacherAbsenceRequest: adminState.reviewTeacherAbsenceRequest,
+
+    // Timetable, Bell Schedule & Academic Lifecycle
+    timetableSlots: timetableState.timetableSlots,
+    setTimetableSlots: timetableState.setTimetableSlots,
+    academicYears: timetableState.academicYears,
+    academicTerms: timetableState.academicTerms,
+    schoolHolidays: timetableState.schoolHolidays,
+    schoolTimingConfig: timetableState.schoolTimingConfig,
+    fetchTimetableSlots: timetableState.fetchTimetableSlots,
+    fetchAcademicYears: timetableState.fetchAcademicYears,
+    fetchAcademicTerms: timetableState.fetchAcademicTerms,
+    fetchSchoolHolidays: timetableState.fetchSchoolHolidays,
+    fetchBellSchedule: timetableState.fetchBellSchedule,
+    saveTimetableSlot: timetableState.saveTimetableSlot,
+    deleteTimetableSlot: timetableState.deleteTimetableSlot,
+    validateTimetableClash: timetableState.validateTimetableClash,
+    updateSchoolTimingConfig: timetableState.updateSchoolTimingConfig,
+    saveAcademicTerm: timetableState.saveAcademicTerm,
+    deleteAcademicTerm: timetableState.deleteAcademicTerm,
+    saveSchoolHoliday: timetableState.saveSchoolHoliday,
+    deleteSchoolHoliday: timetableState.deleteSchoolHoliday,
+    executeAcademicRollover: timetableState.executeAcademicRollover,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

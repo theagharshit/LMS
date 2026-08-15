@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { apiFetch } from '../../utils/apiFetch';
+import { sha256File } from '../../utils/fileChecksum';
+import { getAvatarUrl } from '../../utils/avatarUtils';
 import { Send, Paperclip, Search, FileText, Download, Loader2 } from 'lucide-react';
 
 export const MessagesView: React.FC = () => {
@@ -95,6 +97,7 @@ export const MessagesView: React.FC = () => {
         : `${(file.size / 1024).toFixed(2)} KB`;
 
     try {
+      const checksum = await sha256File(file);
       const res = await apiFetch('/api/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,7 +106,7 @@ export const MessagesView: React.FC = () => {
           sizeBytes: file.size,
           sizeFormatted: formattedSize,
           mimeType: file.type || 'application/octet-stream',
-          uploadedBy: currentUser.name,
+          checksum,
         }),
         feedback: {
           success: `${file.name} attached securely.`,
@@ -113,7 +116,8 @@ export const MessagesView: React.FC = () => {
 
       if (res.ok) {
         const data = await res.json();
-        const fileUrl = data.record?.downloadUrl || `/uploads/${encodeURIComponent(file.name)}`;
+        const fileUrl = data.record?.downloadUrl;
+        if (!fileUrl) throw new Error('The upload returned no file location.');
         const messageText = `📎 Attachment: ${file.name} (${formattedSize})\n${fileUrl}`;
         sendMessage(activeChannelId, currentContact.name || 'Unknown', messageText);
       }
@@ -172,7 +176,7 @@ export const MessagesView: React.FC = () => {
               >
                 <div className="relative shrink-0">
                   <img
-                    src={contact.avatar || 'https://via.placeholder.com/150'}
+                    src={getAvatarUrl(contact.avatar, contact.name)}
                     alt={contact.name}
                     className="w-10 h-10 rounded-full object-cover shrink-0"
                   />
@@ -212,7 +216,7 @@ export const MessagesView: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="relative">
                 <img
-                  src={currentContact.avatar || 'https://via.placeholder.com/150'}
+                  src={getAvatarUrl(currentContact.avatar, currentContact.name)}
                   alt={currentContact.name}
                   className="w-9 h-9 rounded-full object-cover"
                 />
@@ -292,6 +296,11 @@ export const MessagesView: React.FC = () => {
                       minute: '2-digit',
                     })}
                   </span>
+                  {isMe && msg.approvedByParent === false && (
+                    <span className="mt-1 block text-right text-[9px] font-bold text-amber-700">
+                      Awaiting parent approval
+                    </span>
+                  )}
                 </div>
               </div>
             );

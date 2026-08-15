@@ -1,84 +1,101 @@
-import { useState, useEffect, useCallback } from 'react';
-import { User, StudentProfile, MOCK_USERS, MOCK_STUDENTS } from '@lms/shared';
+import { useCallback, useEffect, useState } from 'react';
+import { StudentProfile, User } from '@lms/shared';
 import { apiFetch, SESSION_INVALIDATED_EVENT } from '@utils/apiFetch';
+import type { DatabaseBootstrapState } from '../databaseBootstrap';
 
 const loginRequests = new Map<string, Promise<string | null>>();
 
 const requestTokenForUser = (user: User) => {
   const existing = loginRequests.get(user.id);
   if (existing) return existing;
-
   const request = (async () => {
     await apiFetch('/api/auth/csrf', { feedback: false });
-    const res = await apiFetch('/api/auth/login', {
+    const response = await apiFetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: user.id }),
-      feedback: {
-        success: false,
-        error: 'Could not establish a secure session. The app will keep your local data safe.',
-        errorTitle: 'Secure connection unavailable',
-      },
+      feedback: false,
     });
-    if (!res.ok) return null;
-    const data = await res.json();
+    if (!response.ok) return null;
+    const data = await response.json();
     return String(data.token || data.accessToken || '') || null;
-  })().finally(() => {
-    loginRequests.delete(user.id);
-  });
-
+  })().finally(() => loginRequests.delete(user.id));
   loginRequests.set(user.id, request);
   return request;
 };
 
-export const useAuthState = () => {
-  const [allUsers, setAllUsers] = useState<User[]>(MOCK_USERS);
-  const [currentUser, setCurrentUser] = useState<User>(MOCK_USERS[0]);
-  const [studentProfiles, setStudentProfiles] = useState<StudentProfile[]>(MOCK_STUDENTS);
-  const [activeChildId, setActiveChildId] = useState<string>('user-stu-1');
-  const [jwtToken, setJwtToken] = useState<string | null>(null);
+const emptyUser = (): User => ({
+  id: '',
+  name: '',
+  email: '',
+  role: 'student',
+  avatar: '',
+  schoolName: '',
+});
+
+export const useAuthState = (bootstrap?: DatabaseBootstrapState) => {
+  const initialUser = bootstrap?.currentUser || bootstrap?.users?.[0] || emptyUser();
+  const [allUsers, setAllUsers] = useState<User[]>(() => bootstrap?.users || []);
+  const [currentUser, setCurrentUser] = useState<User>(initialUser);
+  const [studentProfiles, setStudentProfiles] = useState<StudentProfile[]>(
+    () => bootstrap?.studentProfiles || [],
+  );
+  const [activeChildId, setActiveChildId] = useState(
+    () => initialUser.childrenIds?.[0] || initialUser.id,
+  );
+  const [jwtToken, setJwtToken] = useState<string | null>(() =>
+    typeof localStorage === 'undefined' ? null : localStorage.getItem('lms_jwt_token'),
+  );
   const [authenticatedUserId, setAuthenticatedUserId] = useState<string | null>(null);
 
-  const fetchJwtTokenForUser = useCallback(async (user: User) => {
-    try {
-      const token = await requestTokenForUser(user);
-      if (token) {
-        setJwtToken(token);
-        setAuthenticatedUserId(user.id);
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('lms_jwt_token', token);
-        }
-      } else {
-        setJwtToken(null);
-        setAuthenticatedUserId(null);
-        if (typeof localStorage !== 'undefined') localStorage.removeItem('lms_jwt_token');
-      }
-    } catch (err) {
-      console.warn('[useAuthState] Failed to fetch JWT token for user:', err);
-    }
+  const establishSession = useCallback((user: User, token: string) => {
+    setCurrentUser(user);
+    setAllUsers((users) => (users.some((item) => item.id === user.id) ? users : [user]));
+    setJwtToken(token);
+    setAuthenticatedUserId(user.id);
+    if (typeof localStorage !== 'undefined') localStorage.setItem('lms_jwt_token', token);
+    if (user.role === 'parent' && user.childrenIds?.length) setActiveChildId(user.childrenIds[0]);
+  }, []);
+
+  const clearSession = useCallback(() => {
+    setJwtToken(null);
+    setAuthenticatedUserId(null);
+    setCurrentUser(emptyUser());
+    setAllUsers([]);
+    setStudentProfiles([]);
+    setActiveChildId('');
+    if (typeof localStorage !== 'undefined') localStorage.removeItem('lms_jwt_token');
   }, []);
 
   useEffect(() => {
-    if (currentUser) {
-      setJwtToken(null);
-      setAuthenticatedUserId(null);
-      if (typeof localStorage !== 'undefined') localStorage.removeItem('lms_jwt_token');
-      fetchJwtTokenForUser(currentUser);
-    }
-  }, [currentUser.id, fetchJwtTokenForUser]);
+    if (!jwtToken || authenticatedUserId) return;
+    apiFetch('/api/auth/me', { feedback: false })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Saved session expired.');
+        const data = await response.json();
+        establishSession(data.user, jwtToken);
+      })
+      .catch(clearSession);
+  }, [authenticatedUserId, clearSession, establishSession, jwtToken]);
 
   useEffect(() => {
-    const renew = () => {
-      setJwtToken(null);
-      setAuthenticatedUserId(null);
-      void fetchJwtTokenForUser(currentUser);
-    };
-    window.addEventListener(SESSION_INVALIDATED_EVENT, renew);
-    return () => window.removeEventListener(SESSION_INVALIDATED_EVENT, renew);
-  }, [currentUser, fetchJwtTokenForUser]);
+    window.addEventListener(SESSION_INVALIDATED_EVENT, clearSession);
+    return () => window.removeEventListener(SESSION_INVALIDATED_EVENT, clearSession);
+  }, [clearSession]);
 
-  const activeChildList = studentProfiles.filter((s) => currentUser.childrenIds?.includes(s.id));
-  const activeChild = studentProfiles.find((s) => s.id === activeChildId) || studentProfiles[0];
+  const switchUserSession = useCallback(
+    async (user: User) => {
+      const token = await requestTokenForUser(user);
+      if (token) establishSession(user, token);
+    },
+    [establishSession],
+  );
+
+  const activeChildList = studentProfiles.filter((student) =>
+    currentUser.childrenIds?.includes(student.id),
+  );
+  const activeChild =
+    studentProfiles.find((student) => student.id === activeChildId) || activeChildList[0];
 
   const updateStudentIdCardPhoto = (studentId: string, idCardPhotoUrl: string) => {
     setStudentProfiles((profiles) =>
@@ -117,6 +134,9 @@ export const useAuthState = () => {
     activeChild,
     updateStudentIdCardPhoto,
     jwtToken,
-    authReady: Boolean(jwtToken && authenticatedUserId === currentUser.id),
+    authReady: Boolean(currentUser.id && jwtToken && authenticatedUserId === currentUser.id),
+    establishSession,
+    clearSession,
+    switchUserSession,
   };
 };

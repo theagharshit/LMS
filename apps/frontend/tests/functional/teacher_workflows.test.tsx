@@ -9,10 +9,11 @@ import { QuizBuilderModal } from '../../src/components/teacher/QuizBuilderModal'
 
 describe('Teacher Interactive Functional Workflows (tests/functional/teacher_workflows.test.tsx)', () => {
   const TeacherWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { switchUser } = useApp();
+    const { allUsers, establishSession } = useApp();
     useEffect(() => {
-      switchUser('user-teach-1');
-    }, [switchUser]);
+      const teacher = allUsers.find((user) => user.id === 'user-teach-1');
+      if (teacher) establishSession(teacher, 'database-test-token-user-teach-1');
+    }, [allUsers, establishSession]);
     return <>{children}</>;
   };
 
@@ -26,7 +27,7 @@ describe('Teacher Interactive Functional Workflows (tests/functional/teacher_wor
       </AppProvider>,
     );
 
-    expect(screen.getByText(/Class Teacher & Mathematics Faculty/i)).toBeInTheDocument();
+    expect(screen.getByText(/Faculty • Mathematics, Computer Science/i)).toBeInTheDocument();
     expect(screen.getByText(/Homework Submissions Queue/i)).toBeInTheDocument();
 
     const gradeButtons = screen.getAllByRole('button', { name: /Grade & Feedback/i });

@@ -15,12 +15,14 @@ export class ParentService {
 
   public async updateParentControls(
     studentId: string,
-    settings: ParentControlSettings,
+    settings: Partial<ParentControlSettings>,
   ): Promise<ParentControlSettings> {
-    return prisma.parentControlSettings.upsert({
+    const existing = await prisma.parentControlSettings.findUnique({ where: { studentId } });
+    if (!existing)
+      throw new Error('Parent control settings have not been configured for this student.');
+    return prisma.parentControlSettings.update({
       where: { studentId },
-      update: settings,
-      create: { ...settings, studentId },
+      data: settings,
     });
   }
 }

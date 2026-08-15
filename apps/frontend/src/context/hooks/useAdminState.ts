@@ -11,15 +11,10 @@ import {
   TeacherAbsenceRequest,
   EligibleSubstituteTeacher,
   TeacherAssignmentAuditLog,
-  MOCK_ADMIN_AUDIT_LOGS,
-  MOCK_ANNOUNCEMENTS,
-  MOCK_SUBSTITUTE_REQUESTS,
-  MOCK_TEACHER_ABSENCE_REQUESTS,
-  MOCK_TEACHER_ASSIGNMENT_AUDIT_LOGS,
 } from '@lms/shared';
 import { apiFetch } from '../../utils/apiFetch';
-import { logger } from '../../utils/logger';
 import { toast } from '../../utils/toast';
+import type { DatabaseBootstrapState } from '../databaseBootstrap';
 
 export const useAdminState = (
   currentUser: User,
@@ -31,30 +26,38 @@ export const useAdminState = (
   allUsers: User[],
   badgeDefinitions: BadgeDefinition[],
   classrooms: Classroom[],
+  bootstrap?: DatabaseBootstrapState,
 ) => {
-  const [adminAuditLogs, setAdminAuditLogs] = useState<AdminAuditLog[]>(MOCK_ADMIN_AUDIT_LOGS);
-  const [schoolAnnouncements, setSchoolAnnouncements] =
-    useState<SchoolAnnouncement[]>(MOCK_ANNOUNCEMENTS);
+  const [adminAuditLogs, setAdminAuditLogs] = useState<AdminAuditLog[]>(
+    () => bootstrap?.adminAuditLogs || [],
+  );
+  const [schoolAnnouncements, setSchoolAnnouncements] = useState<SchoolAnnouncement[]>(
+    () => bootstrap?.schoolAnnouncements || [],
+  );
 
-  const [substituteRequests, setSubstituteRequests] =
-    useState<SubstituteRequest[]>(MOCK_SUBSTITUTE_REQUESTS);
+  const [substituteRequests, setSubstituteRequests] = useState<SubstituteRequest[]>(
+    () => bootstrap?.substituteRequests || [],
+  );
   const [teacherAbsenceRequests, setTeacherAbsenceRequests] = useState<TeacherAbsenceRequest[]>(
-    MOCK_TEACHER_ABSENCE_REQUESTS,
+    () => bootstrap?.teacherAbsenceRequests || [],
   );
   const [teacherAssignmentAuditLogs, setTeacherAssignmentAuditLogs] = useState<
     TeacherAssignmentAuditLog[]
-  >(MOCK_TEACHER_ASSIGNMENT_AUDIT_LOGS);
+  >(() => bootstrap?.teacherAssignmentAuditLogs || []);
 
-  const addAuditLog = (action: string, category: AdminAuditLog['category'], details: string) => {
-    const newLog: AdminAuditLog = {
-      id: `log-${Date.now()}`,
-      action,
-      category,
-      performedBy: currentUser.name,
-      details,
-      timestamp: new Date().toISOString(),
-    };
-    setAdminAuditLogs((prev) => [newLog, ...prev]);
+  const addAuditLog = async (
+    action: string,
+    category: AdminAuditLog['category'],
+    details: string,
+  ) => {
+    const response = await apiFetch('/api/db/audit-logs', {
+      method: 'POST',
+      body: JSON.stringify({ action, category, details }),
+      feedback: false,
+    }).catch(() => null);
+    if (!response?.ok) return;
+    const data = await response.json();
+    if (data.auditLog) setAdminAuditLogs((prev) => [data.auditLog, ...prev]);
   };
 
   const addStudentProfile = async (
@@ -63,34 +66,21 @@ export const useAdminState = (
       'id' | 'attendancePercentage' | 'streakDays' | 'xpPoints' | 'badges'
     >,
   ) => {
-    const newId = `user-stu-${Date.now()}`;
-    const newStudent: StudentProfile = {
-      ...studentData,
-      id: newId,
-      role: 'student',
-      attendancePercentage: 100,
-      streakDays: 1,
-      xpPoints: 0,
-      badges: [],
-      avatar:
-        studentData.avatar ||
-        'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
-    };
-
-    logger.log('[Frontend:AdminState] Dispatching POST /api/db/students payload:', newStudent);
-
     const response = await apiFetch('/api/db/students', {
       method: 'POST',
-      body: JSON.stringify(newStudent),
+      body: JSON.stringify(studentData),
       feedback: {
-        success: `${newStudent.name} was enrolled successfully.`,
-        error: `Could not enroll ${newStudent.name}. The local change may not be saved.`,
+        success: `${studentData.name} was enrolled successfully.`,
+        error: `Could not enroll ${studentData.name}.`,
       },
     }).catch((err) => {
       console.error('Failed to create student via API:', err);
       return null;
     });
     if (!response?.ok) return;
+    const data = await response.json();
+    const newStudent = data.student as StudentProfile;
+    if (!newStudent?.id) return;
 
     setStudentProfiles((prev) => [...prev, newStudent]);
     setAllUsers((prev) => [...prev, newStudent]);
@@ -138,28 +128,94 @@ export const useAdminState = (
     );
   };
 
-  const addTeacherProfile = async (teacherData: Omit<User, 'id'>) => {
-    const newTeacher: User = {
-      ...teacherData,
-      id: `user-teach-${Date.now()}`,
-      role: 'teacher',
-      avatar:
-        teacherData.avatar ||
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    };
+  const promoteStudentProfile = async (id: string) => {
+    const student = studentProfiles.find((item) => item.id === id);
+    if (!student) return;
+    const lifecycleResponse = await apiFetch(`/api/db/students/${id}/lifecycle`, {
+      feedback: false,
+    });
+    if (!lifecycleResponse.ok) return;
+    const lifecycleData = await lifecycleResponse.json();
+    const activeEnrollment = lifecycleData.lifecycle?.studentAcademicEnrollments?.find(
+      (enrollment: { status?: string }) => enrollment.status === 'active',
+    );
+    if (!activeEnrollment?.academicYearId) return;
+    const hasReport = lifecycleData.lifecycle?.studentReportCards?.some(
+      (report: { academicYearId?: string }) =>
+        report.academicYearId === activeEnrollment.academicYearId,
+    );
+    if (!hasReport) {
+      const reportResponse = await apiFetch(`/api/db/students/${id}/report-cards`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ academicYearId: activeEnrollment.academicYearId }),
+        feedback: {
+          success: `${student.name}'s official report card was generated.`,
+          error: `Promotion is blocked until ${student.name}'s exam marks and report card are complete.`,
+        },
+      });
+      if (!reportResponse.ok) return;
+    }
+    const response = await apiFetch(`/api/db/students/${id}/promote`, {
+      method: 'POST',
+      body: JSON.stringify({
+        targetSection: student.section,
+      }),
+      feedback: {
+        success: `${student.name}'s academic progression was recorded.`,
+        error: `Could not progress ${student.name}.`,
+      },
+    });
+    if (!response.ok) return;
+    const data = await response.json();
+    if (data.result?.status === 'graduated') {
+      setStudentProfiles((items) => items.filter((item) => item.id !== id));
+      setAllUsers((items) => items.filter((item) => item.id !== id));
+    } else if (data.result?.status === 'promoted') {
+      setStudentProfiles((items) =>
+        items.map((item) =>
+          item.id === id ? { ...item, gradeLevel: student.gradeLevel + 1 } : item,
+        ),
+      );
+      setAllUsers((items) =>
+        items.map((item) =>
+          item.id === id ? { ...item, gradeLevel: student.gradeLevel + 1 } : item,
+        ),
+      );
+    }
+  };
 
+  const restoreStudentProfile = async (id: string) => {
+    const response = await apiFetch(`/api/db/students/${id}/restore`, {
+      method: 'POST',
+      body: JSON.stringify({ reason: 'Re-enrolled by school administration' }),
+      feedback: { success: 'Student enrollment restored.', error: 'Could not restore enrollment.' },
+    });
+    if (!response.ok) return;
+    setStudentProfiles((items) =>
+      items.map((item) => (item.id === id ? { ...item, isArchived: false } : item)),
+    );
+    setAllUsers((items) =>
+      items.map((item) => (item.id === id ? { ...item, isArchived: false } : item)),
+    );
+  };
+
+  const addTeacherProfile = async (teacherData: Omit<User, 'id'>) => {
     const response = await apiFetch('/api/db/teachers', {
       method: 'POST',
-      body: JSON.stringify(newTeacher),
+      body: JSON.stringify(teacherData),
       feedback: {
-        success: `${newTeacher.name} was added to the faculty directory.`,
-        error: `Could not add ${newTeacher.name}.`,
+        success: `${teacherData.name} was added to the faculty directory.`,
+        error: `Could not add ${teacherData.name}.`,
       },
     }).catch((err) => {
       console.error('Failed to create teacher via API:', err);
       return null;
     });
     if (!response?.ok) return;
+    const data = await response.json();
+    const newTeacher = data.teacher as User;
+    if (!newTeacher?.id) return;
 
     setAllUsers((prev) => [...prev, newTeacher]);
 
@@ -201,28 +257,21 @@ export const useAdminState = (
   };
 
   const addParentProfile = async (parentData: Omit<User, 'id'>) => {
-    const newParent: User = {
-      ...parentData,
-      id: `user-parent-${Date.now()}`,
-      role: 'parent',
-      childrenIds: parentData.childrenIds || [],
-      avatar:
-        parentData.avatar ||
-        'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
-    };
-
     const response = await apiFetch('/api/db/parents', {
       method: 'POST',
-      body: JSON.stringify(newParent),
+      body: JSON.stringify(parentData),
       feedback: {
-        success: `${newParent.name}'s parent account was created.`,
-        error: `Could not create ${newParent.name}'s account.`,
+        success: `${parentData.name}'s parent account was created.`,
+        error: `Could not create ${parentData.name}'s account.`,
       },
     }).catch((err) => {
       console.error('Failed to create parent via API:', err);
       return null;
     });
     if (!response?.ok) return;
+    const data = await response.json();
+    const newParent = data.parent as User;
+    if (!newParent?.id) return;
 
     setAllUsers((prev) => [...prev, newParent]);
 
@@ -241,7 +290,9 @@ export const useAdminState = (
       method: 'PUT',
       body: JSON.stringify({ childrenIds }),
       feedback: {
-        success: `${parent?.name || 'Parent'}'s family links were updated.`,
+        success: parent?.name
+          ? `${parent.name}'s family links were updated.`
+          : 'The family links were updated.',
         error: 'Could not update the family links.',
       },
     }).catch((err) => console.error('Failed to update parent family links via API:', err));
@@ -260,7 +311,9 @@ export const useAdminState = (
     apiFetch(`/api/db/parents/${id}`, {
       method: 'DELETE',
       feedback: {
-        success: `${target?.name || 'Parent'}'s account was archived.`,
+        success: target?.name
+          ? `${target.name}'s account was archived.`
+          : 'The parent account was archived.',
         error: 'Could not archive the parent account.',
       },
     }).catch((err) => console.error('Failed to delete parent profile via API:', err));
@@ -272,22 +325,20 @@ export const useAdminState = (
     );
   };
 
-  const addBadgeDefinition = (badge: Omit<BadgeDefinition, 'id'>) => {
-    const newBadge: BadgeDefinition = {
-      ...badge,
-      id: `bdg-def-${Date.now()}`,
-    };
-
-    setBadgeDefinitions((prev) => [...prev, newBadge]);
-
-    apiFetch('/api/db/badge-definitions', {
+  const addBadgeDefinition = async (badge: Omit<BadgeDefinition, 'id'>) => {
+    const response = await apiFetch('/api/db/badge-definitions', {
       method: 'POST',
-      body: JSON.stringify(newBadge),
+      body: JSON.stringify(badge),
       feedback: {
-        success: `Badge “${newBadge.title}” was created.`,
-        error: `Could not create badge “${newBadge.title}”.`,
+        success: `Badge “${badge.title}” was created.`,
+        error: `Could not create badge “${badge.title}”.`,
       },
-    }).catch((err) => console.error('Failed to create badge definition via API:', err));
+    }).catch(() => null);
+    if (!response?.ok) return;
+    const data = await response.json();
+    const newBadge = data.badge as BadgeDefinition;
+    if (!newBadge?.id) return;
+    setBadgeDefinitions((prev) => [...prev, newBadge]);
 
     addAuditLog(
       'Created Custom Badge',
@@ -330,40 +381,31 @@ export const useAdminState = (
     addAuditLog('Deleted Classroom', 'classroom', `Removed classroom ${cls?.name || id}.`);
   };
   const addAnnouncement = async (annData: Omit<SchoolAnnouncement, 'id' | 'createdAt'>) => {
-    const newAnn: SchoolAnnouncement = {
-      ...annData,
-      id: `ann-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-
     try {
-      await apiFetch('/api/db/notifications/dispatch', {
+      const response = await apiFetch('/api/db/notifications/dispatch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          targetAudience: newAnn.targetAudience,
-          title: newAnn.title,
-          body: newAnn.content,
+          targetAudience: annData.targetAudience,
+          title: annData.title,
+          body: annData.content,
           category: 'COMMUNICATION',
-          severity: newAnn.priority === 'high' ? 'high' : 'normal',
+          severity: annData.priority,
           type: 'announcement',
-          senderId: currentUser.id,
-          senderName: currentUser.name,
-          senderRole: currentUser.role,
         }),
       });
+      const result = await response.json();
+      if (!result.announcement?.id) throw new Error('Announcement response was incomplete.');
+      setSchoolAnnouncements((prev) => [result.announcement, ...prev]);
 
-      // Only runs if API call succeeds
-      setSchoolAnnouncements((prev) => [newAnn, ...prev]);
-
-      toast.success(`Announcement “${newAnn.title}” was published.`, {
+      toast.success(`Announcement “${annData.title}” was published.`, {
         title: 'Announcement published',
       });
 
       addAuditLog(
         'Broadcast School Notice',
         'broadcast',
-        `Posted announcement "${newAnn.title}" to ${newAnn.targetAudience}.`,
+        `Posted announcement "${annData.title}" to ${annData.targetAudience}.`,
       );
     } catch (err) {
       console.error('Failed to publish announcement', err);
@@ -371,9 +413,17 @@ export const useAdminState = (
       toast.error('Could not publish announcement. Please try again.');
     }
   };
-  const deleteAnnouncement = (id: string) => {
+  const deleteAnnouncement = async (id: string) => {
     const announcement = schoolAnnouncements.find((item) => item.id === id);
-    setSchoolAnnouncements((prev) => prev.filter((a) => a.id !== id));
+    const response = await apiFetch(`/api/db/notifications/${id}`, {
+      method: 'DELETE',
+      feedback: {
+        success: `Announcement “${announcement?.title || 'Untitled'}” was removed.`,
+        error: 'Could not remove the announcement.',
+      },
+    });
+    if (!response.ok) return;
+    setSchoolAnnouncements((prev) => prev.filter((announcementItem) => announcementItem.id !== id));
     toast.success(`Announcement “${announcement?.title || 'Untitled'}” was removed.`, {
       title: 'Announcement removed',
     });
@@ -418,22 +468,6 @@ export const useAdminState = (
             : u,
         ),
       );
-      const newAudit: TeacherAssignmentAuditLog = {
-        id: `ta-log-${Date.now()}`,
-        actorId: currentUser.id,
-        actorName: currentUser.name,
-        actorRole: currentUser.role,
-        targetTeacherId: teacherId,
-        targetTeacherName: teacher?.name || 'Teacher',
-        action: 'ASSIGN_SUBJECT',
-        subjectId,
-        classroomId,
-        classroomName: cls?.name,
-        details: `Assigned subject ${subjectId}${cls ? ` for ${cls.name}` : ''} to ${teacher?.name}.`,
-        reason,
-        createdAt: new Date().toISOString(),
-      };
-      setTeacherAssignmentAuditLogs((prev) => [newAudit, ...prev]);
     }
   };
 
@@ -461,21 +495,6 @@ export const useAdminState = (
             : u,
         ),
       );
-      const newAudit: TeacherAssignmentAuditLog = {
-        id: `ta-log-${Date.now()}`,
-        actorId: currentUser.id,
-        actorName: currentUser.name,
-        actorRole: currentUser.role,
-        targetTeacherId: teacherId,
-        targetTeacherName: teacher?.name || 'Teacher',
-        action: 'DEASSIGN_SUBJECT',
-        subjectId,
-        classroomId,
-        details: `De-assigned subject ${subjectId} from ${teacher?.name}.`,
-        reason,
-        createdAt: new Date().toISOString(),
-      };
-      setTeacherAssignmentAuditLogs((prev) => [newAudit, ...prev]);
     }
   };
 
@@ -512,22 +531,6 @@ export const useAdminState = (
             : c,
         ),
       );
-      const newAudit: TeacherAssignmentAuditLog = {
-        id: `ta-log-${Date.now()}`,
-        actorId: currentUser.id,
-        actorName: currentUser.name,
-        actorRole: currentUser.role,
-        targetTeacherId: toTeacherId,
-        targetTeacherName: toTeacher.name,
-        action: 'REASSIGN_SUBJECT',
-        subjectId,
-        classroomId,
-        classroomName: cls?.name,
-        details: `Reassigned ${cls?.name || 'Classroom'} from ${fromTeacher?.name} to ${toTeacher.name}.`,
-        reason,
-        createdAt: new Date().toISOString(),
-      };
-      setTeacherAssignmentAuditLogs((prev) => [newAudit, ...prev]);
     }
   };
 
@@ -546,19 +549,7 @@ export const useAdminState = (
       return data.candidates || [];
     } catch (err) {
       console.error('Failed to fetch eligible substitutes:', err);
-      // Fallback evaluate local candidates
-      return allUsers
-        .filter((u) => u.role === 'teacher' && !u.isArchived)
-        .map((t) => ({
-          teacherId: t.id,
-          teacherName: t.name,
-          teacherAvatar: t.avatar,
-          isQualified: (t.subjectsTaught || []).some((s) =>
-            s.toLowerCase().includes(subjectId.toLowerCase()),
-          ),
-          isAvailable: true,
-          currentWorkload: classrooms.filter((c) => c.teacherId === t.id).length,
-        }));
+      return [];
     }
   };
 
@@ -572,10 +563,6 @@ export const useAdminState = (
     reason: string;
     teacherAbsenceRequestId?: string;
   }) => {
-    const cls = classrooms.find((c) => c.id === data.classroomId);
-    const origTeacher = allUsers.find((u) => u.id === data.originalTeacherId);
-    const sugSub = allUsers.find((u) => u.id === data.suggestedSubstituteId);
-
     const res = await apiFetch('/api/db/teachers/substitutes/request', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -585,41 +572,10 @@ export const useAdminState = (
       },
     });
 
-    const newReq: SubstituteRequest = {
-      id: `sub-req-${Date.now()}`,
-      teacherAbsenceRequestId: data.teacherAbsenceRequestId,
-      classroomId: data.classroomId,
-      classroomName: cls?.name || 'Classroom',
-      subjectId: data.subjectId,
-      subjectName: cls?.subject || 'Subject',
-      date: data.date,
-      timeSlot: data.timeSlot,
-      originalTeacherId: data.originalTeacherId,
-      originalTeacherName: origTeacher?.name || 'Original Teacher',
-      suggestedSubstituteId: data.suggestedSubstituteId,
-      suggestedSubstituteName: sugSub?.name,
-      assignedSubstituteId: data.suggestedSubstituteId,
-      assignedSubstituteName: sugSub?.name,
-      reason: data.reason,
-      status: 'PENDING',
-      createdByAdminId: currentUser.id,
-      createdByAdminName: currentUser.name,
-      createdAt: new Date().toISOString(),
-    };
-
-    if (res.ok) {
-      try {
-        const resData = await res.json();
-        if (resData.substituteRequest) {
-          setSubstituteRequests((prev) => [resData.substituteRequest, ...prev]);
-          return;
-        }
-      } catch (e) {
-        // Fallthrough to local update
-      }
-    }
-
-    setSubstituteRequests((prev) => [newReq, ...prev]);
+    const resData = await res.json();
+    if (!resData.substituteRequest?.id)
+      throw new Error('Substitute request response was incomplete.');
+    setSubstituteRequests((prev) => [resData.substituteRequest, ...prev]);
   };
 
   const updateSubstituteStatus = async (
@@ -628,29 +584,19 @@ export const useAdminState = (
     responseNotes?: string,
     assignedSubstituteId?: string,
   ) => {
-    const subTeacher = allUsers.find((u) => u.id === assignedSubstituteId);
-    setSubstituteRequests((prev) =>
-      prev.map((req) =>
-        req.id === requestId
-          ? {
-              ...req,
-              status,
-              responseNotes: responseNotes || req.responseNotes,
-              assignedSubstituteId: assignedSubstituteId || req.assignedSubstituteId,
-              assignedSubstituteName: subTeacher?.name || req.assignedSubstituteName,
-            }
-          : req,
-      ),
-    );
-
-    apiFetch(`/api/db/teachers/substitutes/${requestId}/status`, {
+    const response = await apiFetch(`/api/db/teachers/substitutes/${requestId}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status, responseNotes, assignedSubstituteId }),
       feedback: {
         success: `Substitute request status updated to ${status}.`,
         error: 'Could not update substitute request status.',
       },
-    }).catch((err) => console.error('Failed to update substitute status via API:', err));
+    });
+    const data = await response.json();
+    if (!data.substituteRequest?.id) throw new Error('Substitute request response was incomplete.');
+    setSubstituteRequests((prev) =>
+      prev.map((request) => (request.id === requestId ? data.substituteRequest : request)),
+    );
   };
 
   const submitTeacherAbsenceRequest = async (
@@ -667,75 +613,28 @@ export const useAdminState = (
       },
     });
 
-    const newAbs: TeacherAbsenceRequest = {
-      id: `tar-${Date.now()}`,
-      teacherId: currentUser.id,
-      teacherName: currentUser.name,
-      teacherAvatar: currentUser.avatar,
-      startDate,
-      endDate,
-      reason,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    };
-
-    if (res.ok) {
-      try {
-        const resData = await res.json();
-        if (resData.absenceRequest) {
-          setTeacherAbsenceRequests((prev) => [resData.absenceRequest, ...prev]);
-          return;
-        }
-      } catch (e) {
-        // Fallthrough to local update
-      }
-    }
-
-    setTeacherAbsenceRequests((prev) => [newAbs, ...prev]);
+    const resData = await res.json();
+    if (!resData.absenceRequest?.id) throw new Error('Absence request response was incomplete.');
+    setTeacherAbsenceRequests((prev) => [resData.absenceRequest, ...prev]);
   };
 
   const reviewTeacherAbsenceRequest = async (
     requestId: string,
     status: 'approved' | 'rejected',
   ) => {
-    const req = teacherAbsenceRequests.find((r) => r.id === requestId);
-    setTeacherAbsenceRequests((prev) =>
-      prev.map((r) =>
-        r.id === requestId
-          ? {
-              ...r,
-              status,
-              reviewedByAdminId: currentUser.id,
-              reviewedByAdminName: currentUser.name,
-            }
-          : r,
-      ),
-    );
-
-    apiFetch(`/api/db/teachers/absence-requests/${requestId}/review`, {
+    const response = await apiFetch(`/api/db/teachers/absence-requests/${requestId}/review`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
       feedback: {
         success: `Teacher leave request ${status}.`,
         error: 'Could not update leave request status.',
       },
-    }).catch((err) => console.error('Failed to review teacher absence request via API:', err));
-
-    // If approved, automatically prompt or suggest substitute requests for classrooms taught by this teacher
-    if (status === 'approved' && req) {
-      const teacherClassrooms = classrooms.filter((c) => c.teacherId === req.teacherId);
-      for (const cls of teacherClassrooms) {
-        createSubstituteRequest({
-          classroomId: cls.id,
-          subjectId: cls.subject,
-          date: req.startDate,
-          timeSlot: '10:00 AM - 10:45 AM',
-          originalTeacherId: req.teacherId,
-          reason: `Teacher on approved leave: ${req.reason}`,
-          teacherAbsenceRequestId: req.id,
-        });
-      }
-    }
+    });
+    const data = await response.json();
+    if (!data.absenceRequest?.id) throw new Error('Absence request response was incomplete.');
+    setTeacherAbsenceRequests((prev) =>
+      prev.map((request) => (request.id === requestId ? data.absenceRequest : request)),
+    );
   };
 
   return {
@@ -753,6 +652,8 @@ export const useAdminState = (
     addStudentProfile,
     updateStudentProfile,
     deleteStudentProfile,
+    promoteStudentProfile,
+    restoreStudentProfile,
     addTeacherProfile,
     updateTeacherProfile,
     deleteTeacherProfile,

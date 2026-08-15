@@ -44,7 +44,7 @@ describe('FileStorageDB Engine (src/db/fileStorageDB.ts)', () => {
       sizeFormatted: '1.00 MB',
       uploadedBy: 'Teacher Ramesh',
       uploadedById: 'file-test-uploader',
-      classroomId: 'chan-1',
+      classroomId: 'cls-math-8a',
       checksum: 'sha256-test1234567890abcdef',
       integrityStatus: 'verified',
       downloadUrl: '/uploads/Nepal_Curriculum_Math_G8.pdf',
@@ -56,10 +56,10 @@ describe('FileStorageDB Engine (src/db/fileStorageDB.ts)', () => {
     expect(fetched?.uploadedBy).toBe('File Test Uploader');
   });
   it('should filter files by classroomId', async () => {
-    const classroomFiles = await fileStorageDB.getAllFiles('chan-1');
+    const classroomFiles = await fileStorageDB.getAllFiles('cls-math-8a');
     expect(Array.isArray(classroomFiles)).toBe(true);
     classroomFiles.forEach((file) => {
-      expect(file.classroomId).toBe('chan-1');
+      expect(file.classroomId).toBe('cls-math-8a');
     });
   });
   it('should search files by query keyword', async () => {

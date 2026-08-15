@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 export const useUIState = () => {
-  const [activeView, setActiveView] = useState<string>('dashboard');
+  const [activeView, setActiveView] = useState<string>('login');
   const [selectedClassroomId, setSelectedClassroomId] = useState<string | null>(null);
 
   const [theme, setTheme] = useState<'light' | 'dark' | 'soft'>(() => {

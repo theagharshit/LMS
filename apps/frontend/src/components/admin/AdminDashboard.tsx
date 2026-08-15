@@ -5,8 +5,10 @@ import { AdminStudentModal } from './AdminStudentModal';
 import { AdminTeacherModal } from './AdminTeacherModal';
 import { AdminParentLinkModal } from './AdminParentLinkModal';
 import { SubstituteRequestModal } from './SubstituteRequestModal';
+import { AdminTimetableHub } from './AdminTimetableHub';
 import { toast } from '@utils/toast';
 import {
+  Calendar,
   ShieldAlert,
   Users,
   GraduationCap,
@@ -51,6 +53,8 @@ export const AdminDashboard: React.FC = () => {
     addStudentProfile,
     updateStudentProfile,
     deleteStudentProfile,
+    promoteStudentProfile,
+    restoreStudentProfile,
     addTeacherProfile,
     updateTeacherProfile,
     deleteTeacherProfile,
@@ -79,6 +83,7 @@ export const AdminDashboard: React.FC = () => {
     | 'students'
     | 'parents'
     | 'teachers'
+    | 'timetable'
     | 'assignments'
     | 'substitutes'
     | 'assignment-history'
@@ -102,7 +107,7 @@ export const AdminDashboard: React.FC = () => {
 
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assignTeacherId, setAssignTeacherId] = useState<string>('');
-  const [assignSubjectId, setAssignSubjectId] = useState<string>('Mathematics');
+  const [assignSubjectId, setAssignSubjectId] = useState<string>('');
   const [assignClassroomId, setAssignClassroomId] = useState<string>('');
   const [assignReason, setAssignReason] = useState<string>('');
 
@@ -130,7 +135,7 @@ export const AdminDashboard: React.FC = () => {
 
   // New Badge Creator Form State
   const [newBadgeTitle, setNewBadgeTitle] = useState('');
-  const [newBadgeIcon, setNewBadgeIcon] = useState('🌟');
+  const [newBadgeIcon, setNewBadgeIcon] = useState('');
   const [newBadgeDesc, setNewBadgeDesc] = useState('');
   const [newBadgeCategory, setNewBadgeCategory] = useState('academic');
   const [newBadgeIsAuto, setNewBadgeIsAuto] = useState(false);
@@ -149,7 +154,7 @@ export const AdminDashboard: React.FC = () => {
   const [clsGrade, setClsGrade] = useState(8);
   const [clsSection, setClsSection] = useState('A');
   const [clsTeacherId, setClsTeacherId] = useState('');
-  const [clsRoom, setClsRoom] = useState('Room 101');
+  const [clsRoom, setClsRoom] = useState('');
 
   // Categories & Metrics
   const teacherUsers = allUsers.filter((u) => u.role === 'teacher');
@@ -257,11 +262,11 @@ export const AdminDashboard: React.FC = () => {
 
   const handleCreateBadgeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newBadgeTitle.trim()) return;
+    if (!newBadgeTitle.trim() || !newBadgeIcon.trim() || !newBadgeDesc.trim()) return;
     addBadgeDefinition({
       title: newBadgeTitle.trim(),
-      icon: newBadgeIcon.trim() || '🌟',
-      description: newBadgeDesc.trim() || 'Awarded by School Administration',
+      icon: newBadgeIcon.trim(),
+      description: newBadgeDesc.trim(),
       category: newBadgeCategory,
       isAutomatic: newBadgeIsAuto,
     });
@@ -286,22 +291,23 @@ export const AdminDashboard: React.FC = () => {
   const handleCreateClassroomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!clsName.trim()) return;
-    const subjectToUse = clsSubject || knownSubjects[0] || 'Mathematics';
+    const subjectToUse = clsSubject || knownSubjects[0];
     const teacherObj = teacherUsers.find((t) => t.id === clsTeacherId) || teacherUsers[0];
+    if (!subjectToUse || !teacherObj) {
+      toast.error('Create a subject and an active teacher before creating a classroom.');
+      return;
+    }
     addClassroom({
       name: clsName.trim(),
       subject: subjectToUse,
       gradeLevel: Number(clsGrade),
       section: clsSection.toUpperCase(),
-      teacherId: teacherObj ? teacherObj.id : 'user-teach-1',
-      teacherName: teacherObj ? teacherObj.name : 'Dr. Ramesh Thapa',
-      teacherAvatar:
-        teacherObj?.avatar ||
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      teacherId: teacherObj.id,
+      teacherName: teacherObj.name,
+      teacherAvatar: teacherObj.avatar,
       roomNumber: clsRoom,
       colorTheme: '#4A6741',
-      bannerImage:
-        'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&auto=format&fit=crop&q=80',
+      bannerImage: '',
     });
     setClsName('');
   };
@@ -401,6 +407,18 @@ export const AdminDashboard: React.FC = () => {
               {teacherAbsenceRequests.filter((r) => r.status === 'pending').length} Leave
             </span>
           )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('timetable')}
+          className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'timetable'
+              ? 'bg-[#4A6741] text-white shadow-sm'
+              : 'text-[#7A7A72] hover:bg-[#F9F7F2]'
+          }`}
+        >
+          <Calendar className="w-4 h-4" />
+          <span>Timetable & Lifecycle</span>
         </button>
 
         <button
@@ -850,7 +868,7 @@ export const AdminDashboard: React.FC = () => {
                       {isUnenrolled && (
                         <button
                           onClick={() => {
-                            updateStudentProfile(s.id, { isArchived: false });
+                            void restoreStudentProfile(s.id);
                           }}
                           className="px-2.5 py-1 rounded-xl bg-[#4A6741] hover:bg-[#3D5535] text-white font-bold text-[10px] cursor-pointer shadow-xs"
                         >
@@ -859,6 +877,17 @@ export const AdminDashboard: React.FC = () => {
                       )}
 
                       <div className="flex gap-1.5 ml-auto">
+                        {!isUnenrolled && (
+                          <button
+                            onClick={() => {
+                              if (confirm(`Progress ${s.name} to the next academic year?`))
+                                void promoteStudentProfile(s.id);
+                            }}
+                            className="px-2.5 py-1.5 rounded-xl bg-[#EBF1E8] border border-[#88A070]/40 font-bold text-[11px] text-[#4A6741] cursor-pointer"
+                          >
+                            {s.gradeLevel >= 12 ? 'Graduate' : 'Promote'}
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             setEditingStudent(s);
@@ -912,14 +941,15 @@ export const AdminDashboard: React.FC = () => {
               onClick={() => {
                 const pName = prompt('Enter Parent Full Name:');
                 const pEmail = prompt('Enter Parent Email:');
-                if (pName && pEmail) {
+                const pPhone = prompt('Enter Parent Phone:');
+                if (pName && pEmail && pPhone) {
                   addParentProfile({
                     name: pName,
                     email: pEmail,
                     role: 'parent',
-                    schoolName: 'Everest International Academy',
-                    avatar:
-                      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+                    schoolName: currentUser.schoolName,
+                    avatar: '',
+                    phone: pPhone,
                   });
                 }
               }}
@@ -1106,7 +1136,7 @@ export const AdminDashboard: React.FC = () => {
                     <div className="p-2.5 rounded-xl bg-white border border-[#EDEAE2] space-y-1">
                       <p className="font-bold text-[11px] text-[#2D2D2A]">Subjects Taught:</p>
                       <div className="flex flex-wrap gap-1">
-                        {(t.subjectsTaught || ['General Science']).map((sub) => (
+                        {(t.subjectsTaught || []).map((sub) => (
                           <span
                             key={sub}
                             className="px-2 py-0.5 rounded-full bg-[#EBF1E8] text-[#4A6741] text-[10px] font-bold"
@@ -1114,6 +1144,9 @@ export const AdminDashboard: React.FC = () => {
                             {sub}
                           </span>
                         ))}
+                        {!t.subjectsTaught?.length && (
+                          <span className="text-[10px] text-[#7A7A72]">No subjects assigned</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1235,6 +1268,9 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* TAB: TIMETABLE & LIFECYCLE */}
+      {activeTab === 'timetable' && <AdminTimetableHub />}
 
       {/* TAB: SUBJECT ASSIGNMENTS & REASSIGNMENTS */}
       {activeTab === 'assignments' && (
@@ -1664,7 +1700,7 @@ export const AdminDashboard: React.FC = () => {
                   required
                   value={clsName}
                   onChange={(e) => setClsName(e.target.value)}
-                  placeholder="e.g. Grade 8 Mathematics - Sec A"
+                  placeholder="Classroom name"
                   className="w-full px-3 py-2 bg-white rounded-xl border border-[#EDEAE2] text-xs"
                 />
               </div>
@@ -1907,9 +1943,10 @@ export const AdminDashboard: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-[#2D2D2A] mb-1">Emoji Icon</label>
+                  <label className="block font-semibold text-[#2D2D2A] mb-1">Emoji Icon *</label>
                   <input
                     type="text"
+                    required
                     value={newBadgeIcon}
                     onChange={(e) => setNewBadgeIcon(e.target.value)}
                     className="w-full px-3 py-2 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2] text-xs text-center"
@@ -1918,9 +1955,10 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-[#2D2D2A] mb-1">Description</label>
+                <label className="block font-semibold text-[#2D2D2A] mb-1">Description *</label>
                 <input
                   type="text"
+                  required
                   value={newBadgeDesc}
                   onChange={(e) => setNewBadgeDesc(e.target.value)}
                   placeholder="e.g. Awarded for top score in physics lab"
@@ -2174,7 +2212,7 @@ export const AdminDashboard: React.FC = () => {
                   type="text"
                   value={assignSubjectId}
                   onChange={(e) => setAssignSubjectId(e.target.value)}
-                  placeholder="e.g. Mathematics, Science, English..."
+                  placeholder="Subject names separated by commas"
                   className="w-full p-2.5 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2]"
                 />
               </div>

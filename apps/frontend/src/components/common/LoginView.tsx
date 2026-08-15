@@ -1,34 +1,35 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { apiFetch } from '@utils/apiFetch';
-import { LogIn, Key, ShieldCheck, UserCheck, School, ArrowRight, Lock } from 'lucide-react';
-import { getAvatarUrl } from '@utils/avatarUtils';
+import { LogIn, Key, ShieldCheck, School, Lock } from 'lucide-react';
 
 interface LoginViewProps {
   onLoginSuccess?: () => void;
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
-  const { allUsers, switchUser, setActiveView } = useApp();
-  const [selectedUserId, setSelectedUserId] = useState<string>('user-stu-1');
+  const { establishSession, setActiveView } = useApp();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [tokenPreview, setTokenPreview] = useState<string | null>(null);
 
-  const handleLogin = async (userId: string) => {
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
     setIsLoading(true);
     setErrorMsg(null);
 
     try {
-      const targetUser = allUsers.find((u) => u.id === userId);
-      if (!targetUser) throw new Error('Selected user not found');
-
       const res = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: targetUser.id }),
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          ...(password ? { password } : {}),
+        }),
         feedback: {
-          success: `Welcome back, ${targetUser.name}.`,
+          success: 'Welcome back.',
           error: 'Sign-in failed. Please try again.',
           successTitle: 'Signed in',
         },
@@ -39,12 +40,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       }
 
       const data = await res.json();
-      if (data.token) {
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('lms_jwt_token', data.token);
-        }
+      if (data.token && data.user) {
         setTokenPreview(data.token);
-        switchUser(targetUser.id);
+        establishSession(data.user, data.token);
         setActiveView('dashboard');
         if (onLoginSuccess) onLoginSuccess();
       } else {
@@ -78,50 +76,41 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           </div>
         )}
 
-        {/* Quick Role Switcher Cards */}
-        <div className="space-y-3">
+        <form className="space-y-4" onSubmit={handleLogin}>
           <p className="text-xs font-bold text-[#7A7A72] uppercase tracking-wider flex items-center gap-1.5">
             <Key className="w-3.5 h-3.5 text-[#4A6741]" />
-            Select Account to Authenticate & Issue JWT Token:
+            Sign in to your school account
           </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {allUsers.map((user) => {
-              const isSelected = selectedUserId === user.id;
-              return (
-                <button
-                  key={user.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedUserId(user.id);
-                    handleLogin(user.id);
-                  }}
-                  disabled={isLoading}
-                  className={`p-3.5 rounded-2xl border text-left flex items-center justify-between gap-3 transition-all cursor-pointer ${
-                    isSelected
-                      ? 'border-[#4A6741] bg-[#EBF1E8] shadow-xs scale-102'
-                      : 'border-[#EDEAE2] bg-[#F9F7F2] hover:bg-white hover:border-[#4A6741]'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={getAvatarUrl(user.avatar, user.name)}
-                      alt={user.name}
-                      className="w-9 h-9 rounded-full object-cover shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <p className="font-bold text-xs text-[#2D2D2A] truncate">{user.name}</p>
-                      <p className="text-[10px] text-[#7A7A72] uppercase font-bold tracking-wider">
-                        {user.role}
-                      </p>
-                    </div>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-[#4A6741] shrink-0" />
-                </button>
-              );
-            })}
-          </div>
-        </div>
+          <label className="block text-xs font-bold text-[#2D2D2A]">
+            Email address
+            <input
+              type="email"
+              required
+              autoComplete="username"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-[#E5E1D8] bg-[#F9F7F2] px-3.5 py-3 text-sm font-normal outline-none focus:ring-2 focus:ring-[#4A6741]/30"
+            />
+          </label>
+          <label className="block text-xs font-bold text-[#2D2D2A]">
+            Password
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-[#E5E1D8] bg-[#F9F7F2] px-3.5 py-3 text-sm font-normal outline-none focus:ring-2 focus:ring-[#4A6741]/30"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={isLoading || !email.trim()}
+            className="w-full rounded-xl bg-[#4A6741] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#3D5535] disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            <LogIn className="w-4 h-4" />
+            {isLoading ? 'Signing in…' : 'Sign in'}
+          </button>
+        </form>
 
         {tokenPreview && (
           <div className="p-3.5 rounded-2xl bg-[#EBF1E8] border border-[#C8DBC4] text-xs space-y-1">

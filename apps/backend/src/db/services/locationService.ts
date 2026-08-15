@@ -1,90 +1,79 @@
 import { prisma } from './prismaClient';
 import { StudentLocationRecord } from '@lms/shared';
 
+const locationInclude = {
+  student: true,
+  updater: true,
+  externalReporter: true,
+} as const;
+
+const mapLocation = (record: any): StudentLocationRecord => ({
+  id: record.id,
+  studentId: record.studentId,
+  studentName: record.student.name,
+  currentLocation: record.currentLocation,
+  category: record.category,
+  busNumber: record.busNumber || undefined,
+  updatedBy: record.updater?.name || record.externalReporter?.name || 'External reporter',
+  updatedByRole:
+    record.updater?.role === 'admin'
+      ? 'admin'
+      : record.updater?.role === 'teacher'
+        ? 'teacher'
+        : 'staff',
+  notes: record.notes || undefined,
+  latitude: record.latitude ?? undefined,
+  longitude: record.longitude ?? undefined,
+  updatedAt: record.updatedAt,
+});
+
 export class LocationService {
   public async getStudentLocations(): Promise<StudentLocationRecord[]> {
-    const locations = await prisma.studentLocationRecord.findMany();
-    return locations.map((l) => ({
-      ...l,
-      category: l.category as any,
-      updatedByRole: l.updatedByRole as any,
-      busNumber: l.busNumber || undefined,
-      notes: l.notes || undefined,
-    }));
+    const locations = await prisma.studentLocationRecord.findMany({ include: locationInclude });
+    return locations.map(mapLocation);
   }
 
   public async getStudentLocationById(
     studentId: string,
   ): Promise<StudentLocationRecord | undefined> {
-    const l = await prisma.studentLocationRecord.findFirst({
+    const location = await prisma.studentLocationRecord.findUnique({
       where: { studentId },
+      include: locationInclude,
     });
-    if (!l) return undefined;
-    return {
-      ...l,
-      category: l.category as any,
-      updatedByRole: l.updatedByRole as any,
-      busNumber: l.busNumber || undefined,
-      notes: l.notes || undefined,
-    };
+    return location ? mapLocation(location) : undefined;
   }
 
   public async updateStudentLocation(
     studentId: string,
-    studentName: string,
     location: string,
     category: StudentLocationRecord['category'],
-    updatedBy: string,
-    updatedByRole: 'teacher' | 'admin',
+    updatedById: string,
     busNumber?: string,
     notes?: string,
   ): Promise<StudentLocationRecord> {
-    const existing = await prisma.studentLocationRecord.findFirst({
+    const updated = await prisma.studentLocationRecord.upsert({
       where: { studentId },
-    });
-
-    if (existing) {
-      const updated = await prisma.studentLocationRecord.update({
-        where: { id: existing.id },
-        data: {
-          currentLocation: location,
-          category,
-          updatedBy,
-          updatedByRole,
-          busNumber,
-          notes,
-          updatedAt: new Date().toISOString(),
-        },
-      });
-      return {
-        ...updated,
-        category: updated.category as any,
-        updatedByRole: updated.updatedByRole as any,
-        busNumber: updated.busNumber || undefined,
-        notes: updated.notes || undefined,
-      };
-    }
-
-    const created = await prisma.studentLocationRecord.create({
-      data: {
-        studentId,
-        studentName,
+      update: {
         currentLocation: location,
         category,
-        updatedBy,
-        updatedByRole,
+        updatedById,
+        externalReporterId: null,
         busNumber,
         notes,
         updatedAt: new Date().toISOString(),
       },
+      create: {
+        studentId,
+        currentLocation: location,
+        category,
+        updatedById,
+        busNumber,
+        notes,
+        updatedAt: new Date().toISOString(),
+      },
+      include: locationInclude,
     });
-    return {
-      ...created,
-      category: created.category as any,
-      updatedByRole: created.updatedByRole as any,
-      busNumber: created.busNumber || undefined,
-      notes: created.notes || undefined,
-    };
+    return mapLocation(updated);
   }
 }
 

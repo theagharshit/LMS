@@ -55,18 +55,28 @@ export class ResourceService {
     const [classroom, teacher] = await Promise.all([
       prisma.classroom.findUnique({
         where: { id: data.classroomId },
-        select: { teacherId: true },
+        select: {
+          teacherId: true,
+          schoolId: true,
+          teachingAssignments: {
+            where: { teacherId: data.teacherId, isActive: true },
+            select: { id: true },
+          },
+        },
       }),
       prisma.user.findUnique({
         where: { id: data.teacherId },
-        select: { role: true, isArchived: true },
+        select: { role: true, schoolId: true, isArchived: true },
       }),
     ]);
     if (!classroom) throw new Error('The selected classroom does not exist.');
     if (!teacher || teacher.isArchived || teacher.role !== 'teacher') {
       throw new Error('The selected resource owner is not an active teacher.');
     }
-    if (classroom.teacherId !== data.teacherId) {
+    if (
+      classroom.schoolId !== teacher.schoolId ||
+      (classroom.teacherId !== data.teacherId && !classroom.teachingAssignments.length)
+    ) {
       throw new Error('Resources can only be added by the teacher assigned to this classroom.');
     }
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { apiFetch } from '@utils/apiFetch';
 import { useApp } from '../../context/AppContext';
 import {
@@ -22,27 +22,32 @@ interface QuizBuilderModalProps {
 export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onClose }) => {
   const { addQuiz, classrooms } = useApp();
 
-  const [topic, setTopic] = useState('Algebra & Factorization');
-  const [subject, setSubject] = useState('Mathematics');
-  const [gradeLevel, setGradeLevel] = useState(8);
-  const [selectedClassroomId, setSelectedClassroomId] = useState(
-    classrooms[0]?.id || 'cls-math-8a',
-  );
+  const [topic, setTopic] = useState('');
+  const [subject, setSubject] = useState('');
+  const [gradeLevel, setGradeLevel] = useState(0);
+  const [selectedClassroomId, setSelectedClassroomId] = useState('');
   const [durationMinutes, setDurationMinutes] = useState(10);
   const [revealMarksMode, setRevealMarksMode] = useState<'immediate' | 'later'>('immediate');
   const [isAiGenerating, setIsAiGenerating] = useState(false);
 
   const [questions, setQuestions] = useState<QuizQuestion[]>([
     {
-      id: 'q-1',
-      text: 'Expand (a + b)²',
+      id: 'draft-question-1',
+      text: '',
       type: 'MCQ',
-      options: ['a² + b²', 'a² + 2ab + b²', 'a² - 2ab + b²', '2a + 2b'],
-      correctAnswer: 'a² + 2ab + b²',
-      explanation: 'Standard algebraic square identity formula.',
+      options: ['', '', '', ''],
+      correctAnswer: '',
+      explanation: '',
       points: 5,
     },
   ]);
+
+  useEffect(() => {
+    if (!classrooms.length || selectedClassroomId) return;
+    setSelectedClassroomId(classrooms[0].id);
+    setSubject(classrooms[0].subject);
+    setGradeLevel(classrooms[0].gradeLevel);
+  }, [classrooms, selectedClassroomId]);
 
   if (!isOpen) return null;
 
@@ -52,11 +57,11 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
       ...prev,
       {
         id: `q-${Date.now()}-${nextNum}`,
-        text: `New Question ${nextNum}`,
+        text: '',
         type: 'MCQ',
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        correctAnswer: 'Option A',
-        explanation: 'Add explanation here...',
+        options: ['', '', '', ''],
+        correctAnswer: '',
+        explanation: '',
         points: 5,
       },
     ]);
@@ -129,9 +134,9 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           topic,
-          subject,
-          gradeLevel,
+          classroomId: selectedClassroomId,
           questionCount: 4,
+          resourceIds: [],
         }),
         feedback: {
           success: 'AI quiz questions were generated and are ready to review.',
@@ -159,12 +164,13 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
 
   const handleSaveQuiz = () => {
     const selectedCls = classrooms.find((c) => c.id === selectedClassroomId);
+    if (!selectedCls) return;
     addQuiz({
       classroomId: selectedClassroomId,
-      classroomName: selectedCls?.name || 'Grade 8 Mathematics',
-      subject,
+      classroomName: selectedCls.name,
+      subject: selectedCls.subject,
       title: `${topic} Quiz (${subject})`,
-      description: `Teacher assessment for Grade ${gradeLevel} ${subject}`,
+      description: `Teacher assessment for Grade ${selectedCls.gradeLevel} ${selectedCls.subject}`,
       durationMinutes,
       dueDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
       totalQuestions: questions.length,
@@ -206,7 +212,14 @@ export const QuizBuilderModal: React.FC<QuizBuilderModalProps> = ({ isOpen, onCl
               </label>
               <select
                 value={selectedClassroomId}
-                onChange={(e) => setSelectedClassroomId(e.target.value)}
+                onChange={(e) => {
+                  const classroom = classrooms.find((item) => item.id === e.target.value);
+                  setSelectedClassroomId(e.target.value);
+                  if (classroom) {
+                    setSubject(classroom.subject);
+                    setGradeLevel(classroom.gradeLevel);
+                  }
+                }}
                 className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold"
               >
                 {classrooms.map((c) => (

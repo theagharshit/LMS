@@ -35,6 +35,7 @@ export const SubstituteRequestModal: React.FC<SubstituteRequestModalProps> = ({
   const {
     classrooms,
     allUsers,
+    weeklySchedule,
     fetchEligibleSubstitutes,
     createSubstituteRequest,
     updateSubstituteStatus,
@@ -44,7 +45,7 @@ export const SubstituteRequestModal: React.FC<SubstituteRequestModalProps> = ({
     initialClassroomId || classrooms[0]?.id || '',
   );
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [timeSlot, setTimeSlot] = useState<string>('10:00 AM - 10:45 AM');
+  const [timeSlot, setTimeSlot] = useState<string>('');
   const [reason, setReason] = useState<string>('');
   const [selectedSubstituteId, setSelectedSubstituteId] = useState<string>('');
 
@@ -54,6 +55,12 @@ export const SubstituteRequestModal: React.FC<SubstituteRequestModalProps> = ({
 
   const currentClassroom = classrooms.find((c) => c.id === selectedClassroomId);
   const originalTeacher = allUsers.find((u) => u.id === currentClassroom?.teacherId);
+  const selectedDay = new Date(`${date}T00:00:00`).toLocaleDateString('en-US', {
+    weekday: 'long',
+  }) as keyof typeof weeklySchedule;
+  const timetablePeriods = (weeklySchedule[selectedDay] || []).filter(
+    (period) => period.classroomId === selectedClassroomId && period.teacherName,
+  );
 
   useEffect(() => {
     if (editingSubstituteRequest) {
@@ -70,6 +77,12 @@ export const SubstituteRequestModal: React.FC<SubstituteRequestModalProps> = ({
       setSelectedClassroomId(initialClassroomId);
     }
   }, [initialClassroomId, editingSubstituteRequest, isOpen]);
+
+  useEffect(() => {
+    if (editingSubstituteRequest) return;
+    const firstPeriod = timetablePeriods[0];
+    setTimeSlot(firstPeriod ? `${firstPeriod.startTime} - ${firstPeriod.endTime}` : '');
+  }, [selectedClassroomId, date, editingSubstituteRequest]);
 
   useEffect(() => {
     if (isOpen && currentClassroom) {
@@ -113,7 +126,7 @@ export const SubstituteRequestModal: React.FC<SubstituteRequestModalProps> = ({
     } else {
       await createSubstituteRequest({
         classroomId: selectedClassroomId,
-        subjectId: currentClassroom?.subject || 'General',
+        subjectId: currentClassroom?.subject || '',
         date,
         timeSlot,
         originalTeacherId: originalTeacher.id,
@@ -208,12 +221,21 @@ export const SubstituteRequestModal: React.FC<SubstituteRequestModalProps> = ({
                 onChange={(e) => setTimeSlot(e.target.value)}
                 className="w-full text-xs bg-[#F9F7F2] p-3 rounded-2xl border border-[#EDEAE2] font-semibold text-[#2D2D2A] focus:outline-none focus:ring-2 focus:ring-[#E88D67]"
               >
-                <option value="10:00 AM - 10:45 AM">Period 1 (10:00 AM - 10:45 AM)</option>
-                <option value="10:45 AM - 11:30 AM">Period 2 (10:45 AM - 11:30 AM)</option>
-                <option value="11:45 AM - 12:30 PM">Period 3 (11:45 AM - 12:30 PM)</option>
-                <option value="01:15 PM - 02:00 PM">Period 4 (01:15 PM - 02:00 PM)</option>
-                <option value="Full Day Duty">Full Day Duty (All Periods)</option>
+                <option value="">Select a scheduled period</option>
+                {timetablePeriods.map((period) => {
+                  const value = `${period.startTime} - ${period.endTime}`;
+                  return (
+                    <option key={period.id} value={value}>
+                      Period {period.periodNumber} ({value})
+                    </option>
+                  );
+                })}
               </select>
+              {!timetablePeriods.length && (
+                <p className="mt-1 text-[10px] text-rose-600">
+                  No database timetable period exists for this classroom on the selected day.
+                </p>
+              )}
             </div>
           </div>
 

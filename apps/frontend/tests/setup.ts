@@ -1,5 +1,75 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
+import {
+  MOCK_ADMIN_AUDIT_LOGS,
+  MOCK_ANNOUNCEMENTS,
+  MOCK_ASSIGNMENTS,
+  MOCK_ATTENDANCE,
+  MOCK_BADGE_DEFINITIONS,
+  MOCK_CALENDAR_EVENTS,
+  MOCK_CLASSROOMS,
+  MOCK_MESSAGES,
+  MOCK_MODULES,
+  MOCK_PARENT_CONTROLS,
+  MOCK_QUIZZES,
+  MOCK_QUIZ_SUBMISSIONS,
+  MOCK_SCHEDULE,
+  MOCK_STREAM_POSTS,
+  MOCK_STUDENTS,
+  MOCK_SUBJECT_PERFORMANCE,
+  MOCK_SUBMISSIONS,
+  MOCK_SUBSTITUTE_REQUESTS,
+  MOCK_TEACHER_ABSENCE_REQUESTS,
+  MOCK_TEACHER_ASSIGNMENT_AUDIT_LOGS,
+  MOCK_USERS,
+  MOCK_WEEKLY_SCHEDULE,
+} from '@lms/shared';
+
+const databaseTestState = {
+  users: MOCK_USERS,
+  studentProfiles: MOCK_STUDENTS,
+  badgeDefinitions: MOCK_BADGE_DEFINITIONS,
+  classrooms: MOCK_CLASSROOMS,
+  streamPosts: MOCK_STREAM_POSTS,
+  assignments: MOCK_ASSIGNMENTS,
+  submissions: MOCK_SUBMISSIONS,
+  quizzes: MOCK_QUIZZES,
+  quizSubmissions: MOCK_QUIZ_SUBMISSIONS,
+  attendance: MOCK_ATTENDANCE,
+  attendanceRecords: MOCK_ATTENDANCE,
+  parentControls: MOCK_PARENT_CONTROLS,
+  studentLocations: [
+    {
+      id: 'loc-db-1',
+      studentId: 'user-stu-1',
+      studentName: 'Aarav Sharma',
+      currentLocation: 'In Class (Grade 8-A Room 204)',
+      category: 'in_class' as const,
+      updatedBy: 'user-teach-1',
+      updatedByRole: 'teacher' as const,
+      updatedAt: '2026-08-15T08:00:00.000Z',
+    },
+  ],
+  messages: MOCK_MESSAGES,
+  termProgress: [],
+  studentActivities: [],
+  subjectPerformances: MOCK_SUBJECT_PERFORMANCE,
+  resources: [],
+  modules: MOCK_MODULES,
+  teacherAbsenceRequests: MOCK_TEACHER_ABSENCE_REQUESTS,
+  substituteRequests: MOCK_SUBSTITUTE_REQUESTS,
+  teacherAssignmentAuditLogs: MOCK_TEACHER_ASSIGNMENT_AUDIT_LOGS,
+  weeklySchedule: MOCK_WEEKLY_SCHEDULE,
+  schedule: MOCK_SCHEDULE,
+  calendarEvents: MOCK_CALENDAR_EVENTS,
+  adminAuditLogs: MOCK_ADMIN_AUDIT_LOGS,
+  schoolAnnouncements: MOCK_ANNOUNCEMENTS,
+};
+
+window.__LMS_DATABASE_BOOTSTRAP__ = {
+  currentUser: MOCK_USERS[0],
+  ...databaseTestState,
+};
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -32,6 +102,34 @@ const mockApiRouter = async (input: RequestInfo | URL, init?: RequestInit): Prom
     }
   } catch {
     body = {};
+  }
+
+  if (url.includes('/api/auth/csrf')) {
+    return new Response(JSON.stringify({ status: 'success', csrfToken: 'test-csrf-token' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  if (url.includes('/api/auth/login')) {
+    const user = MOCK_USERS.find(
+      (candidate) => candidate.id === body.userId || candidate.email === body.email,
+    );
+    return new Response(
+      JSON.stringify(
+        user
+          ? { status: 'success', user, accessToken: `database-test-token-${user.id}` }
+          : { status: 'error', message: 'User not found' },
+      ),
+      { status: user ? 200 : 401, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
+  if (url.includes('/api/auth/me')) {
+    return new Response(JSON.stringify({ status: 'success', user: MOCK_USERS[0] }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   if (url.includes('/api/db/student-badges')) {
@@ -110,7 +208,7 @@ const mockApiRouter = async (input: RequestInfo | URL, init?: RequestInit): Prom
     return new Response(
       JSON.stringify({
         status: 'success',
-        record: { id: `att-${Date.now()}`, ...body },
+        attendance: { id: `att-${Date.now()}`, ...body },
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     );
@@ -120,7 +218,7 @@ const mockApiRouter = async (input: RequestInfo | URL, init?: RequestInit): Prom
     return new Response(
       JSON.stringify({
         status: 'success',
-        settings: body,
+        parentControls: { ...(MOCK_PARENT_CONTROLS[body.studentId] || {}), ...body.settings },
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     );
@@ -232,8 +330,7 @@ const mockApiRouter = async (input: RequestInfo | URL, init?: RequestInit): Prom
     return new Response(
       JSON.stringify({
         status: 'success',
-        resources: [],
-        modules: [],
+        ...databaseTestState,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     );
@@ -258,6 +355,31 @@ const mockApiRouter = async (input: RequestInfo | URL, init?: RequestInit): Prom
 // Global mocks for browser APIs not available in jsdom
 if (typeof window !== 'undefined') {
   window.fetch = vi.fn(mockApiRouter);
+  class TestWebSocket {
+    static readonly CONNECTING = 0;
+    static readonly OPEN = 1;
+    static readonly CLOSING = 2;
+    static readonly CLOSED = 3;
+
+    readonly CONNECTING = TestWebSocket.CONNECTING;
+    readonly OPEN = TestWebSocket.OPEN;
+    readonly CLOSING = TestWebSocket.CLOSING;
+    readonly CLOSED = TestWebSocket.CLOSED;
+    readyState = TestWebSocket.OPEN;
+    onopen: ((event: Event) => void) | null = null;
+    onmessage: ((event: MessageEvent) => void) | null = null;
+    onerror: ((event: Event) => void) | null = null;
+    onclose: ((event: CloseEvent) => void) | null = null;
+
+    constructor(public readonly url: string | URL) {}
+
+    close() {
+      this.readyState = TestWebSocket.CLOSED;
+    }
+
+    send() {}
+  }
+  vi.stubGlobal('WebSocket', TestWebSocket);
   if (!window.URL.createObjectURL) {
     window.URL.createObjectURL = vi.fn(
       (file: any) => `blob:http://localhost/${file?.name || 'mock-file'}`,

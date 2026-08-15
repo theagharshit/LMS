@@ -51,10 +51,16 @@ export class ModuleService {
     data: Omit<ModuleItem, 'id' | 'completedByStudentIds'> & {
       completedByStudentIds?: string[];
     },
+    creatorId?: string,
   ): Promise<ModuleItem> {
+    const classroom = await prisma.classroom.findUniqueOrThrow({
+      where: { id: data.classroomId },
+      select: { teacherId: true },
+    });
     const created = await prisma.moduleItem.create({
       data: {
         classroomId: data.classroomId,
+        createdById: creatorId || classroom.teacherId,
         unitName: data.unitName,
         title: data.title,
         description: data.description,

@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { getContacts, getChatHistory, sendMessage, markAsRead } from '@controllers/chatController';
-import { optionalAuthenticateJwt } from '@middlewares/authMiddleware';
+import { authenticateJwt } from '@middlewares/authMiddleware';
 
 const router = Router();
 
-router.use(optionalAuthenticateJwt);
+router.use(authenticateJwt);
 
 router.get('/contacts', getContacts);
 router.post('/:contactId/read', markAsRead);

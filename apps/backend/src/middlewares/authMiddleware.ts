@@ -23,8 +23,7 @@ export const isStrictAuthMode = (): boolean => {
 
 /**
  * Middleware to enforce a valid JWT token on protected routes.
- * In Production (or strict mode), missing/invalid tokens trigger HTTP 401 Unauthorized.
- * In Development mode, fallback demo session is provided if token is missing.
+ * Missing or invalid tokens trigger HTTP 401 Unauthorized.
  */
 export const authenticateJwt = async (
   req: Request,
@@ -75,26 +74,11 @@ export const authenticateJwt = async (
     }
   }
 
-  // If token is missing
-  if (isStrictAuthMode()) {
-    logger.warn(
-      `[Auth] Rejected unauthenticated request to ${req.originalUrl} in Production/Strict mode`,
-    );
-    res.status(401).json({
-      status: 'error',
-      message: 'Access denied. Authentication token required in Production mode.',
-    });
-    return;
-  }
-
-  // Development Fallback User context
-  req.user = {
-    id: 'user-stu-1',
-    name: 'Aarav Sharma',
-    email: 'aarav.sharma@example.com',
-    role: 'student',
-  };
-  next();
+  logger.warn(`[Auth] Rejected unauthenticated request to ${req.originalUrl}`);
+  res.status(401).json({
+    status: 'error',
+    message: 'Access denied. Authentication token required.',
+  });
 };
 
 /**
@@ -147,10 +131,10 @@ export const requireRoles = (...allowedRoles: UserRole[]) => {
   };
 };
 
-/** Enforces authentication/RBAC in strict or production mode while preserving local demo mode. */
+/** Enforces authentication/RBAC in every environment. */
 export const requireRolesWhenStrict = (...allowedRoles: UserRole[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    if (!isStrictAuthMode()) return next();
+    if (!isStrictAuthMode()) return requireRoles(...allowedRoles)(req, res, next);
     authenticateJwt(req, res, (error?: unknown) => {
       if (error) return next(error);
       requireRoles(...allowedRoles)(req, res, next);

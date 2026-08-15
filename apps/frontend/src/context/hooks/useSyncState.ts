@@ -27,6 +27,11 @@ export const useSyncState = (
   setTeacherAbsenceRequests?: (reqs: any) => void,
   setSubstituteRequests?: (reqs: any) => void,
   setTeacherAssignmentAuditLogs?: (logs: any) => void,
+  setWeeklySchedule?: (schedule: any) => void,
+  setSchedule?: (schedule: any) => void,
+  setCalendarEvents?: (events: any) => void,
+  setAdminAuditLogs?: (logs: any) => void,
+  setSchoolAnnouncements?: (announcements: any) => void,
 ) => {
   useEffect(() => {
     if (typeof window === 'undefined' || !authReady) return;
@@ -71,6 +76,12 @@ export const useSyncState = (
           if (data.teacherAssignmentAuditLogs && setTeacherAssignmentAuditLogs) {
             setTeacherAssignmentAuditLogs(data.teacherAssignmentAuditLogs);
           }
+          if (data.weeklySchedule && setWeeklySchedule) setWeeklySchedule(data.weeklySchedule);
+          if (data.schedule && setSchedule) setSchedule(data.schedule);
+          if (data.calendarEvents && setCalendarEvents) setCalendarEvents(data.calendarEvents);
+          if (data.adminAuditLogs && setAdminAuditLogs) setAdminAuditLogs(data.adminAuditLogs);
+          if (data.schoolAnnouncements && setSchoolAnnouncements)
+            setSchoolAnnouncements(data.schoolAnnouncements);
         }
       })
       .catch((err) => {

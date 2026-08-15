@@ -34,59 +34,111 @@ const decrypt = (value: string) => {
 };
 
 export class CommunicationService {
+  private toDirectMessage(message: any): DirectMessage {
+    return {
+      id: message.id,
+      senderId: message.senderId,
+      senderName: message.sender.name,
+      senderRole: message.sender.role,
+      senderAvatar: message.sender.avatar,
+      receiverId: message.receiverId,
+      receiverName: message.receiver.name,
+      content: decrypt(message.content),
+      read: message.read,
+      approvedByParent: message.approvedByParent ?? undefined,
+      createdAt: message.createdAt,
+    };
+  }
+
   public async getDirectMessages(): Promise<DirectMessage[]> {
     const msgs = await prisma.directMessage.findMany({
+      include: { sender: true, receiver: true },
       orderBy: { createdAt: 'asc' },
     });
-    return msgs.map((m) => ({
-      ...m,
-      content: decrypt(m.content),
-      senderRole: m.senderRole as any,
-      approvedByParent: m.approvedByParent ?? undefined,
-    }));
+    return msgs.map((message) => this.toDirectMessage(message));
+  }
+
+  public async getConversation(userId: string, contactId: string): Promise<DirectMessage[]> {
+    const messages = await prisma.directMessage.findMany({
+      where: {
+        AND: [
+          {
+            OR: [
+              { senderId: userId, receiverId: contactId },
+              { senderId: contactId, receiverId: userId },
+            ],
+          },
+          {
+            OR: [{ approvedByParent: null }, { approvedByParent: true }, { senderId: userId }],
+          },
+        ],
+      },
+      include: { sender: true, receiver: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    return messages.map((message) => this.toDirectMessage(message));
+  }
+
+  public async getMessagesForUser(userId: string): Promise<DirectMessage[]> {
+    const messages = await prisma.directMessage.findMany({
+      where: {
+        AND: [
+          { OR: [{ senderId: userId }, { receiverId: userId }] },
+          {
+            OR: [{ approvedByParent: null }, { approvedByParent: true }, { senderId: userId }],
+          },
+        ],
+      },
+      include: { sender: true, receiver: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    return messages.map((message) => this.toDirectMessage(message));
+  }
+
+  public async getPendingApprovalMessages(studentIds: string[]): Promise<DirectMessage[]> {
+    if (!studentIds.length) return [];
+    const messages = await prisma.directMessage.findMany({
+      where: { senderId: { in: studentIds }, approvedByParent: false },
+      include: { sender: true, receiver: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    return messages.map((message) => this.toDirectMessage(message));
+  }
+
+  public async approveMessage(id: string): Promise<DirectMessage> {
+    const message = await prisma.directMessage.update({
+      where: { id },
+      data: { approvedByParent: true },
+      include: { sender: true, receiver: true },
+    });
+    return this.toDirectMessage(message);
   }
 
   public async addDirectMessage(
-    msg: Omit<DirectMessage, 'id' | 'createdAt'>,
+    msg: Omit<
+      DirectMessage,
+      'id' | 'createdAt' | 'senderName' | 'senderRole' | 'senderAvatar' | 'receiverName'
+    >,
   ): Promise<DirectMessage> {
-    let validSenderId = msg.senderId;
-    const sender = await prisma.user.findUnique({ where: { id: validSenderId } });
-    if (!sender) {
-      const firstUser =
-        (await prisma.user.findFirst({ where: { role: 'parent' } })) ||
-        (await prisma.user.findFirst());
-      if (firstUser) validSenderId = firstUser.id;
-    }
-
-    let validReceiverId = msg.receiverId;
-    const receiver = await prisma.user.findUnique({ where: { id: validReceiverId } });
-    if (!receiver) {
-      const firstTeacher =
-        (await prisma.user.findFirst({ where: { role: 'teacher' } })) ||
-        (await prisma.user.findFirst());
-      if (firstTeacher) validReceiverId = firstTeacher.id;
-    }
+    const sender = await prisma.user.findFirst({ where: { id: msg.senderId, isArchived: false } });
+    const receiver = await prisma.user.findFirst({
+      where: { id: msg.receiverId, isArchived: false, schoolId: sender?.schoolId },
+    });
+    if (!sender || !receiver)
+      throw new Error('Sender and receiver must be active users in the same school.');
 
     const created = await prisma.directMessage.create({
       data: {
-        senderId: validSenderId,
-        senderName: msg.senderName,
-        senderRole: msg.senderRole,
-        senderAvatar: msg.senderAvatar,
-        receiverId: validReceiverId,
-        receiverName: msg.receiverName,
+        senderId: sender.id,
+        receiverId: receiver.id,
         content: encrypt(msg.content),
-        read: msg.read || false,
+        read: false,
         approvedByParent: msg.approvedByParent,
-        createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        createdAt: new Date().toISOString(),
       },
+      include: { sender: true, receiver: true },
     });
-    return {
-      ...created,
-      content: msg.content,
-      senderRole: created.senderRole as any,
-      approvedByParent: created.approvedByParent ?? undefined,
-    };
+    return this.toDirectMessage(created);
   }
 }
 

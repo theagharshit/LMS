@@ -39,29 +39,29 @@ export const StudentProfileView: React.FC = () => {
     termProgress,
     studentActivities,
     subjectPerformances,
+    attendanceRecords,
     updateStudentIdCardPhoto,
   } = useApp();
 
   const idCardInputRef = useRef<HTMLInputElement>(null);
 
-  const studentData = studentProfiles.find((s) => s.id === currentUser.id) || {
-    id: currentUser.id || 'user-stu-1',
-    name: currentUser.name || 'Aarav Sharma',
-    avatar:
-      currentUser.avatar ||
-      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
-    gradeLevel: 8,
-    section: 'A',
-    rollNumber: 14,
-    attendancePercentage: 96.5,
-    streakDays: 14,
-    parentName: 'Bina Sharma',
-    parentPhone: '+977 9841234567',
-    xpPoints: 1250,
+  const studentProfile = studentProfiles.find((s) => s.id === currentUser.id);
+  const studentData = studentProfile || {
+    id: currentUser.id,
+    name: currentUser.name,
+    avatar: currentUser.avatar,
+    gradeLevel: currentUser.gradeLevel || 0,
+    section: currentUser.section || '',
+    rollNumber: currentUser.rollNumber,
+    attendancePercentage: 0,
+    streakDays: 0,
+    parentName: '',
+    parentPhone: '',
+    xpPoints: 0,
     badges: [],
-    email: currentUser.email || 'aarav.sharma@example.com',
+    email: currentUser.email,
     role: 'student' as const,
-    schoolName: 'Everest Academy',
+    schoolName: currentUser.schoolName,
   };
 
   const [isIdCardOpen, setIsIdCardOpen] = useState<boolean>(false);
@@ -108,9 +108,9 @@ export const StudentProfileView: React.FC = () => {
     .sort((a, b) => String(a.term || '').localeCompare(String(b.term || '')));
 
   const subjectPerformanceData = subjectPerformances
-    .filter((s) => s.studentId === studentData.id)
+    .filter((s) => s.studentId === studentData.id && Boolean(s.subject))
     .map((s) => ({
-      subject: s.subject || 'Subject',
+      subject: s.subject,
       score: s.scorePercentage,
     }));
 
@@ -144,26 +144,61 @@ export const StudentProfileView: React.FC = () => {
     }
   };
 
-  const badgesList = studentData.badges.map((b) => {
-    const def = b.badgeDefinition;
+  const badgesList = studentData.badges
+    .filter((badge) => badge.badgeDefinition)
+    .map((b) => {
+      const def = b.badgeDefinition;
+      return {
+        id: b.id,
+        title: def!.title,
+        desc: def!.description,
+        icon: def!.icon,
+        color: getColor(def?.category || ''),
+      };
+    });
+
+  const studentAttendance = attendanceRecords.filter(
+    (record) => record.studentId === studentData.id,
+  );
+  const presentDays = studentAttendance.filter((record) =>
+    ['present', 'late'].includes(record.status),
+  ).length;
+  const excusedDays = studentAttendance.filter((record) => record.status === 'excused').length;
+  const absentDays = studentAttendance.filter((record) => record.status === 'absent').length;
+  const attendancePercentage = studentAttendance.length
+    ? (presentDays / studentAttendance.length) * 100
+    : 0;
+  const today = new Date();
+  const weekDays = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (6 - index));
+    const dateKey = date.toISOString().slice(0, 10);
+    const record = studentAttendance.find((item) => item.date === dateKey);
     return {
-      id: b.id,
-      title: def?.title || 'Unknown',
-      desc: def?.description || '',
-      icon: def?.icon || '🏆',
-      color: getColor(def?.category || ''),
+      day: date.toLocaleDateString(undefined, { weekday: 'narrow' }),
+      checked: record ? ['present', 'late'].includes(record.status) : false,
+      isToday: index === 6,
     };
   });
+  const academicAverage = subjectPerformanceData.length
+    ? subjectPerformanceData.reduce((sum, subject) => sum + subject.score, 0) /
+      subjectPerformanceData.length
+    : 0;
+  const approvedAbsences = studentAttendance
+    .filter((record) => record.status === 'excused')
+    .sort((left, right) => right.date.localeCompare(left.date));
 
-  const weekDays = [
-    { day: 'M', checked: true },
-    { day: 'T', checked: true },
-    { day: 'W', checked: true },
-    { day: 'T', checked: true },
-    { day: 'F', checked: true },
-    { day: 'S', checked: true, isToday: true },
-    { day: 'S', checked: false },
-  ];
+  if (!studentProfile) {
+    return (
+      <div className="max-w-3xl mx-auto rounded-2xl border border-[#EDEAE2] bg-white p-8 text-center">
+        <h1 className="font-serif text-xl font-bold text-[#2D2D2A]">Student profile unavailable</h1>
+        <p className="mt-2 text-sm text-[#7A7A72]">
+          No active database enrollment is linked to this account. Ask the school administrator to
+          review the student lifecycle record.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-16 text-[#2D2D2A]">
@@ -187,11 +222,13 @@ export const StudentProfileView: React.FC = () => {
             </div>
             <p className="text-xs text-[#7A7A72]">
               Roll No: <strong className="text-[#2D2D2A]">#{studentData.rollNumber}</strong> • Reg
-              ID: <strong className="text-[#2D2D2A]">STU-2026-0814</strong> • House:{' '}
-              <strong className="text-[#4A6741]">Machhapuchhre Green</strong>
+              ID:{' '}
+              <strong className="text-[#2D2D2A]">
+                {studentData.admissionNumber || studentData.id}
+              </strong>
             </p>
             <p className="text-[11px] text-[#7A7A72]">
-              Mount Everest Secondary School • Guardian: {studentData.parentName}
+              {studentData.schoolName} • Guardian: {studentData.parentName || 'Not linked'}
             </p>
           </div>
         </div>
@@ -266,11 +303,6 @@ export const StudentProfileView: React.FC = () => {
               ))}
             </div>
           </div>
-
-          <div className="px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-300 font-extrabold text-[11px] flex items-center gap-1.5 shrink-0">
-            <CheckCircle2 className="w-4 h-4 text-amber-600" />
-            <span>Teacher Verified</span>
-          </div>
         </div>
 
         {/* Attendance */}
@@ -280,8 +312,12 @@ export const StudentProfileView: React.FC = () => {
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase text-[#7A7A72]">Attendance</p>
-            <p className="text-base font-bold text-[#2D2D2A]">96.5% Present</p>
-            <p className="text-[11px] text-[#7A7A72]">112 of 117 days</p>
+            <p className="text-base font-bold text-[#2D2D2A]">
+              {attendancePercentage.toFixed(1)}% Present
+            </p>
+            <p className="text-[11px] text-[#7A7A72]">
+              {presentDays} of {studentAttendance.length} recorded days
+            </p>
           </div>
         </div>
 
@@ -291,9 +327,11 @@ export const StudentProfileView: React.FC = () => {
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase text-[#7A7A72]">GPA & Standing</p>
-            <p className="text-base font-bold text-[#2D2D2A]">GPA 3.88</p>
-            <p className="text-[11px] text-[#7A7A72]">Class Rank #3</p>
+            <p className="text-[10px] font-bold uppercase text-[#7A7A72]">Academic average</p>
+            <p className="text-base font-bold text-[#2D2D2A]">{academicAverage.toFixed(1)}%</p>
+            <p className="text-[11px] text-[#7A7A72]">
+              Across {subjectPerformanceData.length} recorded subjects
+            </p>
           </div>
         </div>
       </div>
@@ -398,20 +436,22 @@ export const StudentProfileView: React.FC = () => {
         <div className="bg-white rounded-2xl p-6 border border-[#EDEAE2] space-y-4">
           <div className="flex justify-between items-center border-b border-[#EDEAE2] pb-3">
             <h3 className="font-bold text-sm text-[#2D2D2A]">Attendance Overview</h3>
-            <span className="text-xs font-bold text-[#4A6741]">96.5% Overall</span>
+            <span className="text-xs font-bold text-[#4A6741]">
+              {attendancePercentage.toFixed(1)}% Overall
+            </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
             <div className="p-4 rounded-xl bg-[#F9F7F2] border border-[#EDEAE2]">
-              <p className="text-xl font-bold text-[#4A6741]">112 Days</p>
+              <p className="text-xl font-bold text-[#4A6741]">{presentDays} Days</p>
               <p className="text-xs text-[#7A7A72] mt-0.5">Present</p>
             </div>
             <div className="p-4 rounded-xl bg-[#F9F7F2] border border-[#EDEAE2]">
-              <p className="text-xl font-bold text-amber-600">3 Days</p>
+              <p className="text-xl font-bold text-amber-600">{excusedDays} Days</p>
               <p className="text-xs text-[#7A7A72] mt-0.5">Approved Leave</p>
             </div>
             <div className="p-4 rounded-xl bg-[#F9F7F2] border border-[#EDEAE2]">
-              <p className="text-xl font-bold text-rose-600">2 Days</p>
+              <p className="text-xl font-bold text-rose-600">{absentDays} Days</p>
               <p className="text-xs text-[#7A7A72] mt-0.5">Absent</p>
             </div>
           </div>
@@ -420,17 +460,33 @@ export const StudentProfileView: React.FC = () => {
             <p className="text-xs font-bold text-[#7A7A72] uppercase tracking-wider mb-2">
               Recent Approved Absence Log
             </p>
-            <div className="p-3 rounded-xl bg-[#F9F7F2] border border-[#EDEAE2] flex justify-between items-center text-xs">
-              <div>
-                <p className="font-bold text-[#2D2D2A]">Medical Leave (Fever)</p>
-                <p className="text-[11px] text-[#7A7A72]">
-                  12 June 2026 • Verified by Class Teacher
-                </p>
+            {approvedAbsences.length ? (
+              <div className="space-y-2">
+                {approvedAbsences.slice(0, 10).map((record) => (
+                  <div
+                    key={record.id}
+                    className="p-3 rounded-xl bg-[#F9F7F2] border border-[#EDEAE2] flex justify-between items-center text-xs"
+                  >
+                    <div>
+                      <p className="font-bold text-[#2D2D2A]">
+                        {record.remarks || 'Approved absence'}
+                      </p>
+                      <p className="text-[11px] text-[#7A7A72]">
+                        {new Date(`${record.date}T00:00:00`).toLocaleDateString()} • Recorded by{' '}
+                        {record.markedBy}
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                      Excused
+                    </span>
+                  </div>
+                ))}
               </div>
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                Approved
-              </span>
-            </div>
+            ) : (
+              <p className="rounded-xl border border-dashed border-[#EDEAE2] p-4 text-xs text-[#7A7A72]">
+                No approved absences have been recorded.
+              </p>
+            )}
           </div>
         </div>
       )}

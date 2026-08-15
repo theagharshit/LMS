@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useApp } from '@context/AppContext';
 import { Classroom, StudyResource, Attachment } from '@lms/shared';
 import { apiFetch } from '@utils/apiFetch';
+import { sha256File } from '@utils/fileChecksum';
 import { toast } from '@utils/toast';
 import {
   Upload,
@@ -59,6 +60,7 @@ export const TeacherMaterialsPanel: React.FC<TeacherMaterialsPanelProps> = ({ cl
 
     let fileUrl = '';
     try {
+      const checksum = await sha256File(file);
       const res = await apiFetch('/api/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -67,7 +69,7 @@ export const TeacherMaterialsPanel: React.FC<TeacherMaterialsPanelProps> = ({ cl
           sizeBytes: file.size,
           sizeFormatted: formattedSize,
           mimeType: file.type || 'application/octet-stream',
-          uploadedBy: currentUser.name,
+          checksum,
           classroomId: classroom.id,
         }),
         feedback: {
@@ -113,11 +115,12 @@ export const TeacherMaterialsPanel: React.FC<TeacherMaterialsPanelProps> = ({ cl
   const handleAddLink = () => {
     const url = prompt('Enter resource URL:');
     if (!url) return;
-    const title = prompt('Enter resource title:', 'Study Material') || 'Study Material';
+    const title = prompt('Enter resource title:');
+    if (!title?.trim()) return;
     addResource({
       classroomId: classroom.id,
       teacherId: currentUser.id,
-      title,
+      title: title.trim(),
       type: 'link',
       url,
       tags: [classroom.subject],
@@ -125,14 +128,17 @@ export const TeacherMaterialsPanel: React.FC<TeacherMaterialsPanelProps> = ({ cl
   };
 
   const handleCreateAssignment = () => {
-    if (!asgTitle.trim()) return;
+    if (!asgTitle.trim() || !asgInstructions.trim() || !asgDueDate || asgPoints <= 0) {
+      toast.error('Title, instructions, due date, and positive points are required.');
+      return;
+    }
     addAssignment({
       classroomId: classroom.id,
       classroomName: classroom.name,
       subject: classroom.subject,
       title: asgTitle,
       instructions: asgInstructions,
-      dueDate: asgDueDate || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+      dueDate: asgDueDate,
       dueTime: '23:59',
       totalPoints: asgPoints,
       attachments: classResources.slice(0, 2).map((r): Attachment => ({
@@ -151,10 +157,13 @@ export const TeacherMaterialsPanel: React.FC<TeacherMaterialsPanelProps> = ({ cl
   };
 
   const handleCreateModule = () => {
-    if (!modTitle.trim()) return;
+    if (!modUnit.trim() || !modTitle.trim() || !modDescription.trim() || modDuration < 0) {
+      toast.error('Unit, title, description, and duration are required.');
+      return;
+    }
     addModule({
       classroomId: classroom.id,
-      unitName: modUnit || 'Unit 1',
+      unitName: modUnit.trim(),
       title: modTitle,
       description: modDescription,
       durationMinutes: modDuration,
