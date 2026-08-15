@@ -308,10 +308,17 @@ export class UserService {
     }
 
     if (Object.keys(profileUpdate).length > 0) {
-      await prisma.studentProfile.updateMany({
-        where: { OR: [{ id }, { userId: id }] },
-        data: profileUpdate,
-      });
+      try {
+        await prisma.studentProfile.updateMany({
+          where: { OR: [{ id }, { userId: id }] },
+          data: profileUpdate,
+        });
+      } catch (error: any) {
+        if (error.code === 'P2002') {
+          throw new Error('A student with this roll number already exists in this cohort.');
+        }
+        throw error;
+      }
     }
 
     if (data.parentPhone !== undefined || data.parentSecondaryPhone !== undefined) {
