@@ -292,7 +292,11 @@ export interface AppContextType {
   academicTerms: AcademicTerm[];
   schoolHolidays: SchoolHoliday[];
   schoolTimingConfig: SchoolTimingConfig;
-  fetchTimetableSlots: (params?: { studentId?: string; teacherId?: string; academicYearId?: string }) => Promise<void>;
+  fetchTimetableSlots: (params?: {
+    studentId?: string;
+    teacherId?: string;
+    academicYearId?: string;
+  }) => Promise<void>;
   fetchAcademicYears: () => Promise<void>;
   fetchAcademicTerms: (academicYearId?: string) => Promise<void>;
   fetchSchoolHolidays: (academicYearId?: string) => Promise<void>;
@@ -320,4 +324,3 @@ export interface AppContextType {
     graduationGrade?: number;
   }) => Promise<{ success: boolean; data?: any; error?: string }>;
 }
-

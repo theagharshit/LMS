@@ -34,27 +34,94 @@ const DAY_INDEX_MAP: Record<string, number> = {
   Saturday: 6,
 };
 
-const SUBJECT_COLORS: Record<string, { bg: string; border: string; text: string; badge: string }> = {
-  math: { bg: 'bg-indigo-900/30', border: 'border-indigo-500/40', text: 'text-indigo-300', badge: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' },
-  mathematics: { bg: 'bg-indigo-900/30', border: 'border-indigo-500/40', text: 'text-indigo-300', badge: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' },
-  science: { bg: 'bg-emerald-900/30', border: 'border-emerald-500/40', text: 'text-emerald-300', badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
-  physics: { bg: 'bg-emerald-900/30', border: 'border-emerald-500/40', text: 'text-emerald-300', badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
-  chemistry: { bg: 'bg-emerald-900/30', border: 'border-emerald-500/40', text: 'text-emerald-300', badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
-  biology: { bg: 'bg-emerald-900/30', border: 'border-emerald-500/40', text: 'text-emerald-300', badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
-  english: { bg: 'bg-amber-900/30', border: 'border-amber-500/40', text: 'text-amber-300', badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30' },
-  nepali: { bg: 'bg-purple-900/30', border: 'border-purple-500/40', text: 'text-purple-300', badge: 'bg-purple-500/20 text-purple-300 border-purple-500/30' },
-  social: { bg: 'bg-rose-900/30', border: 'border-rose-500/40', text: 'text-rose-300', badge: 'bg-rose-500/20 text-rose-300 border-rose-500/30' },
-  computer: { bg: 'bg-sky-900/30', border: 'border-sky-500/40', text: 'text-sky-300', badge: 'bg-sky-500/20 text-sky-300 border-sky-500/30' },
-  opt: { bg: 'bg-teal-900/30', border: 'border-teal-500/40', text: 'text-teal-300', badge: 'bg-teal-500/20 text-teal-300 border-teal-500/30' },
-};
+const SUBJECT_COLORS: Record<string, { bg: string; border: string; text: string; badge: string }> =
+  {
+    math: {
+      bg: 'bg-indigo-900/30',
+      border: 'border-indigo-500/40',
+      text: 'text-indigo-300',
+      badge: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+    },
+    mathematics: {
+      bg: 'bg-indigo-900/30',
+      border: 'border-indigo-500/40',
+      text: 'text-indigo-300',
+      badge: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+    },
+    science: {
+      bg: 'bg-emerald-900/30',
+      border: 'border-emerald-500/40',
+      text: 'text-emerald-300',
+      badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    },
+    physics: {
+      bg: 'bg-emerald-900/30',
+      border: 'border-emerald-500/40',
+      text: 'text-emerald-300',
+      badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    },
+    chemistry: {
+      bg: 'bg-emerald-900/30',
+      border: 'border-emerald-500/40',
+      text: 'text-emerald-300',
+      badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    },
+    biology: {
+      bg: 'bg-emerald-900/30',
+      border: 'border-emerald-500/40',
+      text: 'text-emerald-300',
+      badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    },
+    english: {
+      bg: 'bg-amber-900/30',
+      border: 'border-amber-500/40',
+      text: 'text-amber-300',
+      badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+    },
+    nepali: {
+      bg: 'bg-purple-900/30',
+      border: 'border-purple-500/40',
+      text: 'text-purple-300',
+      badge: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+    },
+    social: {
+      bg: 'bg-rose-900/30',
+      border: 'border-rose-500/40',
+      text: 'text-rose-300',
+      badge: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+    },
+    computer: {
+      bg: 'bg-sky-900/30',
+      border: 'border-sky-500/40',
+      text: 'text-sky-300',
+      badge: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
+    },
+    opt: {
+      bg: 'bg-teal-900/30',
+      border: 'border-teal-500/40',
+      text: 'text-teal-300',
+      badge: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
+    },
+  };
 
 const getSubjectTheme = (subjectName?: string) => {
-  if (!subjectName) return { bg: 'bg-slate-800/40', border: 'border-slate-700', text: 'text-slate-300', badge: 'bg-slate-700 text-slate-300 border-slate-600' };
+  if (!subjectName)
+    return {
+      bg: 'bg-slate-800/40',
+      border: 'border-slate-700',
+      text: 'text-slate-300',
+      badge: 'bg-slate-700 text-slate-300 border-slate-600',
+    };
   const lower = subjectName.toLowerCase();
   for (const [key, theme] of Object.entries(SUBJECT_COLORS)) {
     if (lower.includes(key)) return theme;
   }
-  return { bg: 'bg-blue-900/20', border: 'border-blue-500/30', text: 'text-blue-300', badge: 'bg-blue-500/20 text-blue-300 border-blue-500/30' };
+  return {
+    bg: 'bg-blue-900/20',
+    border: 'border-blue-500/30',
+    text: 'text-blue-300',
+    badge: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+  };
 };
 
 export const AdminTimetableHub: React.FC = () => {
@@ -138,7 +205,10 @@ export const AdminTimetableHub: React.FC = () => {
   const [rolloverResult, setRolloverResult] = useState<any>(null);
 
   const teachers = useMemo(() => allUsers.filter((u) => u.role === 'teacher'), [allUsers]);
-  const activeYear = useMemo(() => academicYears.find((y) => y.isActive) || academicYears[0], [academicYears]);
+  const activeYear = useMemo(
+    () => academicYears.find((y) => y.isActive) || academicYears[0],
+    [academicYears],
+  );
 
   // Unique Cohorts from classrooms
   const cohorts = useMemo(() => {
@@ -159,9 +229,13 @@ export const AdminTimetableHub: React.FC = () => {
   }, [classrooms, timetableSlots]);
 
   const handleOpenAddSlot = (dayOfWeek?: number, periodNumber?: number) => {
-    const selectedClass = classrooms.find((c) =>
-      selectedCohort ? `${c.gradeLevel ? `Grade ${c.gradeLevel} - Section ${c.section}` : c.name}` === selectedCohort : true,
-    ) || classrooms[0];
+    const selectedClass =
+      classrooms.find((c) =>
+        selectedCohort
+          ? `${c.gradeLevel ? `Grade ${c.gradeLevel} - Section ${c.section}` : c.name}` ===
+            selectedCohort
+          : true,
+      ) || classrooms[0];
 
     const defDay = dayOfWeek !== undefined ? dayOfWeek : 0;
     const defPeriod = periodNumber || 1;
@@ -347,7 +421,10 @@ export const AdminTimetableHub: React.FC = () => {
       if (activeView === 'cohort' && selectedCohort) {
         const cls = classrooms.find((c) => c.id === slot.classroomId);
         if (!cls) return false;
-        const cName = cls.gradeLevel && cls.section ? `Grade ${cls.gradeLevel} - Section ${cls.section}` : cls.name;
+        const cName =
+          cls.gradeLevel && cls.section
+            ? `Grade ${cls.gradeLevel} - Section ${cls.section}`
+            : cls.name;
         return cName === selectedCohort;
       }
       if (activeView === 'teacher' && selectedTeacherId) {
@@ -361,7 +438,9 @@ export const AdminTimetableHub: React.FC = () => {
   }, [timetableSlots, activeView, selectedCohort, selectedTeacherId, selectedRoom, classrooms]);
 
   return (
-    <div className={`space-y-6 ${isFullScreen ? 'fixed inset-0 z-50 bg-slate-950 p-6 overflow-y-auto' : ''}`}>
+    <div
+      className={`space-y-6 ${isFullScreen ? 'fixed inset-0 z-50 bg-slate-950 p-6 overflow-y-auto' : ''}`}
+    >
       {/* Top Header Card */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -372,9 +451,15 @@ export const AdminTimetableHub: React.FC = () => {
                 <Calendar className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white tracking-tight">Master Timetable & Academic Engine</h2>
+                <h2 className="text-2xl font-bold text-white tracking-tight">
+                  Master Timetable & Academic Engine
+                </h2>
                 <p className="text-sm text-slate-400 mt-0.5">
-                  Academic Year: <span className="font-semibold text-indigo-400">{activeYear?.name || '2026/2027'}</span> • Zero-conflict scheduling & Bell Schedule
+                  Academic Year:{' '}
+                  <span className="font-semibold text-indigo-400">
+                    {activeYear?.name || '2026/2027'}
+                  </span>{' '}
+                  • Zero-conflict scheduling & Bell Schedule
                 </p>
               </div>
             </div>
@@ -433,7 +518,9 @@ export const AdminTimetableHub: React.FC = () => {
             <button
               onClick={() => setActiveView('matrix')}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                activeView === 'matrix' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+                activeView === 'matrix'
+                  ? 'bg-indigo-600 text-white shadow'
+                  : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               Master Grid
@@ -441,7 +528,9 @@ export const AdminTimetableHub: React.FC = () => {
             <button
               onClick={() => setActiveView('cohort')}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                activeView === 'cohort' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+                activeView === 'cohort'
+                  ? 'bg-indigo-600 text-white shadow'
+                  : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               By Cohort / Grade
@@ -449,7 +538,9 @@ export const AdminTimetableHub: React.FC = () => {
             <button
               onClick={() => setActiveView('teacher')}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                activeView === 'teacher' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+                activeView === 'teacher'
+                  ? 'bg-indigo-600 text-white shadow'
+                  : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               By Teacher
@@ -457,7 +548,9 @@ export const AdminTimetableHub: React.FC = () => {
             <button
               onClick={() => setActiveView('room')}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                activeView === 'room' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+                activeView === 'room'
+                  ? 'bg-indigo-600 text-white shadow'
+                  : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               By Room
@@ -530,7 +623,9 @@ export const AdminTimetableHub: React.FC = () => {
           <div className="flex items-center gap-2 text-slate-300">
             <Clock className="w-4 h-4 text-indigo-400" />
             <span className="font-semibold text-white">Daily Operational Hours:</span>
-            <span>{schoolTimingConfig.schoolStartTime} – {schoolTimingConfig.schoolEndTime}</span>
+            <span>
+              {schoolTimingConfig.schoolStartTime} – {schoolTimingConfig.schoolEndTime}
+            </span>
             <span className="text-slate-600">|</span>
             <span>{schoolTimingConfig.periodDurationMinutes} mins / period</span>
           </div>
@@ -546,7 +641,9 @@ export const AdminTimetableHub: React.FC = () => {
                 {b.type === 'lunch' && <Utensils className="w-3 h-3 text-emerald-400" />}
                 {b.type === 'dismissal' && <LogOut className="w-3 h-3 text-rose-400" />}
                 <span>{b.name}:</span>
-                <span className="text-slate-400 font-mono">{b.startTime} {b.endTime ? `- ${b.endTime}` : ''}</span>
+                <span className="text-slate-400 font-mono">
+                  {b.startTime} {b.endTime ? `- ${b.endTime}` : ''}
+                </span>
               </span>
             ))}
           </div>
@@ -565,7 +662,9 @@ export const AdminTimetableHub: React.FC = () => {
 
           {/* Periods 1 through 6 with Interleaved Breaks */}
           {[1, 2, 3, 4, 5, 6].map((pNum) => {
-            const breakAfter = schoolTimingConfig.breaks.find((b) => b.afterPeriod === pNum - 1 && pNum > 1);
+            const breakAfter = schoolTimingConfig.breaks.find(
+              (b) => b.afterPeriod === pNum - 1 && pNum > 1,
+            );
 
             return (
               <React.Fragment key={`period-group-${pNum}`}>
@@ -573,16 +672,24 @@ export const AdminTimetableHub: React.FC = () => {
                 {breakAfter && (
                   <div className="my-2 p-2.5 bg-indigo-950/20 border border-indigo-500/20 rounded-xl flex items-center justify-center gap-3 text-xs text-indigo-300">
                     {breakAfter.type === 'snack' && <Coffee className="w-4 h-4 text-orange-400" />}
-                    {breakAfter.type === 'lunch' && <Utensils className="w-4 h-4 text-emerald-400" />}
-                    <span className="font-semibold uppercase tracking-wider">{breakAfter.name}</span>
-                    <span className="font-mono text-slate-400 font-normal">({breakAfter.startTime} - {breakAfter.endTime})</span>
+                    {breakAfter.type === 'lunch' && (
+                      <Utensils className="w-4 h-4 text-emerald-400" />
+                    )}
+                    <span className="font-semibold uppercase tracking-wider">
+                      {breakAfter.name}
+                    </span>
+                    <span className="font-mono text-slate-400 font-normal">
+                      ({breakAfter.startTime} - {breakAfter.endTime})
+                    </span>
                   </div>
                 )}
 
                 <div className="grid grid-cols-7 gap-3 mb-3">
                   {/* Period Header Column */}
                   <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-3 flex flex-col justify-center items-center text-center">
-                    <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">Period {pNum}</span>
+                    <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">
+                      Period {pNum}
+                    </span>
                     <span className="text-[11px] text-slate-500 mt-1 font-mono">
                       {pNum === 1 && '09:00 - 09:45'}
                       {pNum === 2 && '09:45 - 10:30'}
@@ -608,7 +715,9 @@ export const AdminTimetableHub: React.FC = () => {
                         {slotsForCell.length > 0 ? (
                           <div className="space-y-1.5">
                             {slotsForCell.map((slot) => {
-                              const theme = getSubjectTheme(slot.subject?.name || slot.classroom?.name);
+                              const theme = getSubjectTheme(
+                                slot.subject?.name || slot.classroom?.name,
+                              );
                               return (
                                 <div
                                   key={slot.id}
@@ -624,7 +733,9 @@ export const AdminTimetableHub: React.FC = () => {
                                     </span>
                                   </div>
                                   <div className="text-[11px] text-slate-400 flex items-center justify-between">
-                                    <span className="truncate">{slot.teacher?.name || 'Assigned Teacher'}</span>
+                                    <span className="truncate">
+                                      {slot.teacher?.name || 'Assigned Teacher'}
+                                    </span>
                                     {slot.cohort?.name && (
                                       <span className="text-[10px] text-indigo-400 font-medium truncate">
                                         {slot.cohort.name}
@@ -684,7 +795,9 @@ export const AdminTimetableHub: React.FC = () => {
                   <h3 className="text-lg font-bold text-white">
                     {slotForm.id ? 'Edit Period Slot' : 'Schedule New Period Slot'}
                   </h3>
-                  <p className="text-xs text-slate-400">Configure clash-free timetable period for cohort & teacher</p>
+                  <p className="text-xs text-slate-400">
+                    Configure clash-free timetable period for cohort & teacher
+                  </p>
                 </div>
               </div>
               <button
@@ -707,7 +820,9 @@ export const AdminTimetableHub: React.FC = () => {
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-medium mb-1.5">Classroom / Subject & Cohort</label>
+                <label className="block text-slate-300 font-medium mb-1.5">
+                  Classroom / Subject & Cohort
+                </label>
                 <select
                   value={slotForm.classroomId}
                   onChange={(e) => {
@@ -725,7 +840,8 @@ export const AdminTimetableHub: React.FC = () => {
                   <option value="">Select a Classroom</option>
                   {classrooms.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name} ({c.gradeLevel ? `Grade ${c.gradeLevel}-${c.section}` : c.code || ''})
+                      {c.name} ({c.gradeLevel ? `Grade ${c.gradeLevel}-${c.section}` : c.code || ''}
+                      )
                     </option>
                   ))}
                 </select>
@@ -736,7 +852,9 @@ export const AdminTimetableHub: React.FC = () => {
                   <label className="block text-slate-300 font-medium mb-1.5">Instructor</label>
                   <select
                     value={slotForm.teacherId}
-                    onChange={(e) => setSlotForm((prev) => ({ ...prev, teacherId: e.target.value }))}
+                    onChange={(e) =>
+                      setSlotForm((prev) => ({ ...prev, teacherId: e.target.value }))
+                    }
                     className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500"
                   >
                     <option value="">Select Teacher</option>
@@ -752,7 +870,9 @@ export const AdminTimetableHub: React.FC = () => {
                   <input
                     type="text"
                     value={slotForm.roomNumber}
-                    onChange={(e) => setSlotForm((prev) => ({ ...prev, roomNumber: e.target.value }))}
+                    onChange={(e) =>
+                      setSlotForm((prev) => ({ ...prev, roomNumber: e.target.value }))
+                    }
                     placeholder="e.g. Room 204 / Lab B"
                     className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500"
                   />
@@ -764,7 +884,9 @@ export const AdminTimetableHub: React.FC = () => {
                   <label className="block text-slate-300 font-medium mb-1.5">Day of Week</label>
                   <select
                     value={slotForm.dayOfWeek}
-                    onChange={(e) => setSlotForm((prev) => ({ ...prev, dayOfWeek: Number(e.target.value) }))}
+                    onChange={(e) =>
+                      setSlotForm((prev) => ({ ...prev, dayOfWeek: Number(e.target.value) }))
+                    }
                     className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500"
                   >
                     {DAYS.map((day, idx) => (
@@ -778,7 +900,9 @@ export const AdminTimetableHub: React.FC = () => {
                   <label className="block text-slate-300 font-medium mb-1.5">Period Number</label>
                   <select
                     value={slotForm.periodNumber}
-                    onChange={(e) => setSlotForm((prev) => ({ ...prev, periodNumber: Number(e.target.value) }))}
+                    onChange={(e) =>
+                      setSlotForm((prev) => ({ ...prev, periodNumber: Number(e.target.value) }))
+                    }
                     className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
@@ -792,16 +916,22 @@ export const AdminTimetableHub: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1.5">Start Time (HH:mm)</label>
+                  <label className="block text-slate-300 font-medium mb-1.5">
+                    Start Time (HH:mm)
+                  </label>
                   <input
                     type="time"
                     value={slotForm.startTime}
-                    onChange={(e) => setSlotForm((prev) => ({ ...prev, startTime: e.target.value }))}
+                    onChange={(e) =>
+                      setSlotForm((prev) => ({ ...prev, startTime: e.target.value }))
+                    }
                     className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1.5">End Time (HH:mm)</label>
+                  <label className="block text-slate-300 font-medium mb-1.5">
+                    End Time (HH:mm)
+                  </label>
                   <input
                     type="time"
                     value={slotForm.endTime}
@@ -812,11 +942,15 @@ export const AdminTimetableHub: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1.5">Required Books / Materials</label>
+                <label className="block text-slate-300 font-medium mb-1.5">
+                  Required Books / Materials
+                </label>
                 <input
                   type="text"
                   value={slotForm.requiredBooks}
-                  onChange={(e) => setSlotForm((prev) => ({ ...prev, requiredBooks: e.target.value }))}
+                  onChange={(e) =>
+                    setSlotForm((prev) => ({ ...prev, requiredBooks: e.target.value }))
+                  }
                   placeholder="e.g. NCERT Science Textbook & Lab Journal"
                   className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500"
                 />
@@ -866,7 +1000,9 @@ export const AdminTimetableHub: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Bell Schedule & School Timing</h3>
-                  <p className="text-xs text-slate-400">Configure daily periods, morning assembly, and lunch breaks</p>
+                  <p className="text-xs text-slate-400">
+                    Configure daily periods, morning assembly, and lunch breaks
+                  </p>
                 </div>
               </div>
               <button
@@ -902,7 +1038,9 @@ export const AdminTimetableHub: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Period Length (Mins)</label>
+                  <label className="block text-slate-300 font-medium mb-1">
+                    Period Length (Mins)
+                  </label>
                   <input
                     type="number"
                     value={timingConfig.periodDurationMinutes}
@@ -931,7 +1069,8 @@ export const AdminTimetableHub: React.FC = () => {
                       <div>
                         <div className="font-semibold text-slate-200">{b.name}</div>
                         <div className="text-[11px] text-slate-500 font-mono">
-                          Type: {b.type} • {b.startTime} - {b.endTime} • After Period {b.afterPeriod ?? 0}
+                          Type: {b.type} • {b.startTime} - {b.endTime} • After Period{' '}
+                          {b.afterPeriod ?? 0}
                         </div>
                       </div>
                       <button
@@ -983,7 +1122,9 @@ export const AdminTimetableHub: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Academic Terms</h3>
-                  <p className="text-xs text-slate-400">Configure Trimesters or Semesters for active year</p>
+                  <p className="text-xs text-slate-400">
+                    Configure Trimesters or Semesters for active year
+                  </p>
                 </div>
               </div>
               <button
@@ -1042,7 +1183,9 @@ export const AdminTimetableHub: React.FC = () => {
               </div>
 
               <div className="space-y-2 max-h-52 overflow-y-auto">
-                <div className="text-slate-400 font-semibold">Active Terms ({academicTerms.length})</div>
+                <div className="text-slate-400 font-semibold">
+                  Active Terms ({academicTerms.length})
+                </div>
                 {academicTerms.map((term) => (
                   <div
                     key={term.id}
@@ -1050,10 +1193,12 @@ export const AdminTimetableHub: React.FC = () => {
                   >
                     <div>
                       <div className="font-semibold text-white">
-                        {term.name} <span className="text-slate-500 font-normal">#{term.sequence}</span>
+                        {term.name}{' '}
+                        <span className="text-slate-500 font-normal">#{term.sequence}</span>
                       </div>
                       <div className="text-slate-400 text-[11px] font-mono">
-                        {term.startsAt ? term.startsAt.slice(0, 10) : 'N/A'} to {term.endsAt ? term.endsAt.slice(0, 10) : 'N/A'}
+                        {term.startsAt ? term.startsAt.slice(0, 10) : 'N/A'} to{' '}
+                        {term.endsAt ? term.endsAt.slice(0, 10) : 'N/A'}
                       </div>
                     </div>
                     <button
@@ -1081,7 +1226,9 @@ export const AdminTimetableHub: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">School Holidays Calendar</h3>
-                  <p className="text-xs text-slate-400">Non-instructional days excluded from attendance penalty</p>
+                  <p className="text-xs text-slate-400">
+                    Non-instructional days excluded from attendance penalty
+                  </p>
                 </div>
               </div>
               <button
@@ -1126,7 +1273,9 @@ export const AdminTimetableHub: React.FC = () => {
               </div>
 
               <div className="space-y-2 max-h-52 overflow-y-auto">
-                <div className="text-slate-400 font-semibold">Registered Holidays ({schoolHolidays.length})</div>
+                <div className="text-slate-400 font-semibold">
+                  Registered Holidays ({schoolHolidays.length})
+                </div>
                 {schoolHolidays.map((h) => (
                   <div
                     key={h.id}
@@ -1134,7 +1283,9 @@ export const AdminTimetableHub: React.FC = () => {
                   >
                     <div>
                       <div className="font-semibold text-white">{h.name}</div>
-                      <div className="text-slate-400 text-[11px] font-mono">{h.date?.slice(0, 10)}</div>
+                      <div className="text-slate-400 text-[11px] font-mono">
+                        {h.date?.slice(0, 10)}
+                      </div>
                     </div>
                     <button
                       onClick={() => deleteSchoolHoliday(h.id)}
@@ -1161,7 +1312,9 @@ export const AdminTimetableHub: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Year-End Academic Rollover</h3>
-                  <p className="text-xs text-slate-400">Promote students, graduate senior classes, archive terms</p>
+                  <p className="text-xs text-slate-400">
+                    Promote students, graduate senior classes, archive terms
+                  </p>
                 </div>
               </div>
               <button
@@ -1183,10 +1336,30 @@ export const AdminTimetableHub: React.FC = () => {
                     Academic Rollover Completed Successfully!
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs text-slate-300 mt-2">
-                    <div>Students Promoted: <span className="font-semibold text-white">{rolloverResult.summary?.promoted ?? 0}</span></div>
-                    <div>Students Graduated: <span className="font-semibold text-white">{rolloverResult.summary?.graduated ?? 0}</span></div>
-                    <div>Classrooms Archived: <span className="font-semibold text-white">{rolloverResult.summary?.classroomsArchived ?? 0}</span></div>
-                    <div>New Classrooms: <span className="font-semibold text-white">{rolloverResult.summary?.newClassroomsCreated ?? 0}</span></div>
+                    <div>
+                      Students Promoted:{' '}
+                      <span className="font-semibold text-white">
+                        {rolloverResult.summary?.promoted ?? 0}
+                      </span>
+                    </div>
+                    <div>
+                      Students Graduated:{' '}
+                      <span className="font-semibold text-white">
+                        {rolloverResult.summary?.graduated ?? 0}
+                      </span>
+                    </div>
+                    <div>
+                      Classrooms Archived:{' '}
+                      <span className="font-semibold text-white">
+                        {rolloverResult.summary?.classroomsArchived ?? 0}
+                      </span>
+                    </div>
+                    <div>
+                      New Classrooms:{' '}
+                      <span className="font-semibold text-white">
+                        {rolloverResult.summary?.newClassroomsCreated ?? 0}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <button
@@ -1202,18 +1375,24 @@ export const AdminTimetableHub: React.FC = () => {
             ) : (
               <div className="space-y-4 text-xs">
                 <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-300 text-[11px] leading-relaxed">
-                  ⚠️ <strong>Important:</strong> Rollover will automatically calculate student progress, generate official Report Cards, promote students in grades 1–9 to the next grade level, graduate Grade 10 students, and archive the old academic year.
+                  ⚠️ <strong>Important:</strong> Rollover will automatically calculate student
+                  progress, generate official Report Cards, promote students in grades 1–9 to the
+                  next grade level, graduate Grade 10 students, and archive the old academic year.
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1.5">Current Academic Year (Source)</label>
+                  <label className="block text-slate-300 font-medium mb-1.5">
+                    Current Academic Year (Source)
+                  </label>
                   <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 font-mono">
                     {activeYear?.name || '2026/2027'} (Active)
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1.5">Target Academic Year</label>
+                  <label className="block text-slate-300 font-medium mb-1.5">
+                    Target Academic Year
+                  </label>
                   <select
                     value={rolloverTargetYear}
                     onChange={(e) => setRolloverTargetYear(e.target.value)}
@@ -1231,7 +1410,9 @@ export const AdminTimetableHub: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1.5">Passing Percentage Threshold (%)</label>
+                  <label className="block text-slate-300 font-medium mb-1.5">
+                    Passing Percentage Threshold (%)
+                  </label>
                   <input
                     type="number"
                     min={0}

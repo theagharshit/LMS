@@ -131,15 +131,17 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenParental
 
   const childTodayPeriods = React.useMemo(() => {
     if (childDbSlots.length > 0) {
-      return childDbSlots.map((s) => ({
-        id: s.id,
-        periodNumber: s.periodNumber,
-        startTime: s.startTime,
-        endTime: s.endTime,
-        subject: s.subject?.name || s.classroom?.name || 'Class',
-        teacherName: s.teacher?.name || 'Teacher',
-        room: s.roomNumber || 'Room 101',
-      })).sort((a, b) => a.startTime.localeCompare(b.startTime));
+      return childDbSlots
+        .map((s) => ({
+          id: s.id,
+          periodNumber: s.periodNumber,
+          startTime: s.startTime,
+          endTime: s.endTime,
+          subject: s.subject?.name || s.classroom?.name || 'Class',
+          teacherName: s.teacher?.name || 'Teacher',
+          room: s.roomNumber || 'Room 101',
+        }))
+        .sort((a, b) => a.startTime.localeCompare(b.startTime));
     }
     return weeklySchedule[todayDayName as keyof typeof weeklySchedule] || [];
   }, [childDbSlots, weeklySchedule, todayDayName]);
@@ -230,7 +232,12 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenParental
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-[#2D2D2A]">To: {msg.receiverName}</span>
                     <span className="text-[10px] text-[#7A7A72]">
-                      ({new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+                      (
+                      {new Date(msg.createdAt).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                      )
                     </span>
                   </div>
                   <p className="text-xs text-[#52524E] italic bg-[#F9F7F2] p-2.5 rounded-xl border border-[#EDEAE2]">
@@ -338,16 +345,25 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenParental
             </div>
 
             {childTodayPeriods.length === 0 ? (
-              <p className="text-xs text-[#7A7A72] py-4 text-center">No scheduled classes for today.</p>
+              <p className="text-xs text-[#7A7A72] py-4 text-center">
+                No scheduled classes for today.
+              </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {childTodayPeriods.map((period) => (
-                  <div key={period.id} className="p-3 bg-[#F9F7F2] border border-[#EDEAE2] rounded-2xl flex items-center justify-between">
+                  <div
+                    key={period.id}
+                    className="p-3 bg-[#F9F7F2] border border-[#EDEAE2] rounded-2xl flex items-center justify-between"
+                  >
                     <div>
-                      <span className="text-[10px] font-bold text-[#4A6741] uppercase">Period {period.periodNumber}</span>
+                      <span className="text-[10px] font-bold text-[#4A6741] uppercase">
+                        Period {period.periodNumber}
+                      </span>
                       <h4 className="font-bold text-xs text-[#2D2D2A]">{period.subject}</h4>
                       <p className="text-[11px] text-[#7A7A72] mt-0.5 flex items-center gap-2">
-                        <span>{period.startTime} - {period.endTime}</span>
+                        <span>
+                          {period.startTime} - {period.endTime}
+                        </span>
                         <span>•</span>
                         <span>{period.room}</span>
                       </p>
