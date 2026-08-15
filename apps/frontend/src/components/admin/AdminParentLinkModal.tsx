@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, StudentProfile } from '@lms/shared';
-import { X, Users, Check, Save, UserPlus, Trash2 } from 'lucide-react';
+import { X, Users, Check, Save, UserPlus, Trash2, Search } from 'lucide-react';
+
 
 interface AdminParentLinkModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export const AdminParentLinkModal: React.FC<AdminParentLinkModalProps> = ({
   onSaveLink,
 }) => {
   const [selectedChildIds, setSelectedChildIds] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (parent && parent.childrenIds) {
@@ -25,6 +27,7 @@ export const AdminParentLinkModal: React.FC<AdminParentLinkModalProps> = ({
     } else {
       setSelectedChildIds([]);
     }
+    setSearchQuery('');
   }, [parent, isOpen]);
 
   if (!isOpen || !parent) return null;
@@ -81,8 +84,28 @@ export const AdminParentLinkModal: React.FC<AdminParentLinkModalProps> = ({
             <h4 className="font-bold text-[#2D2D2A] text-xs font-serif mb-2">
               Select Enrolled Students to Link:
             </h4>
-            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-              {allStudents.map((student) => {
+            
+            <div className="relative mb-3">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-[#7A7A72]" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search students by name or roll number..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-[#EDEAE2] text-xs font-semibold text-[#2D2D2A] placeholder-[#7A7A72] focus:outline-none focus:border-[#4A6741] transition-colors"
+              />
+            </div>
+
+            <div className="space-y-2 h-72 overflow-y-auto pr-1">
+              {allStudents
+                .filter(
+                  (s) =>
+                    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    s.rollNumber?.toString().toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map((student) => {
                 const isLinked = selectedChildIds.includes(student.id);
                 return (
                   <div
