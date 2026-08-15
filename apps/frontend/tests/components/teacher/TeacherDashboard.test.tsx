@@ -5,10 +5,11 @@ import { TeacherDashboard } from '../../../src/components/teacher/TeacherDashboa
 import { AppProvider, useApp } from '../../../src/context/AppContext';
 
 const TestWrapper = ({ onOpenGradeModal, onOpenQuizBuilderModal }: any) => {
-  const { switchUser } = useApp();
+  const { allUsers, establishSession } = useApp();
   useEffect(() => {
-    switchUser('user-teach-1');
-  }, [switchUser]);
+    const teacher = allUsers.find((user) => user.id === 'user-teach-1');
+    if (teacher) establishSession(teacher, 'database-test-token-user-teach-1');
+  }, [allUsers, establishSession]);
 
   return (
     <TeacherDashboard
@@ -26,6 +27,6 @@ describe('TeacherDashboard Component (src/components/teacher/TeacherDashboard.ts
       </AppProvider>,
     );
 
-    expect(screen.getByText(/Class Teacher & Mathematics Faculty/i)).toBeInTheDocument();
+    expect(screen.getByText(/Faculty • Mathematics, Computer Science/i)).toBeInTheDocument();
   });
 });

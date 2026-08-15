@@ -1,6 +1,5 @@
 import { prisma } from './prismaClient';
 import { Quiz, QuizSubmission } from '@lms/shared';
-import { badgeService } from './badgeService';
 import { notificationService } from './notificationService';
 
 const quizInclude = {
@@ -48,7 +47,7 @@ export class QuizService {
     return quizzes.map(mapQuiz);
   }
 
-  public async addQuiz(quiz: Omit<Quiz, 'id' | 'createdAt'>): Promise<Quiz> {
+  public async addQuiz(quiz: Omit<Quiz, 'id' | 'createdAt'>, creatorId?: string): Promise<Quiz> {
     const classroom = await prisma.classroom.findUniqueOrThrow({
       where: { id: quiz.classroomId },
       include: { subjectRef: true },
@@ -61,6 +60,7 @@ export class QuizService {
     const created = await prisma.quiz.create({
       data: {
         classroomId: quiz.classroomId,
+        createdById: creatorId || classroom.teacherId,
         title: quiz.title,
         description: quiz.description,
         durationMinutes: quiz.durationMinutes,
@@ -92,6 +92,7 @@ export class QuizService {
         .dispatchBroadcastNotification({
           targetAudience: 'classroom',
           classroomId: created.classroomId,
+          schoolId: classroom.schoolId,
           title:
             status === 'live'
               ? `⚡ Test Started: ${created.title}`
@@ -185,6 +186,7 @@ export class QuizService {
       .dispatchBroadcastNotification({
         targetAudience: 'classroom',
         classroomId: updated.classroomId,
+        schoolId: updated.classroom.schoolId,
         title: `⚡ Test Started: ${updated.title}`,
         body: `${updated.durationMinutes} min assessment is now live! Open your classroom to begin.`,
         category: 'CRITICAL',
@@ -221,6 +223,7 @@ export class QuizService {
         .dispatchBroadcastNotification({
           targetAudience: 'classroom',
           classroomId: updated.classroomId,
+          schoolId: updated.classroom.schoolId,
           title: `📊 Quiz Marks Published: ${updated.title}`,
           body: 'Scores and detailed solution keys are now visible!',
           category: 'CRITICAL',
@@ -245,23 +248,25 @@ export class QuizService {
   public async submitQuiz(
     submission: Omit<QuizSubmission, 'id' | 'completedAt'>,
   ): Promise<QuizSubmission> {
-    let quiz = await prisma.quiz.findUnique({ where: { id: submission.quizId } });
-    if (!quiz) {
-      quiz = await prisma.quiz.create({
-        data: {
-          id: submission.quizId,
-          classroomId: 'cls-math-8a',
-          title: 'Online Assessment',
-          description: 'Quiz evaluation',
-          durationMinutes: 10,
-          dueDate: '2026-08-15',
-          published: true,
-          status: 'published',
-          revealMarksMode: 'immediate',
-          createdAt: new Date().toISOString(),
-        },
-      });
-    }
+    const quiz = await prisma.quiz.findUnique({
+      where: { id: submission.quizId },
+      include: { questions: true, classroom: true },
+    });
+    if (!quiz || quiz.classroom.isArchived) throw new Error('Active quiz not found.');
+    if (!quiz.published || !['published', 'live', 'completed'].includes(quiz.status))
+      throw new Error('This quiz is not open for submissions.');
+    const student = await prisma.user.findFirst({
+      where: { id: submission.studentId, role: 'student', isArchived: false },
+    });
+    if (!student) throw new Error('Active student not found.');
+    const enrollment = await prisma.classroomEnrollment.findFirst({
+      where: {
+        classroomId: quiz.classroomId,
+        studentId: student.id,
+        isActive: true,
+      },
+    });
+    if (!enrollment) throw new Error('Student is not enrolled in this quiz classroom.');
     if (submission.timeSpentSeconds !== undefined) {
       if (
         submission.timeSpentSeconds < 0 ||
@@ -276,28 +281,76 @@ export class QuizService {
       _max: { attemptNumber: true },
     });
     const attemptNumber = (latestAttempt._max.attemptNumber || 0) + 1;
+    const answers = submission.answers || {};
+    const normalizeAnswer = (value: unknown) =>
+      String(value ?? '')
+        .trim()
+        .toLocaleLowerCase();
+    const score = quiz.questions.reduce(
+      (total, question) =>
+        normalizeAnswer(answers[question.id]) === normalizeAnswer(question.correctAnswer)
+          ? total + question.points
+          : total,
+      0,
+    );
+    const totalPoints = quiz.questions.reduce((total, question) => total + question.points, 0);
 
-    const created = await prisma.quizSubmission.create({
-      data: {
-        quizId: submission.quizId,
-        studentId: submission.studentId,
-        score: submission.score,
-        totalPoints: submission.totalPoints,
-        completedAt: new Date().toISOString(),
-        startedAt: submission.startedAt ? new Date(submission.startedAt) : undefined,
-        timeSpentSeconds: submission.timeSpentSeconds,
-        answers: submission.answers || {},
-        attemptNumber,
-      },
+    const created = await prisma.$transaction(async (tx) => {
+      const savedSubmission = await tx.quizSubmission.create({
+        data: {
+          quizId: submission.quizId,
+          studentId: submission.studentId,
+          score,
+          totalPoints,
+          completedAt: new Date().toISOString(),
+          startedAt: submission.startedAt ? new Date(submission.startedAt) : undefined,
+          timeSpentSeconds: submission.timeSpentSeconds,
+          answers,
+          attemptNumber,
+        },
+      });
+
+      if (totalPoints > 0 && score === totalPoints) {
+        const [profile, automaticBadge] = await Promise.all([
+          tx.studentProfile.findFirst({
+            where: { userId: submission.studentId, isArchived: false },
+            select: { id: true },
+          }),
+          tx.badgeDefinition.findFirst({
+            where: {
+              isAutomatic: true,
+              OR: [
+                { title: { equals: 'Quiz Master', mode: 'insensitive' } },
+                { criteria: { contains: '100%' } },
+              ],
+            },
+            orderBy: { id: 'asc' },
+            select: { id: true },
+          }),
+        ]);
+        if (profile && automaticBadge) {
+          const existing = await tx.studentBadge.findFirst({
+            where: {
+              studentProfileId: profile.id,
+              badgeDefinitionId: automaticBadge.id,
+            },
+            select: { id: true },
+          });
+          if (!existing) {
+            await tx.studentBadge.create({
+              data: {
+                studentProfileId: profile.id,
+                badgeDefinitionId: automaticBadge.id,
+                earnedDate: new Date().toISOString().split('T')[0],
+                remarks: `Automatically awarded for a perfect score on ${quiz.title}.`,
+              },
+            });
+          }
+        }
+      }
+
+      return savedSubmission;
     });
-    if (submission.score === submission.totalPoints && submission.totalPoints > 0) {
-      await badgeService.assignBadge(
-        submission.studentId,
-        'bdg-def-2',
-        undefined,
-        'Scored 100% on a quiz',
-      );
-    }
     return {
       ...created,
       startedAt: created.startedAt?.toISOString(),

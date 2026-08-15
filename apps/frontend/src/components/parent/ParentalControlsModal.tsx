@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { X, ShieldAlert, Check, Clock, Bell, MessageSquare, Save } from 'lucide-react';
 
@@ -13,25 +13,44 @@ export const ParentalControlsModal: React.FC<ParentalControlsModalProps> = ({
 }) => {
   const { activeChild, parentControls, updateParentControls } = useApp();
 
-  const currentCtrl = parentControls[activeChild.id] || {
-    studentId: activeChild.id,
-    allowTeacherDirectChat: true,
-    allowPeerDiscussion: false,
-    missingHomeworkAlerts: true,
-    lowAttendanceAlerts: true,
-    weeklyDigestEmail: true,
-    screenTimeLimitMinutes: 120,
-    requireApprovalForOutboundMsgs: true,
-  };
+  const currentCtrl = activeChild ? parentControls[activeChild.id] : undefined;
 
-  const [allowTeacher, setAllowTeacher] = useState(currentCtrl.allowTeacherDirectChat);
-  const [allowPeer, setAllowPeer] = useState(currentCtrl.allowPeerDiscussion);
-  const [screenTime, setScreenTime] = useState(currentCtrl.screenTimeLimitMinutes);
-  const [missingHw, setMissingHw] = useState(currentCtrl.missingHomeworkAlerts);
-  const [lowAtt, setLowAtt] = useState(currentCtrl.lowAttendanceAlerts);
-  const [requireApprove, setRequireApprove] = useState(currentCtrl.requireApprovalForOutboundMsgs);
+  const [allowTeacher, setAllowTeacher] = useState(false);
+  const [allowPeer, setAllowPeer] = useState(false);
+  const [screenTime, setScreenTime] = useState(0);
+  const [missingHw, setMissingHw] = useState(false);
+  const [lowAtt, setLowAtt] = useState(false);
+  const [requireApprove, setRequireApprove] = useState(false);
+
+  useEffect(() => {
+    if (!currentCtrl) return;
+    setAllowTeacher(currentCtrl.allowTeacherDirectChat);
+    setAllowPeer(currentCtrl.allowPeerDiscussion);
+    setScreenTime(currentCtrl.screenTimeLimitMinutes);
+    setMissingHw(currentCtrl.missingHomeworkAlerts);
+    setLowAtt(currentCtrl.lowAttendanceAlerts);
+    setRequireApprove(currentCtrl.requireApprovalForOutboundMsgs);
+  }, [currentCtrl]);
 
   if (!isOpen) return null;
+  if (!activeChild || !currentCtrl) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="w-full max-w-md rounded-3xl bg-white p-6 text-center shadow-2xl">
+          <h3 className="font-bold text-slate-900">Safety settings unavailable</h3>
+          <p className="mt-2 text-xs text-slate-500">
+            No database-backed parental-control record is linked to the selected child.
+          </p>
+          <button
+            onClick={onClose}
+            className="mt-5 rounded-xl bg-slate-800 px-4 py-2 text-xs font-bold text-white"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleSave = () => {
     updateParentControls(activeChild.id, {
@@ -41,7 +60,7 @@ export const ParentalControlsModal: React.FC<ParentalControlsModalProps> = ({
       screenTimeLimitMinutes: screenTime,
       missingHomeworkAlerts: missingHw,
       lowAttendanceAlerts: lowAtt,
-      weeklyDigestEmail: true,
+      weeklyDigestEmail: currentCtrl.weeklyDigestEmail,
       requireApprovalForOutboundMsgs: requireApprove,
     });
     onClose();

@@ -10,10 +10,28 @@ import {
 } from '@lms/shared';
 import { sendToUser } from '@utils/realtime';
 import { logger } from '@utils/logger';
+import { randomUUID } from 'node:crypto';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
+
+const mapNotification = (record: any): NotificationItem => ({
+  id: record.id,
+  recipientId: record.recipientId,
+  senderId: record.senderId || undefined,
+  senderName: record.sender?.name,
+  senderRole: record.sender?.role,
+  title: record.title,
+  body: record.body,
+  category: record.category as NotificationCategory,
+  severity: record.severity as NotificationSeverity,
+  type: record.type as NotificationType,
+  broadcastId: record.broadcastId || undefined,
+  targetAudience: record.targetAudience || undefined,
+  read: record.read,
+  createdAt: record.createdAt,
+});
 
 export class NotificationService {
   /**
@@ -106,6 +124,9 @@ export class NotificationService {
     category: NotificationCategory;
     severity?: NotificationSeverity;
     type?: NotificationType;
+    broadcastId?: string;
+    targetAudience?: string;
+    createdAt?: string;
   }): Promise<NotificationItem | null> {
     if (!(await this.hasActiveUser(data.recipientId))) {
       logger.warn(
@@ -141,27 +162,23 @@ export class NotificationService {
       data: {
         recipientId: data.recipientId,
         senderId,
-        senderName: data.senderName,
-        senderRole: data.senderRole,
         title: data.title,
         body: data.body,
         category,
         severity,
         type,
-        createdAt: new Date().toISOString(),
+        broadcastId: data.broadcastId,
+        targetAudience: data.targetAudience,
+        createdAt: data.createdAt || new Date().toISOString(),
       },
+      include: { sender: true },
     });
 
     logger.info(
       `[NotificationEngine] Dispatched [${category}] notification "${data.title}" to ${data.recipientId}`,
     );
 
-    const notificationItem = {
-      ...created,
-      category: created.category as NotificationCategory,
-      severity: created.severity as NotificationSeverity,
-      type: created.type as NotificationType,
-    };
+    const notificationItem = mapNotification(created);
 
     sendToUser(data.recipientId, 'notification', notificationItem);
 
@@ -179,12 +196,18 @@ export class NotificationService {
     category: NotificationCategory;
     severity?: NotificationSeverity;
     type?: NotificationType;
-  }): Promise<number> {
+    schoolId: string;
+  }): Promise<{ dispatchedCount: number; broadcastId: string; createdAt: string }> {
     let targetUserIds: string[] = [];
 
     if (data.targetAudience === 'classroom' && data.classroomId) {
       const enrollments = await prisma.classroomEnrollment.findMany({
-        where: { classroomId: data.classroomId },
+        where: {
+          classroomId: data.classroomId,
+          isActive: true,
+          classroom: { schoolId: data.schoolId, isArchived: false },
+          student: { schoolId: data.schoolId, isArchived: false },
+        },
         select: { studentId: true },
       });
       targetUserIds = enrollments.map((e) => e.studentId);
@@ -201,22 +224,31 @@ export class NotificationService {
                 : undefined;
 
       const users = await prisma.user.findMany({
-        where: roleFilter ? { role: roleFilter } : undefined,
+        where: {
+          schoolId: data.schoolId,
+          isArchived: false,
+          ...(roleFilter ? { role: roleFilter } : {}),
+        },
         select: { id: true },
       });
       targetUserIds = users.map((u) => u.id);
     }
 
+    const broadcastId = `broadcast-${randomUUID()}`;
+    const createdAt = new Date().toISOString();
     let dispatchedCount = 0;
     for (const userId of targetUserIds) {
       const result = await this.dispatchNotification({
         ...data,
         recipientId: userId,
+        broadcastId,
+        targetAudience: data.targetAudience,
+        createdAt,
       });
       if (result) dispatchedCount++;
     }
 
-    return dispatchedCount;
+    return { dispatchedCount, broadcastId, createdAt };
   }
 
   public async getUserNotifications(userId: string): Promise<NotificationItem[]> {
@@ -225,83 +257,24 @@ export class NotificationService {
       return [];
     }
 
-    let records = await prisma.notificationRecord.findMany({
+    const records = await prisma.notificationRecord.findMany({
       where: { recipientId: userId },
+      include: { sender: true },
       orderBy: { createdAt: 'desc' },
     });
 
-    if (records.length === 0) {
-      await prisma.notificationRecord.createMany({
-        data: [
-          {
-            id: `n1-${userId}`,
-            recipientId: userId,
-            title: '🚨 Attendance Alert: Absence Reported',
-            body: 'Attendance record updated as ABSENT for Period 1 Science.',
-            category: 'CRITICAL',
-            severity: 'urgent',
-            type: 'attendance',
-            read: false,
-            createdAt: new Date(Date.now() - 10 * 60000).toISOString(),
-          },
-          {
-            id: `n2-${userId}`,
-            recipientId: userId,
-            title: '⚡ Quiz Marks Published',
-            body: 'Grade 8 Algebra & Factorization Quiz scores are now live!',
-            category: 'CRITICAL',
-            severity: 'high',
-            type: 'quiz',
-            read: false,
-            createdAt: new Date(Date.now() - 60 * 60000).toISOString(),
-          },
-          {
-            id: `n3-${userId}`,
-            recipientId: userId,
-            title: 'New Homework Assigned',
-            body: 'Mr. Ramesh Thapa posted Exercise 4.1 in Math Grade 8',
-            category: 'ACADEMIC',
-            severity: 'normal',
-            type: 'assignment',
-            read: false,
-            createdAt: new Date(Date.now() - 2 * 3600000).toISOString(),
-          },
-          {
-            id: `n4-${userId}`,
-            recipientId: userId,
-            title: 'Badge Earned: Quiz Master 🎉',
-            body: 'Awarded for scoring 100% on Mathematics assessment.',
-            category: 'COMMUNICATION',
-            severity: 'info',
-            type: 'badge',
-            read: true,
-            createdAt: new Date(Date.now() - 24 * 3600000).toISOString(),
-          },
-        ],
-      });
-
-      records = await prisma.notificationRecord.findMany({
-        where: { recipientId: userId },
-        orderBy: { createdAt: 'desc' },
-      });
-    }
-
-    return records.map((r) => ({
-      ...r,
-      category: r.category as NotificationCategory,
-      severity: r.severity as NotificationSeverity,
-      type: r.type as NotificationType,
-    }));
+    return records.map(mapNotification);
   }
 
-  public async markAsRead(id: string): Promise<boolean> {
-    await prisma.notificationRecord.updateMany({
+  public async markAsRead(id: string, userId: string): Promise<boolean> {
+    const result = await prisma.notificationRecord.updateMany({
       where: {
-        OR: [{ id }, { id: { startsWith: `${id}-` } }],
+        id,
+        recipientId: userId,
       },
       data: { read: true },
     });
-    return true;
+    return result.count > 0;
   }
 
   public async markAllAsRead(userId: string): Promise<boolean> {
@@ -312,13 +285,34 @@ export class NotificationService {
     return true;
   }
 
-  public async deleteNotification(id: string): Promise<boolean> {
-    await prisma.notificationRecord.deleteMany({
-      where: {
-        OR: [{ id }, { id: { startsWith: `${id}-` } }],
+  public async deleteNotification(id: string, actorId: string): Promise<boolean> {
+    const actor = await prisma.user.findFirst({
+      where: { id: actorId, isArchived: false },
+      select: { id: true, role: true, schoolId: true },
+    });
+    if (!actor) return false;
+    const record = await prisma.notificationRecord.findFirst({
+      where: { OR: [{ id }, { broadcastId: id }] },
+      select: {
+        id: true,
+        recipientId: true,
+        broadcastId: true,
+        recipient: { select: { schoolId: true } },
       },
     });
-    return true;
+    if (!record) return false;
+    if (actor.role === 'admin' && record.recipient.schoolId === actor.schoolId) {
+      const result = await prisma.notificationRecord.deleteMany({
+        where: {
+          recipient: { schoolId: actor.schoolId },
+          ...(record.broadcastId ? { broadcastId: record.broadcastId } : { id: record.id }),
+        },
+      });
+      return result.count > 0;
+    }
+    if (record.recipientId !== actor.id) return false;
+    const result = await prisma.notificationRecord.deleteMany({ where: { id: record.id } });
+    return result.count > 0;
   }
 
   public async clearReadNotifications(userId: string): Promise<boolean> {

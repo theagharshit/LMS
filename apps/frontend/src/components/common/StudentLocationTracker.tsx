@@ -26,27 +26,23 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
   studentName,
   showUpdateButton = true,
 }) => {
-  const { currentUser, studentLocations, updateStudentLocation } = useApp();
+  const { currentUser, studentLocations, updateStudentLocation, classrooms } = useApp();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const locationRecord = studentLocations.find((l) => l.studentId === studentId) || {
-    id: 'default',
-    studentId,
-    studentName,
-    currentLocation: 'In Class (Grade 8-A Room 204)',
-    category: 'in_class' as LocationStatusCategory,
-    updatedBy: 'School Timetable System',
-    updatedByRole: 'admin' as const,
-    updatedAt: new Date().toISOString(),
-  };
+  const locationRecord = studentLocations.find((l) => l.studentId === studentId);
+  const enrolledClassrooms = classrooms.filter((classroom) =>
+    classroom.enrolledStudentIds?.includes(studentId),
+  );
 
   const isTeacherOrAdmin = currentUser.role === 'teacher' || currentUser.role === 'admin';
 
   // Modal Form State
-  const [locationText, setLocationText] = useState(locationRecord.currentLocation);
-  const [category, setCategory] = useState<LocationStatusCategory>(locationRecord.category);
-  const [busNumber, setBusNumber] = useState(locationRecord.busNumber || 'Bus #4');
-  const [notes, setNotes] = useState(locationRecord.notes || '');
+  const [locationText, setLocationText] = useState(locationRecord?.currentLocation || '');
+  const [category, setCategory] = useState<LocationStatusCategory>(
+    locationRecord?.category || 'in_class',
+  );
+  const [busNumber, setBusNumber] = useState(locationRecord?.busNumber || '');
+  const [notes, setNotes] = useState(locationRecord?.notes || '');
 
   const getLocationIcon = (cat: LocationStatusCategory) => {
     switch (cat) {
@@ -78,16 +74,6 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
     }
   };
 
-  const handleApplyPreset = (
-    presetText: string,
-    presetCat: LocationStatusCategory,
-    defaultBus?: string,
-  ) => {
-    setLocationText(presetText);
-    setCategory(presetCat);
-    if (defaultBus) setBusNumber(defaultBus);
-  };
-
   const handleSaveLocation = (e: React.FormEvent) => {
     e.preventDefault();
     updateStudentLocation(
@@ -95,40 +81,44 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
       studentName,
       locationText,
       category,
-      currentUser.name,
-      currentUser.role === 'admin' ? 'admin' : 'teacher',
       category === 'en_route_bus' ? busNumber : undefined,
       notes,
     );
     setIsModalOpen(false);
   };
 
-  const formattedTime = new Date(locationRecord.updatedAt).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const formattedTime = locationRecord
+    ? new Date(locationRecord.updatedAt).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '';
 
   return (
     <div className="rounded-2xl bg-white border border-[#EDEAE2] p-3.5 shadow-xs space-y-2">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-xl bg-[#F9F7F2]">
-            {getLocationIcon(locationRecord.category)}
+            {getLocationIcon(locationRecord?.category || 'in_class')}
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-[#7A7A72]">
               Where is Student? • Live Tracker
             </p>
-            <p className="text-xs font-bold text-[#2D2D2A]">{locationRecord.currentLocation}</p>
+            <p className="text-xs font-bold text-[#2D2D2A]">
+              {locationRecord?.currentLocation || 'Location not reported'}
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span
-            className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${getCategoryBadgeColor(locationRecord.category)}`}
-          >
-            ● Live
-          </span>
+          {locationRecord && (
+            <span
+              className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${getCategoryBadgeColor(locationRecord.category)}`}
+            >
+              ● Live
+            </span>
+          )}
           {isTeacherOrAdmin && showUpdateButton && (
             <button
               onClick={() => setIsModalOpen(true)}
@@ -141,14 +131,16 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
         </div>
       </div>
 
-      <div className="text-[10px] text-[#7A7A72] flex items-center justify-between border-t border-[#EDEAE2] pt-2">
-        <span>
-          Updated by: <strong className="text-[#2D2D2A]">{locationRecord.updatedBy}</strong>
-        </span>
-        <span>
-          Time: <strong className="text-[#2D2D2A]">{formattedTime}</strong>
-        </span>
-      </div>
+      {locationRecord && (
+        <div className="text-[10px] text-[#7A7A72] flex items-center justify-between border-t border-[#EDEAE2] pt-2">
+          <span>
+            Updated by: <strong className="text-[#2D2D2A]">{locationRecord.updatedBy}</strong>
+          </span>
+          <span>
+            Time: <strong className="text-[#2D2D2A]">{formattedTime}</strong>
+          </span>
+        </div>
+      )}
 
       {/* Location Update Modal for Teacher & Admin */}
       {isModalOpen && (
@@ -167,49 +159,49 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
               </button>
             </div>
 
-            {/* Quick Presets */}
-            <div>
-              <p className="text-[11px] font-bold text-[#7A7A72] mb-1.5">Quick Location Presets:</p>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => handleApplyPreset('In Math Class (Room 204)', 'in_class')}
-                  className="px-2.5 py-1 rounded-xl bg-[#EBF1E8] text-[#4A6741] font-semibold hover:bg-[#88A070]/20 cursor-pointer"
-                >
-                  🏫 In Class
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleApplyPreset('School Canteen (Lunch Time)', 'canteen_lunch')}
-                  className="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-700 font-semibold hover:bg-amber-100 cursor-pointer"
-                >
-                  🍱 Lunch Time
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleApplyPreset(
-                      'Boarded School Bus #4 (En Route Home)',
-                      'en_route_bus',
-                      'Bus #4',
-                    )
-                  }
-                  className="px-2.5 py-1 rounded-xl bg-sky-50 text-sky-700 font-semibold hover:bg-sky-100 cursor-pointer"
-                >
-                  🚌 Boarded Bus
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleApplyPreset('School Library Study Session', 'library')}
-                  className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 font-semibold hover:bg-purple-100 cursor-pointer"
-                >
-                  📚 Library
-                </button>
+            {enrolledClassrooms.length > 0 && (
+              <div>
+                <p className="text-[11px] font-bold text-[#7A7A72] mb-1.5">Enrolled classrooms:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {enrolledClassrooms.map((classroom) => (
+                    <button
+                      key={classroom.id}
+                      type="button"
+                      onClick={() => {
+                        setLocationText(`${classroom.name} (${classroom.roomNumber})`);
+                        setCategory('in_class');
+                      }}
+                      className="px-2.5 py-1 rounded-xl bg-[#EBF1E8] text-[#4A6741] font-semibold hover:bg-[#88A070]/20 cursor-pointer"
+                    >
+                      {classroom.name}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Form */}
             <form onSubmit={handleSaveLocation} className="space-y-3 pt-1">
+              <div>
+                <label className="block font-semibold text-[#2D2D2A] mb-1">
+                  Location category:
+                </label>
+                <select
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value as LocationStatusCategory)}
+                  className="w-full px-3 py-2 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
+                >
+                  <option value="in_class">In class</option>
+                  <option value="canteen_lunch">Canteen / lunch</option>
+                  <option value="en_route_bus">En route</option>
+                  <option value="library">Library</option>
+                  <option value="sports_ground">Sports ground</option>
+                  <option value="assembly_hall">Assembly hall</option>
+                  <option value="dismissed_home">Dismissed / home</option>
+                  <option value="laboratory">Laboratory</option>
+                </select>
+              </div>
+
               <div>
                 <label className="block font-semibold text-[#2D2D2A] mb-1">
                   Current Location Description:
@@ -219,7 +211,7 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
                   value={locationText}
                   onChange={(e) => setLocationText(e.target.value)}
                   className="w-full px-3 py-2 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
-                  placeholder="e.g. In Science Lab 201..."
+                  placeholder="Current location"
                   required
                 />
               </div>
@@ -232,7 +224,7 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
                     value={busNumber}
                     onChange={(e) => setBusNumber(e.target.value)}
                     className="w-full px-3 py-2 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
-                    placeholder="e.g. Bus #4"
+                    placeholder="Bus identifier"
                   />
                 </div>
               )}
@@ -246,7 +238,7 @@ export const StudentLocationTracker: React.FC<StudentLocationTrackerProps> = ({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full px-3 py-2 bg-[#F9F7F2] rounded-xl border border-[#EDEAE2] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
-                  placeholder="e.g. Boarded at 03:45 PM with driver Hari..."
+                  placeholder="Additional location notes"
                 />
               </div>
 

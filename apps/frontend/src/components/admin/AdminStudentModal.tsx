@@ -15,7 +15,6 @@ import {
   Calendar,
   CheckCircle2,
   AlertCircle,
-  Zap,
 } from 'lucide-react';
 import { useUnsavedChanges } from '../../utils/hooks';
 
@@ -37,7 +36,7 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
   onSave,
   initialData,
 }) => {
-  const { studentProfiles } = useApp();
+  const { currentUser } = useApp();
   const [activeTab, setActiveTab] = useState<'student' | 'parent' | 'verification'>('student');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -45,13 +44,13 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
   // Tab 1: Student Demographics
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [gradeLevel, setGradeLevel] = useState(8);
-  const [section, setSection] = useState('A');
+  const [gradeLevel, setGradeLevel] = useState<number | ''>('');
+  const [section, setSection] = useState('');
   const [rollNumber, setRollNumber] = useState<number | ''>('');
-  const [schoolName, setSchoolName] = useState('Everest International Academy');
+  const [schoolName, setSchoolName] = useState(currentUser.schoolName);
   const [dob, setDob] = useState('');
-  const [gender, setGender] = useState('Male');
-  const [bloodGroup, setBloodGroup] = useState('O+');
+  const [gender, setGender] = useState('');
+  const [bloodGroup, setBloodGroup] = useState('');
   const [medicalNotes, setMedicalNotes] = useState('');
 
   // Tab 2: Parent Onboarding
@@ -60,13 +59,13 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
   const [parentEmail, setParentEmail] = useState('');
   const [parentAddress, setParentAddress] = useState('');
   const [parentOccupation, setParentOccupation] = useState('');
-  const [relationship, setRelationship] = useState('Father');
+  const [relationship, setRelationship] = useState('');
   const [parentSecondaryPhone, setParentSecondaryPhone] = useState('');
 
   // Tab 3: Verification Status
   const [verificationStatus, setVerificationStatus] = useState<
     'pending_verification' | 'verified_enrolled'
-  >('verified_enrolled');
+  >('pending_verification');
 
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -78,34 +77,34 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
     if (initialData) {
       setName(initialData.name || '');
       setEmail(initialData.email || '');
-      setGradeLevel(initialData.gradeLevel || 8);
-      setSection(initialData.section || 'A');
+      setGradeLevel(initialData.gradeLevel || '');
+      setSection(initialData.section || '');
       setRollNumber(initialData.rollNumber || '');
-      setSchoolName(initialData.schoolName || 'Everest International Academy');
-      setDob(initialData.dob || '2012-05-14');
-      setGender(initialData.gender || 'Male');
-      setBloodGroup(initialData.bloodGroup || 'O+');
+      setSchoolName(initialData.schoolName || currentUser.schoolName);
+      setDob(initialData.dob || '');
+      setGender(initialData.gender || '');
+      setBloodGroup(initialData.bloodGroup || '');
       setMedicalNotes(initialData.medicalNotes || '');
 
       setParentName(initialData.parentName || '');
       setParentPhone(initialData.parentPhone || '');
       setParentEmail(initialData.parentEmail || '');
-      setParentAddress(initialData.parentAddress || 'Kathmandu, Nepal');
+      setParentAddress(initialData.parentAddress || '');
       setParentOccupation(initialData.parentOccupation || '');
-      setRelationship(initialData.relationship || 'Father');
+      setRelationship(initialData.relationship || '');
       setParentSecondaryPhone(initialData.parentSecondaryPhone || '');
 
-      setVerificationStatus(initialData.verificationStatus || 'verified_enrolled');
+      setVerificationStatus(initialData.verificationStatus || 'pending_verification');
     } else {
       setName('');
       setEmail('');
-      setGradeLevel(8);
-      setSection('A');
+      setGradeLevel('');
+      setSection('');
       setRollNumber('');
-      setSchoolName('Everest International Academy');
+      setSchoolName(currentUser.schoolName);
       setDob('');
-      setGender('Male');
-      setBloodGroup('O+');
+      setGender('');
+      setBloodGroup('');
       setMedicalNotes('');
 
       setParentName('');
@@ -113,12 +112,12 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
       setParentEmail('');
       setParentAddress('');
       setParentOccupation('');
-      setRelationship('Father');
+      setRelationship('');
       setParentSecondaryPhone('');
 
-      setVerificationStatus('verified_enrolled');
+      setVerificationStatus('pending_verification');
     }
-  }, [initialData, isOpen]);
+  }, [currentUser.schoolName, initialData, isOpen]);
 
   const hasEnteredData = Boolean(
     name.trim() ||
@@ -138,8 +137,8 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
     return (
       name !== (initialData.name || '') ||
       email !== (initialData.email || '') ||
-      gradeLevel !== (initialData.gradeLevel || 8) ||
-      section !== (initialData.section || 'A') ||
+      gradeLevel !== (initialData.gradeLevel || '') ||
+      section !== (initialData.section || '') ||
       rollNumber !== (initialData.rollNumber || '')
     );
   };
@@ -158,19 +157,6 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
     }
   };
 
-  // Helper for Auto-assigning next roll number
-  const handleAutoAssignRollNumber = () => {
-    const sameGradeSection = studentProfiles.filter(
-      (s) => s.gradeLevel === gradeLevel && s.section.toUpperCase() === section.toUpperCase(),
-    );
-    const existingRolls = sameGradeSection
-      .map((s) => s.rollNumber)
-      .filter((r): r is number => typeof r === 'number' && !isNaN(r));
-    const nextRoll = existingRolls.length > 0 ? Math.max(...existingRolls) + 1 : 1;
-    setRollNumber(nextRoll);
-    if (validationError) setValidationError(null);
-  };
-
   // Input Sanitizer for Digits + Phone Symbols Only
   const sanitizePhoneInput = (value: string): string => {
     return value.replace(/[^0-9+\-\s]/g, '');
@@ -186,10 +172,8 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
       setValidationError('A valid Student Email address is required.');
       return false;
     }
-    if (!rollNumber) {
-      setValidationError(
-        'Student Roll Number is required. Click "Auto ⚡" to calculate next available.',
-      );
+    if (!gradeLevel || !section.trim()) {
+      setValidationError('Grade level and section are required.');
       return false;
     }
     if (!dob.trim()) {
@@ -269,7 +253,7 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
       schoolName: schoolName.trim(),
       gradeLevel: Number(gradeLevel),
       section: section.trim().toUpperCase(),
-      rollNumber: Number(rollNumber),
+      ...(rollNumber ? { rollNumber: Number(rollNumber) } : {}),
       dob: dob.trim(),
       gender: gender.trim(),
       bloodGroup: bloodGroup.trim(),
@@ -284,9 +268,7 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
       parentSecondaryPhone: parentSecondaryPhone.trim(),
 
       verificationStatus,
-      avatar:
-        initialData?.avatar ||
-        'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
+      avatar: initialData?.avatar || '',
     });
     onClose();
   };
@@ -421,7 +403,7 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
                       setName(e.target.value);
                       if (validationError) setValidationError(null);
                     }}
-                    placeholder="e.g. Aarav Sharma"
+                    placeholder="Student name"
                     className="w-full px-3.5 py-2.5 bg-[#F9F7F2] rounded-xl border border-[#E5E1D8] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
                   />
                 </div>
@@ -450,7 +432,8 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
                     onChange={(e) => setGradeLevel(Number(e.target.value))}
                     className="w-full px-3.5 py-2.5 bg-[#F9F7F2] rounded-xl border border-[#E5E1D8] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
                   >
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((g) => (
+                    <option value="">Select grade</option>
+                    {Array.from({ length: 12 }, (_, index) => index + 1).map((g) => (
                       <option key={g} value={g}>
                         Grade {g}
                       </option>
@@ -460,27 +443,18 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
 
                 <div>
                   <label className="block font-bold text-[#2D2D2A] mb-1">Section</label>
-                  <select
+                  <input
                     value={section}
-                    onChange={(e) => setSection(e.target.value)}
+                    onChange={(e) => setSection(e.target.value.toUpperCase())}
+                    maxLength={10}
+                    placeholder="Section"
                     className="w-full px-3.5 py-2.5 bg-[#F9F7F2] rounded-xl border border-[#E5E1D8] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
-                  >
-                    <option value="A">Section A</option>
-                    <option value="B">Section B</option>
-                  </select>
+                  />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="font-bold text-[#2D2D2A]">Roll Number *</label>
-                    <button
-                      type="button"
-                      onClick={handleAutoAssignRollNumber}
-                      className="px-1.5 py-0.5 rounded-md bg-[#EBF1E8] text-[#4A6741] hover:bg-[#4A6741] hover:text-white text-[10px] font-extrabold transition-all cursor-pointer flex items-center gap-0.5"
-                      title="Auto-assign next roll number for Grade & Section"
-                    >
-                      <Zap className="w-2.5 h-2.5" /> Auto
-                    </button>
+                    <label className="font-bold text-[#2D2D2A]">Roll Number</label>
                   </div>
                   <input
                     type="number"
@@ -489,7 +463,7 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
                       setRollNumber(e.target.value ? Number(e.target.value) : '');
                       if (validationError) setValidationError(null);
                     }}
-                    placeholder="e.g. 14"
+                    placeholder="Assigned automatically"
                     className="w-full px-3.5 py-2.5 bg-[#F9F7F2] rounded-xl border border-[#E5E1D8] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
@@ -519,6 +493,7 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
                     onChange={(e) => setGender(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-[#F9F7F2] rounded-xl border border-[#E5E1D8] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
                   >
+                    <option value="">Not specified</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                     <option value="Other">Other</option>
@@ -533,6 +508,7 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
                     onChange={(e) => setBloodGroup(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-[#F9F7F2] rounded-xl border border-[#E5E1D8] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
                   >
+                    <option value="">Not specified</option>
                     {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => (
                       <option key={bg} value={bg}>
                         {bg}
@@ -573,7 +549,7 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
                       setParentName(e.target.value);
                       if (validationError) setValidationError(null);
                     }}
-                    placeholder="e.g. Bina Sharma"
+                    placeholder="Guardian's full name"
                     className="w-full px-3.5 py-2.5 bg-[#F9F7F2] rounded-xl border border-[#E5E1D8] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
                   />
                 </div>
@@ -641,6 +617,7 @@ export const AdminStudentModal: React.FC<AdminStudentModalProps> = ({
                     onChange={(e) => setRelationship(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-[#F9F7F2] rounded-xl border border-[#E5E1D8] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
                   >
+                    <option value="">Select relationship</option>
                     <option value="Father">Father</option>
                     <option value="Mother">Mother</option>
                     <option value="Legal Guardian">Legal Guardian</option>

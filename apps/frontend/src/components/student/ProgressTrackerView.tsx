@@ -15,11 +15,24 @@ export const ProgressTrackerView: React.FC = () => {
     currentUser,
     subjectPerformances,
     studentProfiles,
+    attendanceRecords,
     setIsAiTutorOpen,
     setAiTutorInitialPrompt,
   } = useApp();
 
-  const studentData = studentProfiles.find((s) => s.id === currentUser.id) || studentProfiles[0];
+  const studentData = studentProfiles.find((student) => student.id === currentUser.id);
+  const performances = subjectPerformances.filter(
+    (performance) => performance.studentId === currentUser.id,
+  );
+  const academicAverage = performances.length
+    ? performances.reduce((total, performance) => total + performance.scorePercentage, 0) /
+      performances.length
+    : 0;
+  const attendance = attendanceRecords.filter((record) => record.studentId === currentUser.id);
+  const attendedDays = attendance.filter((record) =>
+    ['present', 'late'].includes(record.status),
+  ).length;
+  const attendancePercentage = attendance.length ? (attendedDays / attendance.length) * 100 : 0;
 
   const handleAskHelpForSubject = (subjectName: string) => {
     setAiTutorInitialPrompt(
@@ -37,24 +50,30 @@ export const ProgressTrackerView: React.FC = () => {
             <span>CDC Nepal Standard Evaluation</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold font-serif">
-            {studentData.name}'s Academic Progress
+            {currentUser.name}'s Academic Progress
           </h1>
           <p className="text-xs md:text-sm text-[#F9F7F2]/90 mt-1">
-            Grade {studentData.gradeLevel}-{studentData.section} • Roll No. {studentData.rollNumber}
+            {studentData
+              ? `Grade ${studentData.gradeLevel}-${studentData.section} • Roll No. ${studentData.rollNumber}`
+              : 'No active academic enrollment'}
           </p>
         </div>
 
         <div className="flex gap-3">
           <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-center min-w-[110px]">
-            <p className="text-[10px] text-[#FDEEDC] uppercase font-bold">Estimated GPA</p>
-            <p className="text-2xl font-black text-white">3.85</p>
-            <p className="text-[10px] font-bold text-[#FDEEDC]">Grade A+</p>
+            <p className="text-[10px] text-[#FDEEDC] uppercase font-bold">Academic average</p>
+            <p className="text-2xl font-black text-white">{academicAverage.toFixed(1)}%</p>
+            <p className="text-[10px] font-bold text-[#FDEEDC]">
+              {performances.length} recorded subjects
+            </p>
           </div>
 
           <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-center min-w-[110px]">
             <p className="text-[10px] text-[#FDEEDC] uppercase font-bold">Attendance</p>
-            <p className="text-2xl font-black text-white">{studentData.attendancePercentage}%</p>
-            <p className="text-[10px] font-bold text-[#FDEEDC]">Regular</p>
+            <p className="text-2xl font-black text-white">{attendancePercentage.toFixed(1)}%</p>
+            <p className="text-[10px] font-bold text-[#FDEEDC]">
+              {attendedDays}/{attendance.length} recorded days
+            </p>
           </div>
         </div>
       </div>
@@ -74,9 +93,9 @@ export const ProgressTrackerView: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {subjectPerformances.map((sp, idx) => (
+          {performances.map((sp) => (
             <div
-              key={idx}
+              key={sp.id}
               className="p-4 rounded-2xl border border-[#EDEAE2] bg-[#F9F7F2] space-y-3"
             >
               <div className="flex justify-between items-start">
@@ -131,22 +150,24 @@ export const ProgressTrackerView: React.FC = () => {
         </h2>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {studentData.badges.map((b) => {
-            const def = b.badgeDefinition;
-            return (
-              <div
-                key={b.id}
-                className="p-4 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] text-center space-y-1"
-              >
-                <span className="text-3xl block">{def?.icon || '🏆'}</span>
-                <h3 className="font-bold text-xs text-[#2D2D2A]">{def?.title || 'Unknown'}</h3>
-                <p className="text-[10px] text-[#7A7A72] leading-snug">{def?.description}</p>
-                <span className="inline-block text-[9px] font-bold text-[#E88D67] mt-1">
-                  Earned: {b.earnedDate}
-                </span>
-              </div>
-            );
-          })}
+          {(studentData?.badges || [])
+            .filter((badge) => badge.badgeDefinition)
+            .map((b) => {
+              const def = b.badgeDefinition;
+              return (
+                <div
+                  key={b.id}
+                  className="p-4 rounded-2xl bg-[#F9F7F2] border border-[#EDEAE2] text-center space-y-1"
+                >
+                  <span className="text-3xl block">{def!.icon}</span>
+                  <h3 className="font-bold text-xs text-[#2D2D2A]">{def!.title}</h3>
+                  <p className="text-[10px] text-[#7A7A72] leading-snug">{def!.description}</p>
+                  <span className="inline-block text-[9px] font-bold text-[#E88D67] mt-1">
+                    Earned: {b.earnedDate}
+                  </span>
+                </div>
+              );
+            })}
         </div>
       </div>
     </div>

@@ -37,7 +37,9 @@ export interface AppContextType {
   currentUser: User;
   allUsers: User[];
   switchUser: (userId: string) => void;
-  activeChild: StudentProfile;
+  establishSession: (user: User, token: string) => void;
+  logout: () => void;
+  activeChild: StudentProfile | undefined;
   setActiveChildId: (id: string) => void;
   activeChildList: StudentProfile[];
 
@@ -51,15 +53,26 @@ export interface AppContextType {
 
   // Data lists & mutations
   classrooms: Classroom[];
-  addClassroom: (classroom: Omit<Classroom, 'id' | 'code' | 'studentCount'>) => void;
+  addClassroom: (classroom: Omit<Classroom, 'id' | 'code' | 'studentCount'>) => Promise<void>;
   joinClassroomByCode: (code: string) => Promise<boolean>;
 
   streamPosts: StreamPost[];
-  addStreamPost: (post: Omit<StreamPost, 'id' | 'createdAt' | 'commentsCount'>) => void;
-  addPostComment: (postId: string, commentText: string) => void;
+  addStreamPost: (
+    post: Omit<
+      StreamPost,
+      | 'id'
+      | 'createdAt'
+      | 'commentsCount'
+      | 'authorId'
+      | 'authorName'
+      | 'authorAvatar'
+      | 'authorRole'
+    >,
+  ) => Promise<void>;
+  addPostComment: (postId: string, commentText: string) => Promise<void>;
 
   assignments: Assignment[];
-  addAssignment: (asg: Omit<Assignment, 'id' | 'createdAt'>) => void;
+  addAssignment: (asg: Omit<Assignment, 'id' | 'createdAt'>) => Promise<void>;
 
   submissions: Submission[];
   submitHomework: (
@@ -67,11 +80,11 @@ export interface AppContextType {
     fileUrl: string,
     fileName: string,
     responseText: string,
-  ) => void;
-  gradeSubmission: (submissionId: string, grade: number, feedback: string) => void;
+  ) => Promise<void>;
+  gradeSubmission: (submissionId: string, grade: number, feedback: string) => Promise<void>;
 
   quizzes: Quiz[];
-  addQuiz: (quiz: Omit<Quiz, 'id'>) => Quiz;
+  addQuiz: (quiz: Omit<Quiz, 'id'>) => Promise<Quiz | undefined>;
   updateQuiz: (quizId: string, updates: Partial<Omit<Quiz, 'id'>>) => void;
   startQuizLive: (quizId: string) => void;
   deleteQuiz: (quizId: string) => void;
@@ -84,15 +97,17 @@ export interface AppContextType {
     totalPoints: number,
     startedAt?: string,
     timeSpentSeconds?: number,
-  ) => void;
+  ) => Promise<void>;
 
   resources: StudyResource[];
-  addResource: (data: Omit<StudyResource, 'id' | 'createdAt'>) => StudyResource;
+  addResource: (
+    data: Omit<StudyResource, 'id' | 'createdAt'>,
+  ) => Promise<StudyResource | undefined>;
   updateResource: (id: string, updates: Partial<Omit<StudyResource, 'id' | 'createdAt'>>) => void;
   deleteResource: (id: string) => void;
   addModule: (
     data: Omit<ModuleItem, 'id' | 'completedByStudentIds'> & { completedByStudentIds?: string[] },
-  ) => ModuleItem;
+  ) => Promise<ModuleItem | undefined>;
   updateModule: (id: string, updates: Partial<Omit<ModuleItem, 'id'>>) => void;
   deleteModule: (id: string) => void;
 
@@ -103,7 +118,7 @@ export interface AppContextType {
     date: string,
     status: 'present' | 'absent' | 'late' | 'excused',
     remarks?: string,
-  ) => void;
+  ) => Promise<void>;
 
   parentControls: Record<string, ParentControlSettings>;
   updateParentControls: (studentId: string, settings: Partial<ParentControlSettings>) => void;
@@ -125,7 +140,7 @@ export interface AppContextType {
 
   // Timetable Schedule Data
   weeklySchedule: WeeklySchedule;
-  updateDaySchedule: (day: DayOfWeek, periods: SchedulePeriod[]) => void;
+  updateDaySchedule: (day: DayOfWeek, periods: SchedulePeriod[]) => Promise<void>;
   schedule: SchedulePeriod[];
   modules: ModuleItem[];
   calendarEvents: CalendarEvent[];
@@ -148,11 +163,9 @@ export interface AppContextType {
     studentName: string,
     location: string,
     category: LocationStatusCategory,
-    updatedBy: string,
-    updatedByRole: 'teacher' | 'admin',
     busNumber?: string,
     notes?: string,
-  ) => void;
+  ) => Promise<void>;
 
   // AI Modal States
   isAiTutorOpen: boolean;
@@ -197,6 +210,8 @@ export interface AppContextType {
   ) => void;
   updateStudentProfile: (id: string, updates: Partial<StudentProfile>) => void;
   deleteStudentProfile: (id: string) => void;
+  promoteStudentProfile: (id: string) => Promise<void>;
+  restoreStudentProfile: (id: string) => Promise<void>;
   addTeacherProfile: (teacher: Omit<User, 'id'>) => void;
   updateTeacherProfile: (id: string, updates: Partial<User>) => void;
   deleteTeacherProfile: (id: string) => void;

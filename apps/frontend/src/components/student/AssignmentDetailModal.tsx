@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { apiFetch } from '@utils/apiFetch';
+import { sha256File } from '@utils/fileChecksum';
 import { toast } from '@utils/toast';
 import { useApp } from '../../context/AppContext';
 import {
@@ -32,7 +33,7 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
   const { assignments, submissions, submitHomework, currentUser } = useApp();
 
   const [responseText, setResponseText] = useState('');
-  const [fileName, setFileName] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState<'submit' | 'ai-helper'>('submit');
   const [aiHelperQuery, setAiHelperQuery] = useState('');
   const [aiHelperResult, setAiHelperResult] = useState<string | null>(null);
@@ -48,44 +49,40 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
     (s) => s.assignmentId === assignmentId && s.studentId === currentUser.id,
   );
 
-  const studentGrade = currentUser.gradeLevel ?? 8;
-  const isBelowClass9 = studentGrade < 9;
-
   // Check deadline
   const now = new Date();
   const dueDateTimeStr = `${assignment.dueDate}T${assignment.dueTime || '23:59'}:00`;
   const dueDateObj = new Date(dueDateTimeStr);
   const isPastDeadline = !isNaN(dueDateObj.getTime()) && now > dueDateObj;
 
-  const historyItems =
-    existingSubmission?.history ||
-    (existingSubmission
-      ? [
-          {
-            id: `${existingSubmission.id}-v1`,
-            version: 1,
-            submittedAt: existingSubmission.submittedAt,
-            fileUrl: existingSubmission.fileUrl,
-            fileName: existingSubmission.fileName,
-            responseText: existingSubmission.responseText,
-            status: existingSubmission.status,
-            grade: existingSubmission.grade,
-            feedback: existingSubmission.feedback,
-            isLate: existingSubmission.isLate,
-          },
-        ]
-      : []);
+  const historyItems = existingSubmission?.history || [];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const defaultFileName = isBelowClass9
-      ? `Direct_Submission_Grade_${studentGrade}.pdf`
-      : `${currentUser.name.replace(/\s+/g, '_')}_${assignment.title.slice(0, 15)}.pdf`;
-    const finalFileName = fileName.trim() || defaultFileName;
-    const finalResponseText =
-      responseText.trim() ||
-      (isBelowClass9 ? `Submitted directly by Grade ${studentGrade} student.` : '');
-    submitHomework(assignmentId, finalFileName, finalFileName, finalResponseText);
+    if (!selectedFile && !responseText.trim()) {
+      toast.warning('Attach a file or enter a typed response before submitting.');
+      return;
+    }
+    let fileUrl = '';
+    if (selectedFile) {
+      const checksum = await sha256File(selectedFile);
+      const upload = await apiFetch('/api/upload', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: selectedFile.name,
+          sizeBytes: selectedFile.size,
+          mimeType: selectedFile.type || 'application/octet-stream',
+          checksum,
+          classroomId: assignment.classroomId,
+        }),
+        feedback: false,
+      });
+      if (!upload.ok) return;
+      const payload = await upload.json();
+      fileUrl = payload.record?.downloadUrl || '';
+      if (!fileUrl) return;
+    }
+    submitHomework(assignmentId, fileUrl, selectedFile?.name || '', responseText.trim());
   };
 
   const handleAiHelperAsk = async () => {
@@ -96,10 +93,8 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          assignmentTitle: assignment.title,
-          assignmentDescription: assignment.instructions,
+          assignmentId: assignment.id,
           questionText: aiHelperQuery,
-          gradeLevel: currentUser.gradeLevel || 8,
         }),
         feedback: false,
       });
@@ -107,16 +102,11 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
       const data = await res.json();
       setAiHelperResult(data.text);
     } catch (err) {
-      toast.warning(
-        'AI help is temporarily unavailable, so a step-by-step fallback was provided.',
-        {
-          title: 'Fallback homework help',
-          id: 'homework-helper-fallback',
-        },
-      );
-      setAiHelperResult(
-        'Here are key steps to complete this homework:\n1. Identify the core mathematical or scientific principle.\n2. Write down your given variables.\n3. Solve step-by-step.',
-      );
+      toast.warning('AI help is temporarily unavailable.', {
+        title: 'Homework help unavailable',
+        id: 'homework-helper-unavailable',
+      });
+      setAiHelperResult(null);
     } finally {
       setIsAiLoading(false);
     }
@@ -387,47 +377,22 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                   )}
                 </div>
 
-                {isBelowClass9 ? (
-                  <div className="p-3.5 rounded-2xl bg-[#EBF1E8] border border-[#88A070]/40 flex items-start gap-2.5 text-[#2D2D2A]">
-                    <CheckCircle className="w-4 h-4 text-[#4A6741] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-xs text-[#4A6741]">
-                        Grade {studentGrade} Direct Submission Enabled
-                      </p>
-                      <p className="text-[11px] text-[#7A7A72] mt-0.5">
-                        Students below Class 9 do not need to upload files. Simply click{' '}
-                        <strong>
-                          {existingSubmission ? 'Submit Resubmission' : 'Submit Homework'}
-                        </strong>{' '}
-                        below to turn in your assignment directly!
-                      </p>
-                    </div>
+                <div>
+                  <label className="block font-semibold text-[#2D2D2A] mb-1">
+                    Attach Homework File (optional):
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      accept=".pdf,.docx,.png,.jpg,.jpeg,.csv"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setSelectedFile(file);
+                      }}
+                      className="flex-1 px-3 py-2 bg-[#F9F7F2] rounded-xl border border-[#E5E1D8] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
+                    />
                   </div>
-                ) : (
-                  <div>
-                    <label className="block font-semibold text-[#2D2D2A] mb-1">
-                      Attach Homework File (PDF/Image):
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={fileName}
-                        onChange={(e) => setFileName(e.target.value)}
-                        placeholder="e.g. Aarav_Math_Ch4.pdf or click Browse..."
-                        className="flex-1 px-3 py-2 bg-[#F9F7F2] rounded-xl border border-[#E5E1D8] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setFileName(`${currentUser.name.replace(/\s+/g, '_')}_Assignment.pdf`)
-                        }
-                        className="px-3 py-2 bg-[#F0EDE5] hover:bg-[#E5E1D8] rounded-xl font-bold text-xs text-[#2D2D2A]"
-                      >
-                        Browse PDF
-                      </button>
-                    </div>
-                  </div>
-                )}
+                </div>
 
                 <div>
                   <label className="block font-semibold text-[#2D2D2A] mb-1">
@@ -437,11 +402,7 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                     value={responseText}
                     onChange={(e) => setResponseText(e.target.value)}
                     rows={3}
-                    placeholder={
-                      isBelowClass9
-                        ? 'Type any notes or answers here if requested by your teacher (optional)...'
-                        : 'Write any additional notes, explanations or typed answers here...'
-                    }
+                    placeholder="Write notes, explanations, or typed answers"
                     className="w-full px-3 py-2 bg-[#F9F7F2] rounded-xl border border-[#E5E1D8] text-xs focus:outline-none focus:ring-1 focus:ring-[#4A6741] resize-none"
                   />
                 </div>
@@ -460,8 +421,6 @@ export const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                   >
                     {existingSubmission ? (
                       <RotateCcw className="w-4 h-4" />
-                    ) : isBelowClass9 ? (
-                      <CheckCircle className="w-4 h-4" />
                     ) : (
                       <Upload className="w-4 h-4" />
                     )}

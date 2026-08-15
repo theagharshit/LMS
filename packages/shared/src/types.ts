@@ -13,6 +13,8 @@ export interface User {
   schoolName: string;
   phone?: string;
   secondaryPhone?: string;
+  address?: string;
+  occupation?: string;
   gradeLevel?: number; // e.g. 8 for Grade 8
   section?: string; // e.g. 'A'
   rollNumber?: number;
@@ -22,6 +24,13 @@ export interface User {
   childrenIds?: string[];
   // Teacher specific
   subjectsTaught?: string[];
+  employeeNumber?: string;
+  joinedAt?: string;
+  employmentStatus?: 'active' | 'on_leave' | 'left';
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  qualification?: string;
+  specialization?: string;
 }
 
 export interface StudentProfile extends User {
@@ -44,6 +53,9 @@ export interface StudentProfile extends User {
   gender?: string;
   bloodGroup?: string;
   medicalNotes?: string;
+  admissionNumber?: string;
+  admittedAt?: string;
+  leftAt?: string;
 }
 
 export interface BadgeDefinition {
@@ -337,9 +349,11 @@ export interface StudentLocationRecord {
   category: LocationStatusCategory;
   busNumber?: string;
   updatedBy: string;
-  updatedByRole: 'teacher' | 'admin';
+  updatedByRole: 'teacher' | 'admin' | 'staff';
   updatedAt: string;
   notes?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface TermProgress {
@@ -401,6 +415,8 @@ export interface NotificationItem {
   category: NotificationCategory;
   severity: NotificationSeverity;
   type: NotificationType;
+  broadcastId?: string;
+  targetAudience?: string;
   read: boolean;
   createdAt: string;
   time?: string;

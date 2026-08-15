@@ -10,6 +10,27 @@ const prisma = new PrismaClient({ adapter });
 describe('Relational Database Integrity & Constraint Enforcement', () => {
   beforeEach(async () => {
     // Ensure clean state before each relational test block
+    await prisma.studentReportCardSubject.deleteMany();
+    await prisma.studentReportCard.deleteMany();
+    await prisma.examMark.deleteMany();
+    await prisma.examSubject.deleteMany();
+    await prisma.exam.deleteMany();
+    await prisma.timetableSlot.deleteMany();
+    await prisma.teachingAssignment.deleteMany();
+    await prisma.studentLifecycleEvent.deleteMany();
+    await prisma.moduleCompletion.deleteMany();
+    await prisma.classroomSubstitute.deleteMany();
+    await prisma.teacherAssignmentAuditLog.deleteMany();
+    await prisma.teacherSubject.deleteMany();
+    await prisma.parentStudent.deleteMany();
+    await prisma.refreshToken.deleteMany();
+    await prisma.tokenRevocation.deleteMany();
+    await prisma.securityAudit.deleteMany();
+    await prisma.auditTrail.deleteMany();
+    await prisma.homeworkVersion.deleteMany();
+    await prisma.quizAttemptSession.deleteMany();
+    await prisma.notificationRecord.deleteMany();
+    await prisma.notificationPreference.deleteMany();
     await prisma.classroomEnrollment.deleteMany();
     await prisma.termProgress.deleteMany();
     await prisma.studentActivity.deleteMany();
@@ -29,6 +50,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
     await prisma.assignment.deleteMany();
     await prisma.streamPost.deleteMany();
     await prisma.classroom.deleteMany();
+    await prisma.studentAcademicEnrollment.deleteMany();
     await prisma.studentProfile.deleteMany();
     await prisma.parentControlSettings.deleteMany();
     await prisma.user.deleteMany();
@@ -52,7 +74,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           userId: user.id,
           streakDays: 5,
           xpPoints: 100,
-          cohortId: 'cohort-8-a',
         },
       });
       await prisma.user.delete({ where: { id: user.id } });
@@ -88,7 +109,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
       });
       expect(settings).toBeNull();
     });
-    it('3. should cascade delete Submissions when User is deleted', async () => {
+    it('3. should retain submissions and reject deleting their student', async () => {
       const teacher = await prisma.user.create({
         data: {
           id: 'tch-cas-1',
@@ -117,6 +138,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
         data: {
           id: 'asg-cas-1',
           classroomId: classroom.id,
+          createdById: teacher.id,
           title: 'Asg 1',
           instructions: 'Inst 1',
           dueDate: '2026-08-10',
@@ -141,15 +163,13 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           id: 'sub-cas-1',
           assignmentId: assignment.id,
           studentId: student.id,
-          studentName: student.name,
-          studentAvatar: student.avatar,
           status: 'submitted',
           submittedAt: '12:00',
         },
       });
-      await prisma.user.delete({ where: { id: student.id } });
+      await expect(prisma.user.delete({ where: { id: student.id } })).rejects.toThrow();
       const subs = await prisma.submission.findMany({ where: { studentId: student.id } });
-      expect(subs.length).toBe(0);
+      expect(subs.length).toBe(1);
     });
     it('4. should cascade delete QuizSubmissions when Quiz is deleted', async () => {
       const teacher = await prisma.user.create({
@@ -180,6 +200,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
         data: {
           id: 'quiz-cas-1',
           classroomId: classroom.id,
+          createdById: teacher.id,
           title: 'Quiz 1',
           description: 'Desc 1',
           durationMinutes: 30,
@@ -242,9 +263,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           id: 'post-cas-1',
           classroomId: classroom.id,
           authorId: teacher.id,
-          authorName: teacher.name,
-          authorAvatar: teacher.avatar,
-          authorRole: 'teacher',
           content: 'Hello Class',
           createdAt: new Date().toISOString(),
         },
@@ -254,8 +272,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           id: 'cmt-cas-1',
           streamPostId: post.id,
           authorId: teacher.id,
-          authorName: teacher.name,
-          authorAvatar: teacher.avatar,
           content: 'Great post',
           createdAt: '12:05',
         },
@@ -266,7 +282,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
       expect(posts.length).toBe(0);
       expect(cmts.length).toBe(0);
     });
-    it('6. should cascade delete AttendanceRecords when User is deleted', async () => {
+    it('6. should retain attendance and reject deleting its student or marker', async () => {
       const student = await prisma.user.create({
         data: {
           id: 'stu-cas-6',
@@ -280,17 +296,16 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
       await prisma.attendanceRecord.create({
         data: {
           studentId: student.id,
-          studentName: student.name,
           date: '2026-08-07',
           status: 'present',
-          markedById: null,
+          markedById: student.id,
         },
       });
-      await prisma.user.delete({ where: { id: student.id } });
+      await expect(prisma.user.delete({ where: { id: student.id } })).rejects.toThrow();
       const atts = await prisma.attendanceRecord.findMany({ where: { studentId: student.id } });
-      expect(atts.length).toBe(0);
+      expect(atts.length).toBe(1);
     });
-    it('7. should cascade delete DirectMessages when sender or receiver User is deleted', async () => {
+    it('7. should retain direct messages and reject deleting their participants', async () => {
       const sender = await prisma.user.create({
         data: {
           id: 'u-msg-sender',
@@ -314,18 +329,14 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
       await prisma.directMessage.create({
         data: {
           senderId: sender.id,
-          senderName: sender.name,
-          senderRole: 'parent',
-          senderAvatar: sender.avatar,
           receiverId: receiver.id,
-          receiverName: receiver.name,
           content: 'Hello Teacher',
           createdAt: '10:00',
         },
       });
-      await prisma.user.delete({ where: { id: sender.id } });
+      await expect(prisma.user.delete({ where: { id: sender.id } })).rejects.toThrow();
       const msgs = await prisma.directMessage.findMany({ where: { senderId: sender.id } });
-      expect(msgs.length).toBe(0);
+      expect(msgs.length).toBe(1);
     });
     it('8. should cascade delete SubjectPerformance records when User is deleted', async () => {
       const student = await prisma.user.create({
@@ -435,9 +446,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
             id: 'post-invalid-cls',
             classroomId: 'non-existent-cls-id',
             authorId: author.id,
-            authorName: author.name,
-            authorAvatar: author.avatar,
-            authorRole: 'teacher',
             content: 'Bad Post',
             createdAt: '12:00',
           },
@@ -473,6 +481,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
         data: {
           id: 'asg-sub-err',
           classroomId: classroom.id,
+          createdById: teacher.id,
           title: 'Asg',
           instructions: 'Inst',
           dueDate: '2026-08-10',
@@ -488,8 +497,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
             id: 'sub-err-1',
             assignmentId: assignment.id,
             studentId: 'non-existent-student-id',
-            studentName: 'Ghost Student',
-            studentAvatar: 'a.png',
             status: 'submitted',
             submittedAt: '12:00',
           },
@@ -723,7 +730,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           userId: student.id,
           streakDays: 5,
           xpPoints: 100,
-          cohortId: 'cohort-8-a',
         },
       });
       await expect(
@@ -733,7 +739,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
             userId: student.id,
             streakDays: 10,
             xpPoints: 200,
-            cohortId: 'cohort-8-a',
           },
         }),
       ).rejects.toThrow();
@@ -950,7 +955,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           userId: u1.id,
           streakDays: 5,
           xpPoints: 100,
-          cohortId: 'cohort-8-a',
         },
       });
       await prisma.studentProfile.create({
@@ -959,7 +963,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           userId: u2.id,
           streakDays: 10,
           xpPoints: 200,
-          cohortId: 'cohort-8-a',
         },
       });
       const p1 = await prisma.studentProfile.findUnique({ where: { userId: u1.id } });
@@ -1100,6 +1103,7 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
         data: {
           id: 'quiz-q-del',
           classroomId: classroom.id,
+          createdById: teacher.id,
           title: 'Quiz Q Del',
           description: 'Desc',
           durationMinutes: 10,
@@ -1150,7 +1154,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           userId: user.id,
           streakDays: 5,
           xpPoints: 100,
-          cohortId: 'cohort-8-a',
         },
       });
       const def = await prisma.badgeDefinition.create({
@@ -1197,11 +1200,9 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
       const loc = await prisma.studentLocationRecord.create({
         data: {
           studentId: student.id,
-          studentName: student.name,
           currentLocation: 'Library',
           category: 'library',
-          updatedBy: 'Staff',
-          updatedByRole: 'teacher',
+          updatedById: student.id,
           updatedAt: new Date().toISOString(),
         },
       });
@@ -1229,7 +1230,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
           userId: user.id,
           streakDays: 5,
           xpPoints: 100,
-          cohortId: 'cohort-8-a',
         },
       });
       const res = await prisma.user.findUnique({
@@ -1328,7 +1328,6 @@ describe('Relational Database Integrity & Constraint Enforcement', () => {
         userId: 'user-stu-1',
         streakDays: 10,
         xpPoints: 500,
-        cohortId: 'cohort-8-a',
       },
     });
     await prisma.user.upsert({

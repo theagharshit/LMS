@@ -99,6 +99,36 @@ describe('TeacherAssignmentService Workflow Tests', () => {
       },
     });
 
+    const academicYear = await prisma.academicYear.upsert({
+      where: { schoolId_name: { schoolId: school.id, name: '2026' } },
+      update: {},
+      create: {
+        schoolId: school.id,
+        name: '2026',
+        startsAt: new Date('2026-01-01T00:00:00.000Z'),
+        endsAt: new Date('2026-12-31T00:00:00.000Z'),
+        isActive: true,
+      },
+    });
+    await prisma.timetableSlot.upsert({
+      where: { id: 'test-timetable-math-wednesday-p1' },
+      update: {},
+      create: {
+        id: 'test-timetable-math-wednesday-p1',
+        schoolId: school.id,
+        academicYearId: academicYear.id,
+        classroomId: testClassroomId,
+        cohortId: cohort.id,
+        subjectId: subject.id,
+        teacherId: teacher1.id,
+        dayOfWeek: 3,
+        periodNumber: 1,
+        startTime: '10:00',
+        endTime: '10:45',
+        roomNumber: 'Room 101',
+      },
+    });
+
     await prisma.teacherSubject.upsert({
       where: { teacherId_subjectId: { teacherId: teacher1.id, subjectId: subject.id } },
       update: {},
@@ -162,10 +192,11 @@ describe('TeacherAssignmentService Workflow Tests', () => {
 
   it('should evaluate eligible substitute candidates with workload ranking', async () => {
     const candidates = await teacherAssignmentService.getEligibleSubstitutes(
+      testAdminId,
       testClassroomId,
       testSubjectId,
       '2026-09-02',
-      '10:00 AM - 10:45 AM',
+      '10:00 - 10:45',
     );
 
     expect(Array.isArray(candidates)).toBe(true);
@@ -192,9 +223,9 @@ describe('TeacherAssignmentService Workflow Tests', () => {
     const approvedSub = await teacherAssignmentService.updateSubstituteRequestStatus(
       subReq.id,
       'APPROVED',
+      testAdminId,
       'Confirmed by Principal',
       testSubTeacherId,
-      testAdminId,
     );
 
     expect(approvedSub.status).toBe('APPROVED');
@@ -202,7 +233,7 @@ describe('TeacherAssignmentService Workflow Tests', () => {
   });
 
   it('should record teacher assignment audit logs', async () => {
-    const logs = await teacherAssignmentService.getAssignmentAuditLogs(testTeacherId);
+    const logs = await teacherAssignmentService.getAssignmentAuditLogs(testAdminId, testTeacherId);
     expect(logs.length).toBeGreaterThan(0);
     expect(logs[0].targetTeacherId).toBe(testTeacherId);
   });

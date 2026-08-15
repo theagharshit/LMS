@@ -7,12 +7,22 @@ import { Server } from 'http';
 import { PrismaClient } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { signToken } from '../../src/utils/jwtUtils';
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 let server: Server;
 const PORT = 3001;
 let BASE_URL = process.env.TEST_BASE_URL || `http://127.0.0.1:${PORT}`;
+const authorization = {
+  admin: `Bearer ${signToken({ id: 'user-admin-1', name: 'Bikram Shrestha', email: 'admin@lms.com', role: 'admin' })}`,
+  teacher: `Bearer ${signToken({ id: 'live-tch-1', name: 'Teacher Live', email: 'teacher.live@lms.com', role: 'teacher' })}`,
+  student: `Bearer ${signToken({ id: 'live-stu-1', name: 'Aarav Live', email: 'aarav.live@lms.com', role: 'student' })}`,
+};
+const headersFor = (role: keyof typeof authorization) => ({
+  'Content-Type': 'application/json',
+  Authorization: authorization[role],
+});
 describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () => {
   let createdLiveStudentId = '';
   let createdLiveTeacherId = '';
@@ -20,6 +30,18 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
   let createdLiveBadgeId = '';
   beforeAll(async () => {
     // 1. Seed base database records
+    await prisma.user.upsert({
+      where: { id: 'user-admin-1' },
+      update: { isArchived: false },
+      create: {
+        id: 'user-admin-1',
+        name: 'Bikram Shrestha',
+        email: 'admin@lms.com',
+        role: 'admin',
+        avatar: '',
+        schoolId: 'school-everest',
+      },
+    });
     await prisma.user.upsert({
       where: { id: 'live-stu-1' },
       update: {
@@ -44,8 +66,36 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
         userId: 'live-stu-1',
         streakDays: 10,
         xpPoints: 500,
+      },
+    });
+    await prisma.studentAcademicEnrollment.upsert({
+      where: {
+        studentId_academicYearId: {
+          studentId: 'live-stu-1',
+          academicYearId: 'academic-year-2026',
+        },
+      },
+      update: { cohortId: 'cohort-8-a', rollNumber: 901, status: 'active', endedAt: null },
+      create: {
+        studentId: 'live-stu-1',
         cohortId: 'cohort-8-a',
-        normalizedRollNumber: 901,
+        academicYearId: 'academic-year-2026',
+        rollNumber: 901,
+      },
+    });
+    await prisma.parentControlSettings.upsert({
+      where: { studentId: 'live-stu-1' },
+      update: {},
+      create: {
+        studentId: 'live-stu-1',
+        allowTeacherDirectChat: true,
+        allowPeerDiscussion: true,
+        missingHomeworkAlerts: true,
+        lowAttendanceAlerts: true,
+        weeklyDigestEmail: true,
+        screenTimeLimitMinutes: 90,
+        requireApprovalForOutboundMsgs: false,
+        timezone: 'Asia/Kathmandu',
       },
     });
     await prisma.user.upsert({
@@ -80,6 +130,13 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
         cohortId: 'cohort-8-a',
       },
     });
+    await prisma.classroomEnrollment.upsert({
+      where: {
+        classroomId_studentId: { classroomId: 'cls-live-1', studentId: 'live-stu-1' },
+      },
+      update: { isActive: true },
+      create: { classroomId: 'cls-live-1', studentId: 'live-stu-1', isActive: true },
+    });
     await prisma.badgeDefinition.upsert({
       where: { id: 'bdg-def-1' },
       update: {},
@@ -106,15 +163,32 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
     });
     await prisma.quiz.upsert({
       where: { id: 'quiz-live-1' },
-      update: {},
+      update: { published: true, status: 'published' },
       create: {
         id: 'quiz-live-1',
         classroomId: 'cls-live-1',
+        createdById: 'live-tch-1',
         title: 'Quiz Live 1',
         description: 'Desc',
         durationMinutes: 15,
         dueDate: '2026-08-10',
+        published: true,
+        status: 'published',
         createdAt: new Date().toISOString(),
+      },
+    });
+    await prisma.quizQuestion.upsert({
+      where: { id: 'q-1' },
+      update: { quizId: 'quiz-live-1', correctAnswer: '4', points: 10 },
+      create: {
+        id: 'q-1',
+        quizId: 'quiz-live-1',
+        text: '2+2=?',
+        type: 'MCQ',
+        options: ['3', '4'],
+        correctAnswer: '4',
+        explanation: 'Math fact',
+        points: 10,
       },
     });
     // 2. Boot an isolated server on a free port unless an external server was explicitly requested.
@@ -158,7 +232,9 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
   });
   it('2. GET /api/db/state returns database state over network socket under 300ms SLA', async () => {
     const startTime = performance.now();
-    const res = await fetch(`${BASE_URL}/api/db/state`);
+    const res = await fetch(`${BASE_URL}/api/db/state`, {
+      headers: { Authorization: authorization.admin },
+    });
     const duration = performance.now() - startTime;
     expect(res.status).toBe(200);
     expect(duration).toBeLessThan(300);
@@ -170,7 +246,7 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
     const startTime = performance.now();
     const res = await fetch(`${BASE_URL}/api/db/student-badges`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headersFor('admin'),
       body: JSON.stringify({
         studentProfileId: 'live-stu-1',
         badgeDefinitionId: 'bdg-def-1',
@@ -189,7 +265,7 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
   it('4. POST /api/db/quizzes creates quiz record via live HTTP endpoint', async () => {
     const res = await fetch(`${BASE_URL}/api/db/quizzes`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headersFor('teacher'),
       body: JSON.stringify({
         classroomId: 'cls-live-1',
         classroomName: 'Math Live',
@@ -212,14 +288,14 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
         ],
       }),
     });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     const data = await res.json();
     expect(data.quiz.title).toBe('Live TCP Quiz');
   });
   it('5. POST /api/db/quiz-submissions triggers auto-badge award over live HTTP route', async () => {
     const res = await fetch(`${BASE_URL}/api/db/quiz-submissions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headersFor('student'),
       body: JSON.stringify({
         quizId: 'quiz-live-1',
         studentId: 'live-stu-1',
@@ -235,7 +311,7 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
   it('6. POST /api/db/stream-posts creates announcement on live server socket', async () => {
     const res = await fetch(`${BASE_URL}/api/db/stream-posts`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headersFor('teacher'),
       body: JSON.stringify({
         classroomId: 'cls-live-1',
         authorId: 'live-tch-1',
@@ -245,14 +321,14 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
         content: 'Live Announcement via HTTP TCP Socket',
       }),
     });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     const data = await res.json();
     expect(data.post.content).toBe('Live Announcement via HTTP TCP Socket');
   });
   it('7. POST /api/db/attendance records attendance on live server route', async () => {
     const res = await fetch(`${BASE_URL}/api/db/attendance`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headersFor('teacher'),
       body: JSON.stringify({
         studentId: 'live-stu-1',
         studentName: 'Aarav Live',
@@ -268,7 +344,7 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
   it('8. POST /api/db/parent-controls updates parental controls on live route', async () => {
     const res = await fetch(`${BASE_URL}/api/db/parent-controls`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headersFor('admin'),
       body: JSON.stringify({
         studentId: 'live-stu-1',
         settings: {
@@ -290,15 +366,18 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
   it('9. POST /api/db/students creates a student via live Admin REST endpoint', async () => {
     const res = await fetch(`${BASE_URL}/api/db/students`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headersFor('admin'),
       body: JSON.stringify({
         name: 'Live Admin Student',
         email: `live.admin.student.${Date.now()}@lms.com`,
         gradeLevel: 9,
         section: 'A',
+        parentName: 'Live Admin Guardian',
+        parentEmail: `live.admin.guardian.${Date.now()}@lms.com`,
+        parentPhone: '+977 9800000000',
       }),
     });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     const data = await res.json();
     expect(data.status).toBe('success');
     expect(data.student.name).toBe('Live Admin Student');
@@ -308,10 +387,9 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
     if (!createdLiveStudentId) return;
     const res = await fetch(`${BASE_URL}/api/db/students/${createdLiveStudentId}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headersFor('admin'),
       body: JSON.stringify({
         name: 'Live Admin Student Updated',
-        section: 'B',
       }),
     });
     expect(res.status).toBe(200);
@@ -322,6 +400,7 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
     if (!createdLiveStudentId) return;
     const res = await fetch(`${BASE_URL}/api/db/students/${createdLiveStudentId}`, {
       method: 'DELETE',
+      headers: { Authorization: authorization.admin },
     });
     expect(res.status).toBe(200);
     const data = await res.json();
@@ -330,13 +409,17 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
   it('12. POST /api/db/teachers registers a teacher via live Admin REST endpoint', async () => {
     const res = await fetch(`${BASE_URL}/api/db/teachers`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headersFor('admin'),
       body: JSON.stringify({
         name: 'Live Faculty Instructor',
         email: `live.faculty.${Date.now()}@lms.com`,
+        phone: '+977 9811111111',
+        employeeNumber: `LIVE-T-${Date.now()}`,
+        emergencyContactName: 'Live Emergency Contact',
+        emergencyContactPhone: '+977 9822222222',
       }),
     });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     const data = await res.json();
     expect(data.status).toBe('success');
     createdLiveTeacherId = data.teacher.id;
@@ -345,6 +428,7 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
     if (!createdLiveTeacherId) return;
     const res = await fetch(`${BASE_URL}/api/db/teachers/${createdLiveTeacherId}`, {
       method: 'DELETE',
+      headers: { Authorization: authorization.admin },
     });
     expect(res.status).toBe(200);
     const data = await res.json();
@@ -353,13 +437,14 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
   it('14. POST /api/db/parents creates parent profile via live Admin REST endpoint', async () => {
     const res = await fetch(`${BASE_URL}/api/db/parents`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headersFor('admin'),
       body: JSON.stringify({
         name: 'Live Parent Account',
         email: `live.parent.${Date.now()}@lms.com`,
+        phone: '+977 9833333333',
       }),
     });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     const data = await res.json();
     expect(data.status).toBe('success');
     createdLiveParentId = data.parent.id;
@@ -368,6 +453,7 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
     if (!createdLiveParentId) return;
     const res = await fetch(`${BASE_URL}/api/db/parents/${createdLiveParentId}`, {
       method: 'DELETE',
+      headers: { Authorization: authorization.admin },
     });
     expect(res.status).toBe(200);
     const data = await res.json();
@@ -376,7 +462,7 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
   it('16. POST /api/db/badge-definitions creates badge definition via live Admin endpoint', async () => {
     const res = await fetch(`${BASE_URL}/api/db/badge-definitions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headersFor('admin'),
       body: JSON.stringify({
         title: 'Live Badge Definition',
         icon: '🏆',
@@ -392,23 +478,24 @@ describe('Live TCP/HTTP Server Network Integration & SLA Performance Suite', () 
     if (!createdLiveBadgeId) return;
     const res = await fetch(`${BASE_URL}/api/db/badge-definitions/${createdLiveBadgeId}`, {
       method: 'DELETE',
+      headers: { Authorization: authorization.admin },
     });
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.status).toBe('success');
   });
-  it('18. POST /api/ai/tutor responds cleanly with fallback response over network', async () => {
+  it('18. POST /api/ai/tutor reports unavailable AI when no provider is configured', async () => {
     const res = await fetch(`${BASE_URL}/api/ai/tutor`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headersFor('student'),
       body: JSON.stringify({
         prompt: 'Explain gravity',
-        gradeLevel: 8,
+        subject: 'Mathematics',
       }),
     });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(503);
     const data = await res.json();
-    expect(data.text).toBeDefined();
+    expect(data.error).toBeDefined();
   });
   it('19. Audits 404 handler for invalid routes over live TCP socket', async () => {
     const res = await fetch(`${BASE_URL}/api/non-existent-endpoint`);

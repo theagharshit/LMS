@@ -59,9 +59,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
   // Dynamic system time & day tracking (updates every second)
   const [now, setNow] = React.useState<Date>(new Date());
-  const [timeMode, setTimeMode] = useState<
-    'real' | '10:15' | '11:00' | '11:45' | '12:30' | '01:15' | '02:00'
-  >('real');
+  const [timeMode, setTimeMode] = useState<string>('real');
 
   React.useEffect(() => {
     const timer = setInterval(() => {
@@ -78,6 +76,12 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [activeTaskTab, setActiveTaskTab] = useState<'homework' | 'quizzes'>('homework');
 
   const studentData = studentProfiles.find((s) => s.id === currentUser.id) || studentProfiles[0];
+  if (!studentData)
+    return (
+      <div className="rounded-3xl border border-[#EDEAE2] bg-white p-8 text-center text-sm text-[#7A7A72]">
+        Student profile data is not available for this account.
+      </div>
+    );
 
   // Get periods for selected day
   const currentDayPeriods: SchedulePeriod[] = weeklySchedule[selectedDay] || [];
@@ -85,11 +89,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   // Parse time like "10:00 AM" into minutes from midnight
   const parseTimeToMinutes = (timeStr: string): number | null => {
     if (!timeStr) return null;
-    const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
     if (!match) return null;
     let hours = parseInt(match[1], 10);
     const minutes = parseInt(match[2], 10);
-    const ampm = match[3].toUpperCase();
+    const ampm = match[3]?.toUpperCase();
     if (ampm === 'PM' && hours < 12) hours += 12;
     if (ampm === 'AM' && hours === 12) hours = 0;
     return hours * 60 + minutes;
@@ -97,12 +101,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
   // Determine current effective minutes based on user's timezone clock or simulation selection
   const getEffectiveMinutes = (): number => {
-    if (timeMode === '10:15') return 10 * 60 + 15; // 615 min
-    if (timeMode === '11:00') return 11 * 60 + 0; // 660 min
-    if (timeMode === '11:45') return 11 * 60 + 45; // 705 min
-    if (timeMode === '12:30') return 12 * 60 + 30; // 750 min
-    if (timeMode === '01:15') return 13 * 60 + 15; // 795 min
-    if (timeMode === '02:00') return 14 * 60 + 0; // 840 min
+    if (timeMode !== 'real') return parseTimeToMinutes(timeMode) ?? 0;
     // Real time from user's device/browser clock
     return now.getHours() * 60 + now.getMinutes();
   };
@@ -171,8 +170,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
               नमस्ते, {studentData.name}! 🙏
             </h1>
             <p className="text-[#F9F7F2]/90 text-xs md:text-sm max-w-xl">
-              Here is your clean daily schedule and learning tasks for Mount Everest Secondary
-              School.
+              Here is your daily schedule and learning tasks for {studentData.schoolName}.
             </p>
           </div>
 
@@ -237,12 +235,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                     className="text-xs font-bold text-[#2D2D2A] bg-transparent focus:outline-none cursor-pointer pr-1"
                   >
                     <option value="real">⏱️ Real Clock</option>
-                    <option value="10:15">Demo: 10:15 AM (P1 Math)</option>
-                    <option value="11:00">Demo: 11:00 AM (P2 Science)</option>
-                    <option value="11:45">Demo: 11:45 AM (P3 Nepali)</option>
-                    <option value="12:30">Demo: 12:30 PM (Lunch)</option>
-                    <option value="01:15">Demo: 01:15 PM (P5 Computer)</option>
-                    <option value="02:00">Demo: 02:00 PM (P6 Social)</option>
+                    {currentDayPeriods.map((period) => (
+                      <option key={period.id} value={period.startTime}>
+                        {period.startTime} — {period.subject}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -302,13 +299,25 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       </strong>{' '}
                       • {activePeriod.startTime} - {activePeriod.endTime}
                     </>
-                  ) : effectiveMinutes < 600 ? (
+                  ) : currentDayPeriods.length > 0 &&
+                    effectiveMinutes <
+                      Math.min(
+                        ...currentDayPeriods.map(
+                          (period) => parseTimeToMinutes(period.startTime) ?? 1440,
+                        ),
+                      ) ? (
                     <>
                       Morning before school hours. First period starts at{' '}
-                      <strong className="text-[#2D2D2A]">10:00 AM</strong>.
+                      <strong className="text-[#2D2D2A]">{currentDayPeriods[0].startTime}</strong>.
                     </>
-                  ) : effectiveMinutes >= 870 ? (
-                    <>School concluded for today. All 6 periods completed!</>
+                  ) : currentDayPeriods.length > 0 &&
+                    effectiveMinutes >=
+                      Math.max(
+                        ...currentDayPeriods.map(
+                          (period) => parseTimeToMinutes(period.endTime) ?? 0,
+                        ),
+                      ) ? (
+                    <>School has concluded for today.</>
                   ) : (
                     <>School Recess / Transition Break. Next period starts shortly.</>
                   )}
@@ -322,9 +331,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             {currentDayPeriods.length === 0 ? (
               <div className="text-center py-8 bg-[#F9F7F2] rounded-2xl border border-[#EDEAE2]">
                 <CalendarDays className="w-8 h-8 text-[#E88D67] mx-auto mb-2 opacity-80" />
-                <p className="font-bold text-sm text-[#2D2D2A]">Saturday - School Holiday</p>
+                <p className="font-bold text-sm text-[#2D2D2A]">No scheduled periods</p>
                 <p className="text-xs text-[#7A7A72] mt-0.5">
-                  No school periods scheduled for today. Enjoy your weekend!
+                  The school has not published timetable periods for {selectedDay}.
                 </p>
               </div>
             ) : (

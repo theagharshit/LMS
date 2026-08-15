@@ -96,9 +96,9 @@ export const apiFetch = async (url: string, options: ApiFetchOptions = {}): Prom
   const { feedback, ...requestOptions } = options;
   const method = (requestOptions.method || 'GET').toUpperCase();
   const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
-  const isAuthRequest = url.startsWith('/api/auth/');
+  const isPublicAuthRequest = /^\/api\/auth\/(csrf|login|refresh)$/.test(url);
   const shouldNotify =
-    feedback !== false && (typeof feedback === 'object' || (isMutation && !isAuthRequest));
+    feedback !== false && (typeof feedback === 'object' || (isMutation && !isPublicAuthRequest));
   try {
     const fetcher = nativeFetch();
     if (!fetcher) throw new Error('Fetch is unavailable.');
@@ -110,7 +110,7 @@ export const apiFetch = async (url: string, options: ApiFetchOptions = {}): Prom
       !headers.has('Content-Type')
     )
       headers.set('Content-Type', 'application/json');
-    if (!isAuthRequest && typeof localStorage !== 'undefined') {
+    if (!isPublicAuthRequest && typeof localStorage !== 'undefined') {
       const token = localStorage.getItem('lms_jwt_token');
       if (token && !headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
     }
@@ -119,7 +119,7 @@ export const apiFetch = async (url: string, options: ApiFetchOptions = {}): Prom
     fetchOptions.headers = headers;
 
     let response = await fetcher(url, fetchOptions);
-    if (response.status === 401 && !isAuthRequest) {
+    if (response.status === 401 && !isPublicAuthRequest) {
       const accessToken = await refreshAccessToken(fetcher, csrf);
       if (accessToken) {
         headers.set('Authorization', `Bearer ${accessToken}`);
@@ -141,7 +141,7 @@ export const apiFetch = async (url: string, options: ApiFetchOptions = {}): Prom
       response.ok &&
       response.status !== 202 &&
       shouldNotify &&
-      (!isAuthRequest || typeof feedback === 'object') &&
+      (!isPublicAuthRequest || typeof feedback === 'object') &&
       feedback?.success !== false
     ) {
       toast.success(

@@ -29,11 +29,11 @@ type CreationMode = 'ai' | 'blank';
 
 const emptyQuestion = (index: number, points: number): QuizQuestion => ({
   id: `q-${Date.now()}-${index}`,
-  text: `Question ${index + 1}`,
+  text: '',
   type: 'MCQ',
-  options: ['Option A', 'Option B', 'Option C', 'Option D'],
-  correctAnswer: 'Option A',
-  explanation: 'Add explanation here...',
+  options: ['', '', '', ''],
+  correctAnswer: '',
+  explanation: '',
   points,
 });
 
@@ -53,7 +53,11 @@ export const QuizBuilderWizard: React.FC<QuizBuilderWizardProps> = ({
     editingQuiz?.classroomId || classrooms[0]?.id || '',
   );
   const [title, setTitle] = useState(editingQuiz?.title || '');
-  const [subject, setSubject] = useState(editingQuiz?.subject || 'Mathematics');
+  const [subject, setSubject] = useState(
+    editingQuiz?.subject ||
+      classrooms.find((item) => item.id === selectedClassroomId)?.subject ||
+      '',
+  );
   const [topic, setTopic] = useState('');
   const [dueDate, setDueDate] = useState(
     editingQuiz?.dueDate || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
@@ -76,6 +80,10 @@ export const QuizBuilderWizard: React.FC<QuizBuilderWizardProps> = ({
   );
 
   const selectedClassroom = classrooms.find((c) => c.id === selectedClassroomId);
+
+  useEffect(() => {
+    if (selectedClassroom && !editingQuiz) setSubject(selectedClassroom.subject);
+  }, [editingQuiz, selectedClassroom]);
 
   const availableResources = useMemo(() => {
     const fromLibrary = showAllResources
@@ -149,15 +157,10 @@ export const QuizBuilderWizard: React.FC<QuizBuilderWizardProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           topic: topic || title,
-          subject,
-          gradeLevel: selectedClassroom?.gradeLevel || 8,
+          classroomId: selectedClassroomId,
           questionCount,
           defaultPoints,
-          resourceTitles: selectedResources.map((r) => r.title),
-          resourceDescriptions: selectedResources.map((r) => r.description || r.title),
-          resourceUrls: selectedResources.map((r) => r.url),
-          resourceTypes: selectedResources.map((r) => r.type),
-          resourceMimeTypes: selectedResources.map((r) => r.mimeType || ''),
+          resourceIds: selectedResources.map((resource) => resource.id),
         }),
         feedback: {
           success: 'Quiz questions were generated from the selected materials.',

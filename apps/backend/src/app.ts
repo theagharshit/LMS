@@ -25,6 +25,7 @@ import {
 import { metricsMiddleware } from '@middlewares/metricsMiddleware';
 import { openApiDocument } from '@utils/openApi';
 import { platformRoutes } from '@routes/platformRoutes';
+import { lifecycleRoutes } from '@routes/lifecycleRoutes';
 import { HttpError } from '@utils/httpError';
 
 export function createApp() {
@@ -109,6 +110,7 @@ export function createApp() {
   app.use('/api', teacherRoutes);
   app.use('/api', parentRoutes);
   app.use('/api', adminRoutes);
+  app.use('/api', lifecycleRoutes);
   app.use('/api/platform', platformRoutes);
   app.use('/api/chat', chatRoutes);
 

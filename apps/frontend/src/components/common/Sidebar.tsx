@@ -78,7 +78,7 @@ export const Sidebar: React.FC = () => {
             id: 'parental-controls',
             label: 'Parental Controls',
             icon: ShieldAlert,
-            badge: activeChild.gradeLevel < 7 ? 'Grade < 7' : undefined,
+            badge: activeChild && activeChild.gradeLevel < 7 ? 'Grade < 7' : undefined,
           },
         ]
       : []),
@@ -113,10 +113,10 @@ export const Sidebar: React.FC = () => {
                     ? `Teacher: ${currentUser.name}`
                     : isAdmin
                       ? `Admin: ${currentUser.name}`
-                      : `Parent: Bina Sharma`}
+                      : `Parent: ${currentUser.name}`}
               </span>
             </div>
-            {isParent && (
+            {isParent && activeChild && (
               <p className="text-[11px] text-[#E88D67] font-medium mt-1">
                 Viewing: {activeChild.name} (Grade {activeChild.gradeLevel})
               </p>
@@ -139,7 +139,7 @@ export const Sidebar: React.FC = () => {
                 👋
               </span>
             </div>
-            {isParent && (
+            {isParent && activeChild && (
               <p className="text-[11px] text-[#F0EDE5]/90 font-medium mt-1">
                 Viewing: {activeChild.name}
               </p>

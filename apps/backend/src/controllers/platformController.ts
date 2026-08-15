@@ -26,6 +26,31 @@ export const getDbHealth = asyncHandler(async (_req, res) =>
   res.json(await platformService.dbHealth()),
 );
 
+export const createAuditLog = asyncHandler(async (req, res) => {
+  if (!req.user || req.user.role !== 'admin')
+    throw new HttpError(403, 'Only administrators may create audit records.');
+  const row = await prisma.auditTrail.create({
+    data: {
+      tableName: req.body.tableName || 'Application',
+      action: req.body.action,
+      category: req.body.category,
+      newData: { details: req.body.details },
+      changedBy: req.user.id,
+    },
+  });
+  res.status(201).json({
+    status: 'success',
+    auditLog: {
+      id: row.id,
+      action: row.action,
+      category: row.category,
+      performedBy: req.user.name,
+      details: req.body.details,
+      timestamp: row.createdAt.toISOString(),
+    },
+  });
+});
+
 export const getSearch = asyncHandler(async (req, res) =>
   res.json({ status: 'success', ...(await platformService.search(String(req.query.q || ''))) }),
 );
@@ -205,14 +230,56 @@ export const updateUserRole = asyncHandler(async (req, res) => {
 });
 
 export const dispatchBulkFeedback = asyncHandler(async (req, res) => {
+  if (!req.user) throw new HttpError(401, 'Authentication required.');
+  const actor = await prisma.user.findFirst({
+    where: {
+      id: req.user.id,
+      role: { in: ['teacher', 'admin'] },
+      isArchived: false,
+    },
+    select: { id: true, name: true, role: true, schoolId: true },
+  });
+  if (!actor) throw new HttpError(401, 'Active teacher or administrator account required.');
+  const uniqueStudentIds = [...new Set<string>(req.body.studentIds)];
+  const recipients = await prisma.user.findMany({
+    where: {
+      id: { in: uniqueStudentIds },
+      schoolId: actor.schoolId,
+      role: 'student',
+      isArchived: false,
+      ...(actor.role === 'teacher'
+        ? {
+            enrollments: {
+              some: {
+                isActive: true,
+                classroom: {
+                  isArchived: false,
+                  OR: [
+                    { teacherId: actor.id },
+                    {
+                      teachingAssignments: {
+                        some: { teacherId: actor.id, isActive: true },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          }
+        : {}),
+    },
+    select: { id: true },
+  });
+  if (recipients.length !== uniqueStudentIds.length)
+    throw new HttpError(403, 'Feedback recipients must be active students in your school scope.');
   const outcomes = await Promise.all(
-    req.body.studentIds.map((recipientId: string) =>
+    recipients.map(({ id: recipientId }) =>
       notificationService.dispatchNotification({
         recipientId,
-        senderId: req.user?.id,
-        senderName: req.user?.name || 'Teacher',
-        senderRole: req.user?.role || 'teacher',
-        title: req.body.title || 'Teacher Feedback',
+        senderId: actor.id,
+        senderName: actor.name,
+        senderRole: actor.role,
+        title: req.body.title,
         body: req.body.feedback,
         category: 'ACADEMIC',
         type: 'message',
@@ -288,17 +355,90 @@ export const verifyParentAccount = asyncHandler(async (req, res) => {
         newData: { verified: true },
       },
     }),
+    prisma.parentProfile.upsert({
+      where: { userId: token.parentId },
+      create: {
+        userId: token.parentId,
+        verificationStatus: 'verified',
+        verifiedAt: new Date(),
+      },
+      update: { verificationStatus: 'verified', verifiedAt: new Date() },
+    }),
   ]);
   res.json({ status: 'success', parentId: token.parentId, verified: true });
 });
 
 export const ingestLocationPing = asyncHandler(async (req, res) => {
-  const buffered = bufferLocationPing(req.body);
-  const delivered = broadcastLocation(req.body);
+  if (!req.user) throw new HttpError(401, 'Authentication required.');
+  const actor = await prisma.user.findFirst({
+    where: { id: req.user.id, role: { in: ['teacher', 'admin'] }, isArchived: false },
+  });
+  if (!actor) throw new HttpError(401, 'Active teacher or administrator required.');
+  const student = await prisma.user.findFirst({
+    where: {
+      id: req.body.studentId,
+      role: 'student',
+      schoolId: actor.schoolId,
+      isArchived: false,
+    },
+  });
+  if (!student) throw new HttpError(404, 'Active student not found in your school.');
+  await prisma.studentLocationRecord.upsert({
+    where: { studentId: student.id },
+    update: {
+      currentLocation: req.body.location,
+      category: req.body.category,
+      latitude: req.body.latitude,
+      longitude: req.body.longitude,
+      busNumber: req.body.busNumber,
+      notes: req.body.notes,
+      updatedById: actor.id,
+      externalReporterId: null,
+      updatedAt: new Date().toISOString(),
+    },
+    create: {
+      studentId: student.id,
+      currentLocation: req.body.location,
+      category: req.body.category,
+      latitude: req.body.latitude,
+      longitude: req.body.longitude,
+      busNumber: req.body.busNumber,
+      notes: req.body.notes,
+      updatedById: actor.id,
+      updatedAt: new Date().toISOString(),
+    },
+  });
+  const ping = {
+    ...req.body,
+    studentName: student.name,
+    updatedBy: actor.name,
+    updatedByRole: actor.role,
+  };
+  const buffered = bufferLocationPing(ping);
+  const delivered = broadcastLocation(ping);
   res.status(202).json({ status: 'success', ...buffered, realtimeSubscribers: delivered });
 });
 
 export const geofenceCheck = asyncHandler(async (req, res) => {
+  if (!req.user) throw new HttpError(401, 'Authentication required.');
+  const student = await prisma.user.findFirst({
+    where: { id: req.body.studentId, role: 'student', isArchived: false },
+    select: {
+      id: true,
+      name: true,
+      schoolId: true,
+      guardianLinks: {
+        where: { isActive: true, parent: { isArchived: false } },
+        select: { parentId: true },
+      },
+    },
+  });
+  const actor = await prisma.user.findFirst({
+    where: { id: req.user.id, isArchived: false },
+    select: { id: true, name: true, role: true, schoolId: true },
+  });
+  if (!student || !actor || student.schoolId !== actor.schoolId)
+    throw new HttpError(404, 'Active student not found in your school.');
   const toRadians = (value: number) => (value * Math.PI) / 180;
   const dLat = toRadians(req.body.latitude - req.body.schoolLatitude);
   const dLon = toRadians(req.body.longitude - req.body.schoolLongitude);
@@ -309,15 +449,23 @@ export const geofenceCheck = asyncHandler(async (req, res) => {
       Math.sin(dLon / 2) ** 2;
   const distanceMeters = 6_371_000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const outside = distanceMeters > req.body.radiusMeters;
-  if (outside)
-    await notificationService.dispatchBroadcastNotification({
-      targetAudience: 'parents',
-      title: 'Safe-zone alert',
-      body: `${req.body.studentName || 'A student'} left the configured school safe zone.`,
-      category: 'CRITICAL',
-      severity: 'urgent',
-      type: 'location',
-    });
+  if (outside) {
+    await Promise.all(
+      student.guardianLinks.map(({ parentId }) =>
+        notificationService.dispatchNotification({
+          recipientId: parentId,
+          senderId: actor.id,
+          senderName: actor.name,
+          senderRole: actor.role,
+          title: 'Safe-zone alert',
+          body: `${student.name} left the configured school safe zone.`,
+          category: 'CRITICAL',
+          severity: 'urgent',
+          type: 'location',
+        }),
+      ),
+    );
+  }
   res.json({ status: 'success', outside, distanceMeters: Math.round(distanceMeters) });
 });
 
@@ -346,12 +494,7 @@ export const checkAccessSchedule = asyncHandler(async (req, res) => {
   });
 });
 
-const tutorCache = new Map<string, string>();
 export const streamTutor = asyncHandler(async (req, res) => {
-  const key = createHash('sha256').update(JSON.stringify(req.body)).digest('hex');
-  const fallback =
-    tutorCache.get(key) ||
-    `Let’s work through “${req.body.prompt}” step by step. Start by listing what you already know, then identify the single concept the question is testing.`;
   res.status(200).set({
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
@@ -362,22 +505,18 @@ export const streamTutor = asyncHandler(async (req, res) => {
   try {
     const ai = getAi();
     if (!ai) throw new Error('AI provider unavailable');
-    let fullText = '';
     const stream = await ai.models.generateContentStream({
       model: 'gemini-3.6-flash',
       contents: req.body.prompt,
     });
     for await (const chunk of stream) {
       if (chunk.text) {
-        fullText += chunk.text;
         send('chunk', { text: chunk.text });
       }
     }
-    tutorCache.set(key, fullText);
-    send('done', { cached: false });
-  } catch {
-    send('chunk', { text: fallback });
-    send('done', { cached: true });
+    send('done', {});
+  } catch (error) {
+    send('error', { message: (error as Error).message || 'AI tutor unavailable.' });
   }
   res.end();
 });

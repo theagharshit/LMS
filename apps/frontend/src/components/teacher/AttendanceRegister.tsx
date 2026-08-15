@@ -54,6 +54,7 @@ export const AttendanceRegister: React.FC = () => {
     currentUser,
     allUsers,
     classrooms,
+    calendarEvents,
     dispatchNotification,
   } = useApp();
 
@@ -67,12 +68,11 @@ export const AttendanceRegister: React.FC = () => {
     if (currentUser.role === 'admin') {
       return classrooms;
     }
-    const myClasses = classrooms.filter((c) => c.teacherId === currentUser.id);
-    return myClasses.length > 0 ? myClasses : classrooms;
+    return classrooms;
   }, [classrooms, currentUser]);
 
   const [selectedClassroomId, setSelectedClassroomId] = useState<string>(
-    () => teacherClassrooms[0]?.id || classrooms[0]?.id || 'cls-math-8a',
+    () => teacherClassrooms[0]?.id || '',
   );
 
   const activeClassroom = useMemo(() => {
@@ -84,9 +84,7 @@ export const AttendanceRegister: React.FC = () => {
   // Filter students enrolled in active classroom
   const classroomStudents = useMemo(() => {
     const enrolledIds = activeClassroom?.enrolledStudentIds;
-    if (!enrolledIds || enrolledIds.length === 0) {
-      return studentProfiles;
-    }
+    if (!enrolledIds || enrolledIds.length === 0) return [];
     return studentProfiles.filter((s) => enrolledIds.includes(s.id));
   }, [studentProfiles, activeClassroom]);
 
@@ -105,56 +103,28 @@ export const AttendanceRegister: React.FC = () => {
   ) => {
     markAttendance(studentId, studentName, selectedDate, status, '');
 
-    // Dispatch CRITICAL notification if absent or late
+    // The API sends the canonical alert to the student and every active guardian.
     if (status === 'absent' || status === 'late') {
-      const isAbsent = status === 'absent';
-      const title = `🚨 Attendance Alert: Marked ${isAbsent ? 'ABSENT' : 'LATE (Tardy)'}`;
-      const body = `${studentName} was marked ${isAbsent ? 'Absent' : 'Late / Tardy'} in ${activeClassroom?.name || 'Class'} on ${selectedDate}. ${isAbsent ? 'Please contact the school.' : 'They arrived after class started.'}`;
-
-      dispatchNotification({
-        recipientId: studentId,
-        title,
-        body,
-        category: 'CRITICAL',
-        severity: isAbsent ? 'urgent' : 'high',
-        type: 'attendance',
-      });
-
-      const parentUser = allUsers.find(
-        (u) => u.role === 'parent' && u.childrenIds?.includes(studentId),
-      );
-      const parentId = parentUser?.id || 'user-parent-1';
-
-      dispatchNotification({
-        recipientId: parentId,
-        title: `🚨 Child Attendance Notice: ${studentName}`,
-        body,
-        category: 'CRITICAL',
-        severity: isAbsent ? 'urgent' : 'high',
-        type: 'attendance',
-      });
-
       setAlertSentStatus((prev) => ({ ...prev, [studentId]: true }));
     }
   };
 
   const handleSendParentAlert = (studentName: string, studentId: string) => {
     const title = `🚨 Urgent Attendance Reminder: ${studentName}`;
-    const body = `${studentName} was marked Absent in ${activeClassroom?.name || 'Class'} on ${selectedDate}. Please verify with Mount Everest Sec. School.`;
+    const body = `${studentName} was marked Absent in ${activeClassroom?.name || 'Class'} on ${selectedDate}. Please verify with ${currentUser.schoolName}.`;
 
-    const parentUser = allUsers.find(
+    const parentUsers = allUsers.filter(
       (u) => u.role === 'parent' && u.childrenIds?.includes(studentId),
     );
-    const parentId = parentUser?.id || 'user-parent-1';
-
-    dispatchNotification({
-      recipientId: parentId,
-      title,
-      body,
-      category: 'CRITICAL',
-      severity: 'urgent',
-      type: 'attendance',
-    });
+    for (const parentUser of parentUsers)
+      dispatchNotification({
+        recipientId: parentUser.id,
+        title,
+        body,
+        category: 'CRITICAL',
+        severity: 'urgent',
+        type: 'attendance',
+      });
 
     setAlertSentStatus((prev) => ({ ...prev, [studentId]: true }));
   };
@@ -179,6 +149,9 @@ export const AttendanceRegister: React.FC = () => {
 
   const isToday = selectedDate === today;
   const isPastDate = selectedDate < today;
+  const selectedHoliday = calendarEvents.find(
+    (event) => event.type === 'holiday' && event.date === selectedDate,
+  );
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
@@ -187,7 +160,7 @@ export const AttendanceRegister: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[#FDEEDC] text-xs font-bold mb-2">
             <School className="w-3.5 h-3.5" />
-            <span>Mount Everest Sec. School Attendance Register</span>
+            <span>{currentUser.schoolName} Attendance Register</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold font-serif">
             Daily Student Attendance Register
@@ -265,6 +238,13 @@ export const AttendanceRegister: React.FC = () => {
             </strong>
             . Changes will overwrite existing records for that date.
           </span>
+        </div>
+      )}
+
+      {selectedHoliday && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-xs font-semibold text-amber-800">
+          <strong>{selectedHoliday.title}</strong> is a declared school holiday. Attendance is
+          locked and excluded from attendance-rate calculations.
         </div>
       )}
 
@@ -424,6 +404,7 @@ export const AttendanceRegister: React.FC = () => {
                     return (
                       <button
                         key={id}
+                        disabled={Boolean(selectedHoliday)}
                         onClick={() =>
                           handleStatusChange(
                             student.id,
@@ -432,7 +413,7 @@ export const AttendanceRegister: React.FC = () => {
                           )
                         }
                         title={cfg.description}
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 ${
                           isSel
                             ? `${cfg.color} shadow-sm scale-105`
                             : 'bg-white text-[#7A7A72] border border-[#E5E1D8] hover:bg-[#EDEAE2]'

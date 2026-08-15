@@ -98,16 +98,16 @@ export class LMSDatabaseService {
   }
 
   // --- TEACHER ASSIGNMENT & SUBSTITUTE SERVICE DELEGATES ---
-  public getTeacherAbsenceRequests(teacherId?: string) {
-    return teacherAssignmentService.getTeacherAbsenceRequests(teacherId);
+  public getTeacherAbsenceRequests(actorId: string, teacherId?: string) {
+    return teacherAssignmentService.getTeacherAbsenceRequests(actorId, teacherId);
   }
 
-  public getSubstituteRequests(teacherId?: string) {
-    return teacherAssignmentService.getSubstituteRequests(teacherId);
+  public getSubstituteRequests(actorId: string, teacherId?: string) {
+    return teacherAssignmentService.getSubstituteRequests(actorId, teacherId);
   }
 
-  public getAssignmentAuditLogs(targetTeacherId?: string) {
-    return teacherAssignmentService.getAssignmentAuditLogs(targetTeacherId);
+  public getAssignmentAuditLogs(actorId: string, targetTeacherId?: string) {
+    return teacherAssignmentService.getAssignmentAuditLogs(actorId, targetTeacherId);
   }
 
   // --- CLASSROOM SERVICE DELEGATES ---
@@ -117,8 +117,9 @@ export class LMSDatabaseService {
 
   public addClassroom(
     classroom: Omit<Classroom, 'id' | 'code' | 'studentCount'>,
+    actorId?: string,
   ): Promise<Classroom> {
-    return classroomService.addClassroom(classroom);
+    return classroomService.addClassroom(classroom, actorId);
   }
 
   public deleteClassroom(id: string) {
@@ -130,16 +131,16 @@ export class LMSDatabaseService {
   }
 
   public addStreamPost(
-    post: Omit<StreamPost, 'id' | 'createdAt' | 'commentsCount'>,
+    post: Omit<
+      StreamPost,
+      'id' | 'createdAt' | 'commentsCount' | 'authorName' | 'authorAvatar' | 'authorRole'
+    >,
   ): Promise<StreamPost> {
     return classroomService.addStreamPost(post);
   }
 
-  public addCommentToPost(
-    streamPostId: string,
-    comment: { authorName: string; authorAvatar: string; content: string },
-  ) {
-    return classroomService.addCommentToPost(streamPostId, comment);
+  public addCommentToPost(streamPostId: string, actorId: string, content: string) {
+    return classroomService.addCommentToPost(streamPostId, actorId, content);
   }
 
   // --- ASSIGNMENT SERVICE DELEGATES ---
@@ -147,8 +148,11 @@ export class LMSDatabaseService {
     return assignmentService.getAssignments();
   }
 
-  public addAssignment(assignment: Omit<Assignment, 'id' | 'createdAt'>): Promise<Assignment> {
-    return assignmentService.addAssignment(assignment);
+  public addAssignment(
+    assignment: Omit<Assignment, 'id' | 'createdAt'>,
+    creatorId?: string,
+  ): Promise<Assignment> {
+    return assignmentService.addAssignment(assignment, creatorId);
   }
 
   public getSubmissions(): Promise<Submission[]> {
@@ -165,13 +169,23 @@ export class LMSDatabaseService {
     return assignmentService.submitHomework(assignmentId, fileName, fileUrl, studentId, notes);
   }
 
+  public gradeSubmission(
+    submissionId: string,
+    grade: number,
+    feedback: string,
+    markerId: string,
+    markerRole: string,
+  ) {
+    return assignmentService.gradeSubmission(submissionId, grade, feedback, markerId, markerRole);
+  }
+
   // --- QUIZ SERVICE DELEGATES ---
   public getQuizzes(): Promise<Quiz[]> {
     return quizService.getQuizzes();
   }
 
-  public addQuiz(quiz: Omit<Quiz, 'id' | 'createdAt'>): Promise<Quiz> {
-    return quizService.addQuiz(quiz);
+  public addQuiz(quiz: Omit<Quiz, 'id' | 'createdAt'>, creatorId?: string): Promise<Quiz> {
+    return quizService.addQuiz(quiz, creatorId);
   }
 
   public updateQuiz(
@@ -241,8 +255,9 @@ export class LMSDatabaseService {
 
   public addModule(
     data: Omit<ModuleItem, 'id' | 'completedByStudentIds'> & { completedByStudentIds?: string[] },
+    creatorId?: string,
   ): Promise<ModuleItem> {
-    return moduleService.addModule(data);
+    return moduleService.addModule(data, creatorId);
   }
 
   public updateModule(
@@ -283,7 +298,12 @@ export class LMSDatabaseService {
     return communicationService.getDirectMessages();
   }
 
-  public addDirectMessage(msg: Omit<DirectMessage, 'id' | 'createdAt'>): Promise<DirectMessage> {
+  public addDirectMessage(
+    msg: Omit<
+      DirectMessage,
+      'id' | 'createdAt' | 'senderName' | 'senderRole' | 'senderAvatar' | 'receiverName'
+    >,
+  ): Promise<DirectMessage> {
     return communicationService.addDirectMessage(msg);
   }
 
@@ -294,20 +314,12 @@ export class LMSDatabaseService {
 
   public markAttendance(
     studentId: string,
-    studentName: string,
     date: string,
     status: 'present' | 'absent' | 'late' | 'excused',
     remarks?: string,
     markedById?: string,
   ): Promise<AttendanceRecord> {
-    return attendanceService.markAttendance(
-      studentId,
-      studentName,
-      date,
-      status,
-      remarks,
-      markedById,
-    );
+    return attendanceService.markAttendance(studentId, date, status, remarks, markedById);
   }
 
   // --- LOCATION SERVICE DELEGATES ---
@@ -321,21 +333,17 @@ export class LMSDatabaseService {
 
   public updateStudentLocation(
     studentId: string,
-    studentName: string,
     location: string,
     category: StudentLocationRecord['category'],
-    updatedBy: string,
-    updatedByRole: 'teacher' | 'admin',
+    updatedById: string,
     busNumber?: string,
     notes?: string,
   ): Promise<StudentLocationRecord> {
     return locationService.updateStudentLocation(
       studentId,
-      studentName,
       location,
       category,
-      updatedBy,
-      updatedByRole,
+      updatedById,
       busNumber,
       notes,
     );
@@ -348,7 +356,7 @@ export class LMSDatabaseService {
 
   public updateParentControls(
     studentId: string,
-    settings: ParentControlSettings,
+    settings: Partial<ParentControlSettings>,
   ): Promise<ParentControlSettings> {
     return parentService.updateParentControls(studentId, settings);
   }
@@ -369,8 +377,8 @@ export class LMSDatabaseService {
     return notificationService.getUserNotifications(userId);
   }
 
-  public markNotificationAsRead(id: string): Promise<boolean> {
-    return notificationService.markAsRead(id);
+  public markNotificationAsRead(id: string, userId: string): Promise<boolean> {
+    return notificationService.markAsRead(id, userId);
   }
 
   public markAllNotificationsAsRead(userId: string): Promise<boolean> {
@@ -381,12 +389,14 @@ export class LMSDatabaseService {
     return notificationService.dispatchNotification(data);
   }
 
-  public dispatchBroadcastNotification(data: any): Promise<number> {
+  public dispatchBroadcastNotification(
+    data: any,
+  ): Promise<{ dispatchedCount: number; broadcastId: string; createdAt: string }> {
     return notificationService.dispatchBroadcastNotification(data);
   }
 
-  public deleteNotification(id: string): Promise<boolean> {
-    return notificationService.deleteNotification(id);
+  public deleteNotification(id: string, actorId: string): Promise<boolean> {
+    return notificationService.deleteNotification(id, actorId);
   }
 
   public clearReadNotifications(userId: string): Promise<boolean> {

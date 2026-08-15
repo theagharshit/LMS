@@ -13,47 +13,37 @@ import {
   BadgeDefinition,
   StudyResource,
   ModuleItem,
-  MOCK_BADGE_DEFINITIONS,
-  MOCK_CLASSROOMS,
-  MOCK_STREAM_POSTS,
-  MOCK_ASSIGNMENTS,
-  MOCK_SUBMISSIONS,
-  MOCK_QUIZZES,
-  MOCK_QUIZ_SUBMISSIONS,
-  MOCK_SUBJECT_PERFORMANCE,
-  MOCK_MODULES,
 } from '@lms/shared';
 import { apiFetch } from '../../utils/apiFetch';
+import type { DatabaseBootstrapState } from '../databaseBootstrap';
 
-export const useAcademicState = (currentUser: User) => {
-  const [badgeDefinitions, setBadgeDefinitions] =
-    useState<BadgeDefinition[]>(MOCK_BADGE_DEFINITIONS);
-  const [classrooms, setClassrooms] = useState<Classroom[]>(MOCK_CLASSROOMS);
-  const [streamPosts, setStreamPosts] = useState<StreamPost[]>(MOCK_STREAM_POSTS);
-  const [assignments, setAssignments] = useState<Assignment[]>(MOCK_ASSIGNMENTS);
-  const [submissions, setSubmissions] = useState<Submission[]>(MOCK_SUBMISSIONS);
-  const [quizzes, setQuizzes] = useState<Quiz[]>(MOCK_QUIZZES);
-  const [quizSubmissions, setQuizSubmissions] = useState<QuizSubmission[]>(MOCK_QUIZ_SUBMISSIONS);
+export const useAcademicState = (currentUser: User, bootstrap?: DatabaseBootstrapState) => {
+  const [badgeDefinitions, setBadgeDefinitions] = useState<BadgeDefinition[]>(
+    () => bootstrap?.badgeDefinitions || [],
+  );
+  const [classrooms, setClassrooms] = useState<Classroom[]>(() => bootstrap?.classrooms || []);
+  const [streamPosts, setStreamPosts] = useState<StreamPost[]>(() => bootstrap?.streamPosts || []);
+  const [assignments, setAssignments] = useState<Assignment[]>(() => bootstrap?.assignments || []);
+  const [submissions, setSubmissions] = useState<Submission[]>(() => bootstrap?.submissions || []);
+  const [quizzes, setQuizzes] = useState<Quiz[]>(() => bootstrap?.quizzes || []);
+  const [quizSubmissions, setQuizSubmissions] = useState<QuizSubmission[]>(
+    () => bootstrap?.quizSubmissions || [],
+  );
 
-  const [subjectPerformances, setSubjectPerformances] =
-    useState<SubjectPerformance[]>(MOCK_SUBJECT_PERFORMANCE);
-  const [termProgress, setTermProgress] = useState<TermProgress[]>([]);
-  const [studentActivities, setStudentActivities] = useState<StudentActivity[]>([]);
-  const [resources, setResources] = useState<StudyResource[]>([]);
-  const [modules, setModules] = useState<ModuleItem[]>(MOCK_MODULES);
+  const [subjectPerformances, setSubjectPerformances] = useState<SubjectPerformance[]>(
+    () => bootstrap?.subjectPerformances || [],
+  );
+  const [termProgress, setTermProgress] = useState<TermProgress[]>(
+    () => bootstrap?.termProgress || [],
+  );
+  const [studentActivities, setStudentActivities] = useState<StudentActivity[]>(
+    () => bootstrap?.studentActivities || [],
+  );
+  const [resources, setResources] = useState<StudyResource[]>(() => bootstrap?.resources || []);
+  const [modules, setModules] = useState<ModuleItem[]>(() => bootstrap?.modules || []);
 
-  const addClassroom = (classroomData: Omit<Classroom, 'id' | 'code' | 'studentCount'>) => {
-    const newId = `cls-${Date.now()}`;
-    const code = `CLS${Math.floor(1000 + Math.random() * 9000)}`;
-    const newCls: Classroom = {
-      ...classroomData,
-      id: newId,
-      code,
-      studentCount: 1,
-    };
-    setClassrooms((prev) => [newCls, ...prev]);
-
-    apiFetch('/api/db/classrooms', {
+  const addClassroom = async (classroomData: Omit<Classroom, 'id' | 'code' | 'studentCount'>) => {
+    const response = await apiFetch('/api/db/classrooms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(classroomData),
@@ -61,27 +51,25 @@ export const useAcademicState = (currentUser: User) => {
         success: `Classroom “${classroomData.name}” was created.`,
         error: `Could not create classroom “${classroomData.name}”.`,
       },
-    })
-      .then((response) => {
-        if (!response.ok) setClassrooms((items) => items.filter((item) => item.id !== newId));
-      })
-      .catch((err) => {
-        setClassrooms((items) => items.filter((item) => item.id !== newId));
-        console.error('[AppContext] Failed to persist classroom', err);
-      });
+    }).catch(() => null);
+    if (!response?.ok) return;
+    const data = await response.json();
+    if (data.classroom) setClassrooms((prev) => [data.classroom, ...prev]);
   };
 
-  const addStreamPost = (postData: Omit<StreamPost, 'id' | 'createdAt' | 'commentsCount'>) => {
-    const newPost: StreamPost = {
-      ...postData,
-      id: `post-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      commentsCount: 0,
-      comments: [],
-    };
-    setStreamPosts((prev) => [newPost, ...prev]);
-
-    apiFetch('/api/db/stream-posts', {
+  const addStreamPost = async (
+    postData: Omit<
+      StreamPost,
+      | 'id'
+      | 'createdAt'
+      | 'commentsCount'
+      | 'authorId'
+      | 'authorName'
+      | 'authorAvatar'
+      | 'authorRole'
+    >,
+  ) => {
+    const response = await apiFetch('/api/db/stream-posts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(postData),
@@ -89,56 +77,33 @@ export const useAcademicState = (currentUser: User) => {
         success: 'Announcement published to the classroom stream.',
         error: 'Could not publish the classroom announcement.',
       },
-    })
-      .then((response) => {
-        if (!response.ok) setStreamPosts((items) => items.filter((item) => item.id !== newPost.id));
-      })
-      .catch((err) => {
-        setStreamPosts((items) => items.filter((item) => item.id !== newPost.id));
-        console.error('[AppContext] Failed to persist stream post', err);
-      });
+    }).catch(() => null);
+    if (!response?.ok) return;
+    const data = await response.json();
+    if (data.post) setStreamPosts((prev) => [data.post, ...prev]);
   };
 
-  const addPostComment = (postId: string, commentText: string) => {
-    const newComment = {
-      id: `c-${Date.now()}`,
-      authorName: currentUser.name,
-      authorAvatar: currentUser.avatar || '',
-      content: commentText,
-      createdAt: new Date().toISOString(),
-    };
-
-    setStreamPosts((prev) =>
-      prev.map((p) => {
-        if (p.id === postId) {
-          const newComments = [...(p.comments || []), newComment];
-          return {
-            ...p,
-            commentsCount: newComments.length,
-            comments: newComments,
-          };
-        }
-        return p;
-      }),
-    );
-
-    apiFetch(`/api/db/stream-posts/${postId}/comments`, {
+  const addPostComment = async (postId: string, commentText: string) => {
+    const response = await apiFetch(`/api/db/stream-posts/${postId}/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newComment),
+      body: JSON.stringify({ content: commentText }),
       feedback: { success: 'Comment posted.', error: 'Could not post your comment.' },
-    }).catch((err) => console.error('[AppContext] Failed to persist comment', err));
+    }).catch(() => null);
+    if (!response?.ok) return;
+    const data = await response.json();
+    if (!data.comment) return;
+    setStreamPosts((prev) =>
+      prev.map((post) => {
+        if (post.id !== postId) return post;
+        const comments = [...(post.comments || []), data.comment];
+        return { ...post, comments, commentsCount: comments.length };
+      }),
+    );
   };
 
-  const addAssignment = (asgData: Omit<Assignment, 'id' | 'createdAt'>) => {
-    const newAsg: Assignment = {
-      ...asgData,
-      id: `asg-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-    setAssignments((prev) => [newAsg, ...prev]);
-
-    apiFetch('/api/db/assignments', {
+  const addAssignment = async (asgData: Omit<Assignment, 'id' | 'createdAt'>) => {
+    const response = await apiFetch('/api/db/assignments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(asgData),
@@ -146,17 +111,13 @@ export const useAcademicState = (currentUser: User) => {
         success: `Assignment “${asgData.title}” was published.`,
         error: `Could not publish assignment “${asgData.title}”.`,
       },
-    })
-      .then((response) => {
-        if (!response.ok) setAssignments((items) => items.filter((item) => item.id !== newAsg.id));
-      })
-      .catch((err) => {
-        setAssignments((items) => items.filter((item) => item.id !== newAsg.id));
-        console.error('[AppContext] Failed to persist assignment', err);
-      });
+    }).catch(() => null);
+    if (!response?.ok) return;
+    const data = await response.json();
+    if (data.assignment) setAssignments((prev) => [data.assignment, ...prev]);
   };
 
-  const submitHomework = (
+  const submitHomework = async (
     assignmentId: string,
     fileUrl: string,
     fileName: string,
@@ -165,76 +126,7 @@ export const useAcademicState = (currentUser: User) => {
     const existingIndex = submissions.findIndex(
       (s) => s.assignmentId === assignmentId && s.studentId === currentUser.id,
     );
-    const existing = existingIndex >= 0 ? submissions[existingIndex] : null;
-
-    // Check if late based on assignment due date
-    const targetAsg = assignments.find((a) => a.id === assignmentId);
-    let isLate = false;
-    const now = new Date();
-    if (targetAsg?.dueDate) {
-      const dueStr = `${targetAsg.dueDate}T${targetAsg.dueTime || '23:59'}:00`;
-      const dueParsed = new Date(dueStr);
-      if (!isNaN(dueParsed.getTime()) && now > dueParsed) {
-        isLate = true;
-      }
-    }
-
-    const previousHistory = existing?.history ? [...existing.history] : [];
-    if (existing && previousHistory.length === 0) {
-      previousHistory.push({
-        id: `${existing.id}-v1`,
-        version: 1,
-        submittedAt: existing.submittedAt || new Date().toISOString(),
-        fileUrl: existing.fileUrl,
-        fileName: existing.fileName,
-        responseText: existing.responseText,
-        status: existing.status,
-        grade: existing.grade,
-        feedback: existing.feedback,
-        isLate: existing.isLate || false,
-      });
-    }
-
-    const nextVersion = previousHistory.length > 0 ? previousHistory.length + 1 : 1;
-    const currentAttemptId = existing ? `${existing.id}-v${nextVersion}` : `sub-${Date.now()}-v1`;
-
-    const newHistoryItem = {
-      id: currentAttemptId,
-      version: nextVersion,
-      submittedAt: now.toISOString(),
-      fileUrl,
-      fileName,
-      responseText,
-      status: isLate ? ('late' as const) : ('submitted' as const),
-      isLate,
-    };
-
-    const updatedHistory = [newHistoryItem, ...previousHistory];
-
-    const newSub: Submission = {
-      id: existing ? existing.id : `sub-${Date.now()}`,
-      assignmentId,
-      studentId: currentUser.id,
-      studentName: currentUser.name,
-      studentAvatar: currentUser.avatar,
-      submittedAt: now.toISOString(),
-      status: isLate ? 'late' : 'submitted',
-      fileUrl,
-      fileName,
-      responseText,
-      isLate,
-      history: updatedHistory,
-    };
-
-    if (existingIndex >= 0) {
-      const updated = [...submissions];
-      updated[existingIndex] = newSub;
-      setSubmissions(updated);
-    } else {
-      setSubmissions((prev) => [newSub, ...prev]);
-    }
-
-    apiFetch('/api/db/submissions', {
+    const response = await apiFetch('/api/db/submissions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -245,46 +137,36 @@ export const useAcademicState = (currentUser: User) => {
         notes: responseText,
       }),
       feedback: {
-        success: isLate
-          ? 'Homework submitted and marked as late.'
-          : 'Homework submitted successfully.',
+        success: 'Homework submitted successfully.',
         error: 'Your homework could not be submitted. Please try again.',
       },
-    })
-      .then((response) => {
-        if (!response.ok && response.status !== 202) {
-          setSubmissions((items) =>
-            existing
-              ? items.map((item) => (item.id === existing.id ? existing : item))
-              : items.filter((item) => item.id !== newSub.id),
-          );
-        }
-      })
-      .catch((err) => {
-        setSubmissions((items) =>
-          existing
-            ? items.map((item) => (item.id === existing.id ? existing : item))
-            : items.filter((item) => item.id !== newSub.id),
-        );
-        console.error('[AppContext] Failed to persist submission', err);
-      });
+    }).catch(() => null);
+    if (!response?.ok) return;
+    const data = await response.json();
+    const saved = data.submission as Submission;
+    if (!saved?.id) return;
+    if (existingIndex >= 0)
+      setSubmissions((items) => items.map((item) => (item.id === saved.id ? saved : item)));
+    else setSubmissions((items) => [saved, ...items]);
   };
 
-  const gradeSubmission = (submissionId: string, grade: number, feedback: string) => {
-    setSubmissions((prev) =>
-      prev.map((s) => {
-        if (s.id === submissionId) {
-          return {
-            ...s,
-            status: 'graded',
-            grade,
-            feedback,
-            annotated: true,
-          };
-        }
-        return s;
-      }),
-    );
+  const gradeSubmission = async (submissionId: string, grade: number, feedback: string) => {
+    const response = await apiFetch(`/api/db/submissions/${submissionId}/grade`, {
+      method: 'PATCH',
+      body: JSON.stringify({ grade, feedback }),
+      feedback: {
+        success: 'Grade and feedback saved.',
+        error: 'Could not save the grade.',
+      },
+    }).catch(() => null);
+    if (!response?.ok) return;
+    const data = await response.json();
+    if (data.submission)
+      setSubmissions((items) =>
+        items.map((submission) =>
+          submission.id === submissionId ? { ...submission, ...data.submission } : submission,
+        ),
+      );
   };
 
   const updateQuizMarksMode = (quizId: string, revealMarksMode: 'immediate' | 'later') => {
@@ -304,15 +186,8 @@ export const useAcademicState = (currentUser: User) => {
     }).catch((err) => console.error('[AppContext] Failed to update quiz marks mode', err));
   };
 
-  const addQuiz = (quizData: Omit<Quiz, 'id'>) => {
-    const newQuiz: Quiz = {
-      ...quizData,
-      id: `quiz-${Date.now()}`,
-      status: quizData.status || (quizData.published ? 'published' : 'draft'),
-    };
-    setQuizzes((prev) => [newQuiz, ...prev]);
-
-    apiFetch('/api/db/quizzes', {
+  const addQuiz = async (quizData: Omit<Quiz, 'id'>) => {
+    const response = await apiFetch('/api/db/quizzes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(quizData),
@@ -320,23 +195,11 @@ export const useAcademicState = (currentUser: User) => {
         success: `Quiz “${quizData.title}” was created.`,
         error: `Could not create quiz “${quizData.title}”.`,
       },
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          setQuizzes((items) => items.filter((item) => item.id !== newQuiz.id));
-          return;
-        }
-        const result = await response.json();
-        if (result.quiz) {
-          setQuizzes((items) => items.map((item) => (item.id === newQuiz.id ? result.quiz : item)));
-        }
-      })
-      .catch((err) => {
-        setQuizzes((items) => items.filter((item) => item.id !== newQuiz.id));
-        console.error('[AppContext] Failed to persist quiz', err);
-      });
-
-    return newQuiz;
+    }).catch(() => null);
+    if (!response?.ok) return undefined;
+    const result = await response.json();
+    if (result.quiz) setQuizzes((items) => [result.quiz, ...items]);
+    return result.quiz as Quiz | undefined;
   };
 
   const updateQuiz = (quizId: string, updates: Partial<Omit<Quiz, 'id'>>) => {
@@ -393,37 +256,16 @@ export const useAcademicState = (currentUser: User) => {
     }).catch((err) => console.error('[AppContext] Failed to delete quiz', err));
   };
 
-  const addResource = (data: Omit<StudyResource, 'id' | 'createdAt'>) => {
-    const newResource: StudyResource = {
-      ...data,
-      id: `res-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-    setResources((prev) => [newResource, ...prev]);
-
-    apiFetch('/api/db/resources', {
+  const addResource = async (data: Omit<StudyResource, 'id' | 'createdAt'>) => {
+    const response = await apiFetch('/api/db/resources', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          setResources((items) => items.filter((item) => item.id !== newResource.id));
-          return;
-        }
-        const result = await response.json();
-        if (result.resource) {
-          setResources((items) =>
-            items.map((item) => (item.id === newResource.id ? result.resource : item)),
-          );
-        }
-      })
-      .catch((err) => {
-        setResources((items) => items.filter((item) => item.id !== newResource.id));
-        console.error('[AppContext] Failed to persist resource', err);
-      });
-
-    return newResource;
+    }).catch(() => null);
+    if (!response?.ok) return undefined;
+    const result = await response.json();
+    if (result.resource) setResources((items) => [result.resource, ...items]);
+    return result.resource as StudyResource | undefined;
   };
 
   const updateResource = (
@@ -447,39 +289,18 @@ export const useAcademicState = (currentUser: User) => {
     }).catch((err) => console.error('[AppContext] Failed to delete resource', err));
   };
 
-  const addModule = (
+  const addModule = async (
     data: Omit<ModuleItem, 'id' | 'completedByStudentIds'> & { completedByStudentIds?: string[] },
   ) => {
-    const newModule: ModuleItem = {
-      ...data,
-      id: `mod-${Date.now()}`,
-      completedByStudentIds: data.completedByStudentIds || [],
-    };
-    setModules((prev) => [newModule, ...prev]);
-
-    apiFetch('/api/db/modules', {
+    const response = await apiFetch('/api/db/modules', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          setModules((items) => items.filter((item) => item.id !== newModule.id));
-          return;
-        }
-        const result = await response.json();
-        if (result.module) {
-          setModules((items) =>
-            items.map((item) => (item.id === newModule.id ? result.module : item)),
-          );
-        }
-      })
-      .catch((err) => {
-        setModules((items) => items.filter((item) => item.id !== newModule.id));
-        console.error('[AppContext] Failed to persist module', err);
-      });
-
-    return newModule;
+    }).catch(() => null);
+    if (!response?.ok) return undefined;
+    const result = await response.json();
+    if (result.module) setModules((items) => [result.module, ...items]);
+    return result.module as ModuleItem | undefined;
   };
 
   const updateModule = (id: string, updates: Partial<Omit<ModuleItem, 'id'>>) => {
@@ -500,7 +321,7 @@ export const useAcademicState = (currentUser: User) => {
     }).catch((err) => console.error('[AppContext] Failed to delete module', err));
   };
 
-  const submitQuizAnswers = (
+  const submitQuizAnswers = async (
     quizId: string,
     answers: Record<string, string>,
     score: number,
@@ -513,20 +334,7 @@ export const useAcademicState = (currentUser: User) => {
     );
     if (existing) return;
 
-    const newSub: QuizSubmission = {
-      id: `qs-${Date.now()}`,
-      quizId,
-      studentId: currentUser.id,
-      score,
-      totalPoints,
-      completedAt: new Date().toISOString(),
-      startedAt,
-      timeSpentSeconds,
-      answers,
-    };
-    setQuizSubmissions((prev) => [newSub, ...prev]);
-
-    apiFetch('/api/db/quiz-submissions', {
+    const response = await apiFetch('/api/db/quiz-submissions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -542,15 +350,10 @@ export const useAcademicState = (currentUser: User) => {
         success: 'Quiz answers submitted successfully.',
         error: 'Your quiz answers could not be submitted.',
       },
-    })
-      .then((response) => {
-        if (!response.ok && response.status !== 202)
-          setQuizSubmissions((items) => items.filter((item) => item.id !== newSub.id));
-      })
-      .catch((err) => {
-        setQuizSubmissions((items) => items.filter((item) => item.id !== newSub.id));
-        console.error('[AppContext] Failed to persist quiz submission', err);
-      });
+    }).catch(() => null);
+    if (!response?.ok) return;
+    const result = await response.json();
+    if (result.quizSubmission) setQuizSubmissions((items) => [result.quizSubmission, ...items]);
   };
 
   return {

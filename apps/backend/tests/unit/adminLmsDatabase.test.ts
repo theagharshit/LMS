@@ -9,7 +9,9 @@ describe('Admin LMSDatabaseService Unit Test Suite', () => {
       section: 'B',
       rollNumber: 42,
       parentName: 'Test Parent',
+      parentEmail: `test.admin.parent.${Date.now()}@lms.com`,
       parentPhone: '+977-9800000001',
+      schoolName: 'Everest International Academy',
     };
     const created = await lmsDB.addStudentProfile(testStudent);
     expect(created).toBeDefined();
@@ -22,10 +24,13 @@ describe('Admin LMSDatabaseService Unit Test Suite', () => {
       email: `update.student.${Date.now()}@lms.com`,
       gradeLevel: 8,
       section: 'A',
+      parentName: 'Update Student Guardian',
+      parentEmail: `update.student.guardian.${Date.now()}@lms.com`,
+      parentPhone: '+977-9800000002',
+      schoolName: 'Everest International Academy',
     });
     const updated = await lmsDB.updateStudentProfile(testStudent.id, {
       name: 'Updated Name Student',
-      gradeLevel: 10,
     });
     expect(updated).toBeDefined();
   });
@@ -35,6 +40,10 @@ describe('Admin LMSDatabaseService Unit Test Suite', () => {
       email: `test.teacher.${Date.now()}@lms.com`,
       role: 'teacher',
       schoolName: 'Everest International Academy',
+      phone: '+977-9811111111',
+      employeeNumber: `UNIT-T-${Date.now()}`,
+      emergencyContactName: 'Teacher Emergency Contact',
+      emergencyContactPhone: '+977-9822222222',
     });
     expect(teacher.name).toBe('Test Teacher Admin');
     const result = await lmsDB.deleteTeacherProfile(teacher.id);
@@ -58,6 +67,7 @@ describe('Admin LMSDatabaseService Unit Test Suite', () => {
       email: `test.parent.${Date.now()}@lms.com`,
       role: 'parent',
       schoolName: 'Everest International Academy',
+      phone: '+977-9833333333',
     });
     expect(parent.name).toBe('Test Parent Unit');
     const result = await lmsDB.deleteParentProfile(parent.id);

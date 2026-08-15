@@ -27,6 +27,11 @@ export const AcademicCalendarView: React.FC = () => {
   const sortedEvents = [...calendarEvents].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
+  const calendarYears = Array.from(
+    new Set(
+      sortedEvents.map((event) => new Date(event.date).getFullYear()).filter(Number.isFinite),
+    ),
+  );
 
   const filteredEvents = sortedEvents.filter(
     (e) =>
@@ -101,7 +106,9 @@ export const AcademicCalendarView: React.FC = () => {
         <div className="relative z-10 space-y-1.5">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[#FDEEDC] text-xs font-bold">
             <CalendarCheck className="w-3.5 h-3.5" />
-            <span>Bikram Sambat 2083 / 2026 Academic Calendar</span>
+            <span>
+              {calendarYears.length ? `${calendarYears.join(' / ')} ` : ''}Academic Calendar
+            </span>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold font-serif">Academic Timeline</h1>
           <p className="text-xs md:text-sm text-[#F9F7F2]/90">
@@ -313,7 +320,9 @@ export const AcademicCalendarView: React.FC = () => {
                             <Users className="w-3.5 h-3.5 text-blue-600" />
                             <span>
                               Target:{' '}
-                              <strong className="text-[#2D2D2A]">Grade 8 & Schoolwide</strong>
+                              <strong className="text-[#2D2D2A]">
+                                {evt.subject || 'Schoolwide'}
+                              </strong>
                             </span>
                           </div>
                         </div>
@@ -322,7 +331,7 @@ export const AcademicCalendarView: React.FC = () => {
                         <div className="flex items-center justify-between pt-1 text-[11px] text-[#7A7A72]">
                           <span className="flex items-center gap-1 text-[#4A6741] font-bold">
                             <Sparkles className="w-3.5 h-3.5" />
-                            Official Nepal CDC Standard Schedule
+                            Published school schedule
                           </span>
                           <button
                             onClick={(e) => {

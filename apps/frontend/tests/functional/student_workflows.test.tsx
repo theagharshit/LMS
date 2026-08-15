@@ -48,7 +48,7 @@ describe('Student Interactive Functional Workflows (tests/functional/student_wor
     expect(screen.getByText(/Teacher Instructions/i)).toBeInTheDocument();
 
     const notesTextarea = screen.getByPlaceholderText(
-      /Type any notes or answers here if requested/i,
+      /Write notes, explanations, or typed answers/i,
     );
     await user.type(notesTextarea, 'Solved Q1 to Q5 on my notebook.');
 

@@ -4,7 +4,7 @@ import { logger } from '@utils/logger';
 export const getAi = () => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    logger.warn('GEMINI_API_KEY is not set. AI features will operate in fallback mode.');
+    logger.warn('GEMINI_API_KEY is not set. AI features are unavailable.');
     return null;
   }
   return new GoogleGenAI({

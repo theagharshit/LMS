@@ -36,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
     setIsAiParentSummaryOpen,
     activeView,
     setActiveView,
+    logout,
   } = useApp();
 
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
@@ -74,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
                   Nepal LMS
                 </span>
               </div>
-              <p className="text-[11px] text-[#7A7A72]">Mount Everest Sec. School</p>
+              <p className="text-[11px] text-[#7A7A72]">{currentUser.schoolName}</p>
             </div>
           </button>
         </div>
@@ -106,7 +107,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
                     key={child.id}
                     onClick={() => setActiveChildId(child.id)}
                     className={`px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
-                      activeChild.id === child.id
+                      activeChild?.id === child.id
                         ? 'bg-[#E88D67] text-white shadow-sm'
                         : 'text-[#7A7A72] hover:bg-[#E88D67]/10'
                     }`}
@@ -209,7 +210,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
                 )}
                 <div className="px-3 py-1.5 border-b border-[#EDEAE2]">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-[#7A7A72]">
-                    Switch Demo Role
+                    Accounts
                   </p>
                 </div>
                 <div className="p-1 space-y-1 border-t border-[#EDEAE2]">
@@ -249,15 +250,13 @@ export const Header: React.FC<HeaderProps> = ({ onToggleNotifications }) => {
                   ))}
                   <button
                     onClick={() => {
-                      if (typeof localStorage !== 'undefined') {
-                        localStorage.removeItem('lms_jwt_token');
-                      }
+                      logout();
                       setActiveView('login');
                       setIsRoleDropdownOpen(false);
                     }}
                     className="w-full flex items-center gap-2 p-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors"
                   >
-                    <span>🔒 Log Out (Clear JWT Token)</span>
+                    <span>Log out</span>
                   </button>
                 </div>
               </div>

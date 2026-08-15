@@ -9,7 +9,7 @@ import { logger } from '../utils/logger';
 export const verifyFileIntegrity = (req: Request, res: Response, next: NextFunction) => {
   logger.debug('Executing verifyFileIntegrity middleware for incoming file...');
 
-  const fileName = String(req.body?.name || 'Uploaded_Attachment.pdf');
+  const fileName = String(req.body?.name || '').trim();
   const extension = fileName.toLowerCase().match(/\.[a-z0-9]+$/)?.[0];
   const allowedExtensions = new Set(['.pdf', '.docx', '.png', '.jpg', '.jpeg', '.csv']);
   const sizeBytes = Number(req.body?.sizeBytes || 0);
@@ -17,7 +17,7 @@ export const verifyFileIntegrity = (req: Request, res: Response, next: NextFunct
     !extension ||
     !allowedExtensions.has(extension) ||
     sizeBytes > 25 * 1024 * 1024 ||
-    sizeBytes < 0 ||
+    sizeBytes <= 0 ||
     req.body?.isMalicious === true;
 
   if (isMalicious) {

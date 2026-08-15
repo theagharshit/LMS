@@ -11,6 +11,7 @@ loadEnv();
 import { PrismaClient } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
+import bcrypt from 'bcryptjs';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -54,8 +55,20 @@ async function main() {
   }
 
   console.log('Clearing database...');
+  await prisma.studentReportCardSubject.deleteMany();
+  await prisma.studentReportCard.deleteMany();
+  await prisma.examMark.deleteMany();
+  await prisma.examSubject.deleteMany();
+  await prisma.exam.deleteMany();
+  await prisma.timetableSlot.deleteMany();
+  await prisma.bellScheduleEntry.deleteMany();
+  await prisma.schoolHoliday.deleteMany();
+  await prisma.teachingAssignment.deleteMany();
+  await prisma.studentLifecycleEvent.deleteMany();
+  await prisma.studentAcademicEnrollment.deleteMany();
   await prisma.moduleCompletion.deleteMany();
   await prisma.classroomSubstitute.deleteMany();
+  await prisma.teacherAssignmentAuditLog.deleteMany();
   await prisma.teacherSubject.deleteMany();
   await prisma.parentStudent.deleteMany();
   await prisma.refreshToken.deleteMany();
@@ -77,6 +90,7 @@ async function main() {
   await prisma.subjectPerformance.deleteMany();
   await prisma.storedFileRecord.deleteMany();
   await prisma.studentLocationRecord.deleteMany();
+  await prisma.externalLocationReporter.deleteMany();
   await prisma.attendanceRecord.deleteMany();
   await prisma.directMessage.deleteMany();
   await prisma.studentBadge.deleteMany();
@@ -94,9 +108,12 @@ async function main() {
   await prisma.moduleItem.deleteMany();
   await prisma.classroom.deleteMany();
   await prisma.studentProfile.deleteMany();
+  await prisma.teacherProfile.deleteMany();
+  await prisma.parentProfile.deleteMany();
   await prisma.parentControlSettings.deleteMany();
   await prisma.user.deleteMany();
   await prisma.academicTerm.deleteMany();
+  await prisma.academicYear.deleteMany();
   await prisma.academicCohort.deleteMany();
   await prisma.subject.deleteMany();
   await prisma.school.deleteMany();
@@ -107,6 +124,18 @@ async function main() {
       id: schoolId,
       name: 'Everest International Academy',
       timezone: 'Asia/Kathmandu',
+    },
+  });
+
+  const academicYearId = 'academic-year-2026';
+  await prisma.academicYear.create({
+    data: {
+      id: academicYearId,
+      schoolId,
+      name: '2026',
+      startsAt: new Date('2026-01-01T00:00:00.000Z'),
+      endsAt: new Date('2026-12-31T00:00:00.000Z'),
+      isActive: true,
     },
   });
 
@@ -143,12 +172,16 @@ async function main() {
     data: termNames.map((name, index) => ({
       id: `term-${index + 1}`,
       schoolId,
+      academicYearId,
       name,
       sequence: index + 1,
     })),
   });
 
   console.log('Seeding Users (1 Principal, 1 Admin, 2 Teachers, 2 Parents, 4 Students)...');
+
+  const seededUserPassword = process.env.SEED_USER_PASSWORD || 'Sikshya@2026!';
+  const seededUserPasswordHash = await bcrypt.hash(seededUserPassword, 12);
 
   const usersData = [
     // 1 Principal
@@ -251,8 +284,32 @@ async function main() {
   ];
 
   for (const u of usersData) {
-    await prisma.user.create({ data: u });
+    await prisma.user.create({ data: { ...u, passwordHash: seededUserPasswordHash } });
   }
+
+  await prisma.teacherProfile.createMany({
+    data: [
+      { id: 'teacher-profile-1', userId: 'user-teach-1', employeeNumber: 'T-001' },
+      { id: 'teacher-profile-2', userId: 'user-teach-2', employeeNumber: 'T-002' },
+    ],
+  });
+
+  await prisma.parentProfile.createMany({
+    data: [
+      {
+        id: 'parent-profile-1',
+        userId: 'user-parent-1',
+        verificationStatus: 'verified_enrolled',
+        verifiedAt: new Date(),
+      },
+      {
+        id: 'parent-profile-2',
+        userId: 'user-parent-2',
+        verificationStatus: 'verified_enrolled',
+        verifiedAt: new Date(),
+      },
+    ],
+  });
 
   await prisma.parentStudent.createMany({
     data: [
@@ -409,11 +466,28 @@ async function main() {
     await prisma.studentProfile.create({
       data: {
         ...profileData,
-        cohortId: identity.cohortId,
-        normalizedRollNumber: identity.rollNumber,
         badges: {
           create: badges,
         },
+      },
+    });
+    await prisma.studentAcademicEnrollment.create({
+      data: {
+        id: `student-enrollment-${profileData.userId}`,
+        studentId: profileData.userId,
+        cohortId: identity.cohortId,
+        academicYearId,
+        rollNumber: identity.rollNumber,
+      },
+    });
+    await prisma.studentLifecycleEvent.create({
+      data: {
+        id: `student-lifecycle-${profileData.userId}`,
+        studentId: profileData.userId,
+        type: 'enrolled',
+        toCohortId: identity.cohortId,
+        academicYearId,
+        createdById: 'user-admin-1',
       },
     });
   }
@@ -485,6 +559,7 @@ async function main() {
         'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&auto=format&fit=crop&q=80',
       meetLink: 'https://meet.google.com/lms-math-8a',
       code: 'MATH8A-2026',
+      academicYearId,
     },
     {
       id: 'cls-sci-9b',
@@ -499,6 +574,7 @@ async function main() {
         'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&auto=format&fit=crop&q=80',
       meetLink: 'https://meet.google.com/lms-sci-9b',
       code: 'SCI9B-2026',
+      academicYearId,
     },
   ];
 
@@ -506,13 +582,78 @@ async function main() {
     await prisma.classroom.create({ data: c });
   }
 
+  await prisma.teachingAssignment.createMany({
+    data: classroomsData.map((classroom) => ({
+      id: `teaching-assignment-${classroom.id}`,
+      teacherId: classroom.teacherId,
+      classroomId: classroom.id,
+      subjectId: classroom.subjectId,
+      academicYearId,
+    })),
+  });
+
+  await prisma.timetableSlot.createMany({
+    data: [
+      {
+        id: 'timetable-math-monday-1',
+        schoolId,
+        academicYearId,
+        classroomId: 'cls-math-8a',
+        cohortId: 'cohort-8-a',
+        subjectId: 'subject-mathematics',
+        teacherId: 'user-teach-1',
+        dayOfWeek: 1,
+        periodNumber: 1,
+        startTime: '09:00',
+        endTime: '09:45',
+        roomNumber: 'Room 301',
+      },
+      {
+        id: 'timetable-science-monday-2',
+        schoolId,
+        academicYearId,
+        classroomId: 'cls-sci-9b',
+        cohortId: 'cohort-9-b',
+        subjectId: 'subject-science',
+        teacherId: 'user-teach-2',
+        dayOfWeek: 1,
+        periodNumber: 2,
+        startTime: '09:50',
+        endTime: '10:35',
+        roomNumber: 'Lab 102',
+      },
+    ],
+  });
+
+  await prisma.bellScheduleEntry.createMany({
+    data: [
+      {
+        id: 'bell-period-1',
+        schoolId,
+        academicYearId,
+        name: 'Period 1',
+        type: 'period',
+        sequence: 1,
+        startTime: '09:00',
+        endTime: '09:45',
+      },
+      {
+        id: 'bell-period-2',
+        schoolId,
+        academicYearId,
+        name: 'Period 2',
+        type: 'period',
+        sequence: 2,
+        startTime: '09:50',
+        endTime: '10:35',
+      },
+    ],
+  });
+
   console.log('Seeding Classroom Enrollments...');
   const enrollments = [
     { classroomId: 'cls-math-8a', studentId: 'user-stu-1' },
     { classroomId: 'cls-math-8a', studentId: 'user-stu-2' },
-    { classroomId: 'cls-math-8a', studentId: 'user-stu-4' },
-    { classroomId: 'cls-sci-9b', studentId: 'user-stu-1' },
-    { classroomId: 'cls-sci-9b', studentId: 'user-stu-2' },
     { classroomId: 'cls-sci-9b', studentId: 'user-stu-3' },
     { classroomId: 'cls-sci-9b', studentId: 'user-stu-4' },
   ];
@@ -527,10 +668,6 @@ async function main() {
       id: 'post-math-1',
       classroomId: 'cls-math-8a',
       authorId: 'user-teach-1',
-      authorName: 'Dr. Ramesh Thapa',
-      authorAvatar:
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      authorRole: 'teacher' as const,
       content:
         'Welcome to Grade 8 Mathematics! Please review the Pythagorean Theorem worksheet attached below before our next class on Friday.',
       pinned: true,
@@ -539,18 +676,12 @@ async function main() {
         {
           id: 'cmt-math-1',
           authorId: 'user-stu-1',
-          authorName: 'Aarav Sharma',
-          authorAvatar:
-            'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
           content: 'Thank you Sir! Will we need graph paper for question 3?',
           createdAt: new Date(Date.now() - 86400000).toISOString(),
         },
         {
           id: 'cmt-math-2',
           authorId: 'user-stu-2',
-          authorName: 'Ananya Sharma',
-          authorAvatar:
-            'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
           content: 'Submitted my work, thank you Dr. Ramesh!',
           createdAt: new Date(Date.now() - 43200000).toISOString(),
         },
@@ -569,10 +700,6 @@ async function main() {
       id: 'post-sci-1',
       classroomId: 'cls-sci-9b',
       authorId: 'user-teach-2',
-      authorName: 'Saraswati Gurung',
-      authorAvatar:
-        'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
-      authorRole: 'teacher' as const,
       content:
         "Important Notice: Lab safety goggles are mandatory for tomorrow's Photosynthesis experiment in Lab 102.",
       pinned: true,
@@ -581,9 +708,6 @@ async function main() {
         {
           id: 'cmt-sci-1',
           authorId: 'user-stu-3',
-          authorName: 'Biban Adhikari',
-          authorAvatar:
-            'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
           content: "Understood Ma'am, lab coats ready as well!",
           createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
         },
@@ -617,6 +741,7 @@ async function main() {
     {
       id: 'asgn-math-1',
       classroomId: 'cls-math-8a',
+      createdById: 'user-teach-1',
       title: 'Pythagorean Theorem Worksheet & Proofs',
       instructions:
         'Solve problems 1 through 10 on page 45. Include step-by-step geometric proofs for questions 8 and 9.',
@@ -643,6 +768,7 @@ async function main() {
     {
       id: 'asgn-sci-1',
       classroomId: 'cls-sci-9b',
+      createdById: 'user-teach-2',
       title: 'Photosynthesis & Solar Energy Experiment Report',
       instructions:
         'Write a 2-page detailed report explaining light absorption spectrum in chlorophyll during lab experiment 4.',
@@ -680,9 +806,6 @@ async function main() {
       id: 'sub-math-1',
       assignmentId: 'asgn-math-1',
       studentId: 'user-stu-1',
-      studentName: 'Aarav Sharma',
-      studentAvatar:
-        'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
       status: 'graded' as const,
       fileUrl: '/uploads/Aarav_Math_HW1_Solved.pdf',
       fileName: 'Aarav_Math_HW1_Solved.pdf',
@@ -696,9 +819,6 @@ async function main() {
       id: 'sub-math-2',
       assignmentId: 'asgn-math-1',
       studentId: 'user-stu-2',
-      studentName: 'Ananya Sharma',
-      studentAvatar:
-        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
       status: 'submitted' as const,
       fileUrl: '/uploads/Ananya_Math_HW1.pdf',
       fileName: 'Ananya_Math_HW1.pdf',
@@ -713,9 +833,6 @@ async function main() {
       id: 'sub-sci-1',
       assignmentId: 'asgn-sci-1',
       studentId: 'user-stu-3',
-      studentName: 'Biban Adhikari',
-      studentAvatar:
-        'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
       status: 'graded' as const,
       fileUrl: '/uploads/Biban_Science_Lab_Report.pdf',
       fileName: 'Biban_Science_Lab_Report.pdf',
@@ -729,9 +846,6 @@ async function main() {
       id: 'sub-sci-2',
       assignmentId: 'asgn-sci-1',
       studentId: 'user-stu-4',
-      studentName: 'Diya Adhikari',
-      studentAvatar:
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
       status: 'graded' as const,
       fileUrl: '/uploads/Diya_Science_Report.pdf',
       fileName: 'Diya_Science_Report.pdf',
@@ -800,6 +914,7 @@ async function main() {
     {
       id: 'quiz-math-1',
       classroomId: 'cls-math-8a',
+      createdById: 'user-teach-1',
       title: 'Algebra & Geometry Speed Quiz',
       description:
         'Tests core concepts of linear equations, right-angled triangles, and exponent rules.',
@@ -844,6 +959,7 @@ async function main() {
     {
       id: 'quiz-sci-1',
       classroomId: 'cls-sci-9b',
+      createdById: 'user-teach-2',
       title: "Newton's Laws & Physical Mechanics Quiz",
       description: 'Assessment on force, inertia, acceleration, and action-reaction principles.',
       durationMinutes: 20,
@@ -953,7 +1069,6 @@ async function main() {
     {
       id: 'att-1',
       studentId: 'user-stu-1',
-      studentName: 'Aarav Sharma',
       date: '2026-08-01',
       status: 'present' as const,
       markedById: 'user-teach-1',
@@ -962,7 +1077,6 @@ async function main() {
     {
       id: 'att-2',
       studentId: 'user-stu-2',
-      studentName: 'Ananya Sharma',
       date: '2026-08-01',
       status: 'present' as const,
       markedById: 'user-teach-1',
@@ -971,7 +1085,6 @@ async function main() {
     {
       id: 'att-3',
       studentId: 'user-stu-1',
-      studentName: 'Aarav Sharma',
       date: '2026-08-02',
       status: 'present' as const,
       markedById: 'user-teach-1',
@@ -980,7 +1093,6 @@ async function main() {
     {
       id: 'att-4',
       studentId: 'user-stu-2',
-      studentName: 'Ananya Sharma',
       date: '2026-08-02',
       status: 'absent' as const,
       markedById: 'user-teach-1',
@@ -991,7 +1103,6 @@ async function main() {
     {
       id: 'att-5',
       studentId: 'user-stu-3',
-      studentName: 'Biban Adhikari',
       date: '2026-08-01',
       status: 'present' as const,
       markedById: 'user-teach-2',
@@ -1000,7 +1111,6 @@ async function main() {
     {
       id: 'att-6',
       studentId: 'user-stu-4',
-      studentName: 'Diya Adhikari',
       date: '2026-08-01',
       status: 'late' as const,
       markedById: 'user-teach-2',
@@ -1018,12 +1128,7 @@ async function main() {
     {
       id: 'dm-1',
       senderId: 'user-teach-1',
-      senderName: 'Dr. Ramesh Thapa',
-      senderRole: 'teacher' as const,
-      senderAvatar:
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       receiverId: 'user-stu-1',
-      receiverName: 'Aarav Sharma',
       content: 'Hello Aarav, excellent proof on homework 1! Keep up the great work.',
       read: true,
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
@@ -1031,12 +1136,7 @@ async function main() {
     {
       id: 'dm-2',
       senderId: 'user-stu-1',
-      senderName: 'Aarav Sharma',
-      senderRole: 'student' as const,
-      senderAvatar:
-        'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80',
       receiverId: 'user-teach-1',
-      receiverName: 'Dr. Ramesh Thapa',
       content: 'Thank you Dr. Ramesh! I will work on the extra credit questions too.',
       read: true,
       createdAt: new Date(Date.now() - 86400000).toISOString(),
@@ -1044,12 +1144,7 @@ async function main() {
     {
       id: 'dm-3',
       senderId: 'user-parent-1',
-      senderName: 'Bina Sharma',
-      senderRole: 'parent' as const,
-      senderAvatar:
-        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
       receiverId: 'user-teach-1',
-      receiverName: 'Dr. Ramesh Thapa',
       content:
         "Good morning Dr. Thapa, I wanted to inquire about Aarav's progress for the upcoming term exams.",
       read: false,
@@ -1062,52 +1157,52 @@ async function main() {
   }
 
   console.log('Seeding Student Location Records...');
+  await prisma.externalLocationReporter.create({
+    data: {
+      id: 'location-reporter-driver-ram',
+      schoolId,
+      name: 'Driver Ram',
+      role: 'staff',
+    },
+  });
   const locationRecords = [
     {
       id: 'loc-1',
       studentId: 'user-stu-1',
-      studentName: 'Aarav Sharma',
       currentLocation: 'In Classroom - Room 301',
       category: 'in_class' as const,
       busNumber: null,
-      updatedBy: 'Dr. Ramesh Thapa',
-      updatedByRole: 'Teacher',
+      updatedById: 'user-teach-1',
       notes: 'Attending Grade 8 Math class',
       updatedAt: new Date().toISOString(),
     },
     {
       id: 'loc-2',
       studentId: 'user-stu-2',
-      studentName: 'Ananya Sharma',
       currentLocation: 'School Library',
       category: 'library' as const,
       busNumber: null,
-      updatedBy: 'Bikram Shrestha',
-      updatedByRole: 'Admin',
+      updatedById: 'user-admin-1',
       notes: 'Studying for quiz',
       updatedAt: new Date().toISOString(),
     },
     {
       id: 'loc-3',
       studentId: 'user-stu-3',
-      studentName: 'Biban Adhikari',
       currentLocation: 'On School Bus #4 (Route A)',
       category: 'en_route_bus' as const,
       busNumber: 'Bus #4',
-      updatedBy: 'Driver Ram',
-      updatedByRole: 'Staff',
+      externalReporterId: 'location-reporter-driver-ram',
       notes: 'En route home',
       updatedAt: new Date().toISOString(),
     },
     {
       id: 'loc-4',
       studentId: 'user-stu-4',
-      studentName: 'Diya Adhikari',
       currentLocation: 'Science Lab 102',
       category: 'laboratory' as const,
       busNumber: null,
-      updatedBy: 'Saraswati Gurung',
-      updatedByRole: 'Teacher',
+      updatedById: 'user-teach-2',
       notes: 'Performing lab experiment',
       updatedAt: new Date().toISOString(),
     },
@@ -1435,6 +1530,7 @@ async function main() {
   console.log('- 2 Classrooms: Math 8A (cls-math-8a), Science 9B (cls-sci-9b)');
   console.log('- 2 Homeworks: Math HW (asgn-math-1), Science HW (asgn-sci-1)');
   console.log('- 2 Quizzes: Math Quiz (quiz-math-1), Science Quiz (quiz-sci-1)');
+  console.log(`- Local login: admin@lms.com / ${seededUserPassword}`);
 }
 
 main()

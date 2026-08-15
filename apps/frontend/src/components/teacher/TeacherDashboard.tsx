@@ -66,7 +66,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [leaveReason, setLeaveReason] = useState('');
 
   const [gradingModalSubmissionId, setGradingModalSubmissionId] = useState<string | null>(null);
-  const [gradeInput, setGradeInput] = useState<number>(18);
+  const [gradeInput, setGradeInput] = useState<number>(0);
   const [feedbackInput, setFeedbackInput] = useState('');
   const [isAiGeneratingFeedback, setIsAiGeneratingFeedback] = useState(false);
 
@@ -78,35 +78,71 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   const pendingGradingSubmissions = submissions.filter((s) => s.status === 'submitted');
   const strugglingStudents = studentProfiles.filter((s) => s.attendancePercentage < 80);
+  const trackedStudent = studentProfiles.find((student) =>
+    classrooms.some(
+      (classroom) =>
+        classroom.teacherId === currentUser.id &&
+        classroom.enrolledStudentIds?.includes(student.id),
+    ),
+  );
+  const facultySubjects = currentUser.subjectsTaught?.join(', ') || 'No subjects assigned';
+  const rosterIds = new Set(
+    classrooms
+      .filter((classroom) => classroom.teacherId === currentUser.id)
+      .flatMap((classroom) => classroom.enrolledStudentIds || []),
+  );
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const todayAttendance = attendanceRecords.filter(
+    (record) => record.date === todayKey && rosterIds.has(record.studentId),
+  );
+  const presentCount = todayAttendance.filter((record) => record.status === 'present').length;
+  const absentCount = todayAttendance.filter((record) => record.status === 'absent').length;
+  const lateCount = todayAttendance.filter((record) => record.status === 'late').length;
+  const attendanceRate = todayAttendance.length ? (presentCount / todayAttendance.length) * 100 : 0;
+  const gradingSubmission = submissions.find((item) => item.id === gradingModalSubmissionId);
+  const gradingAssignment = assignments.find(
+    (assignment) => assignment.id === gradingSubmission?.assignmentId,
+  );
 
   const handleAiFeedbackDraft = async (studentName: string) => {
     setIsAiGeneratingFeedback(true);
     try {
+      const activeSubmission = submissions.find(
+        (submission) => submission.id === gradingModalSubmissionId,
+      );
+      const activeAssignment = assignments.find(
+        (assignment) => assignment.id === activeSubmission?.assignmentId,
+      );
       const res = await apiFetch('/api/ai/teacher-assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           task: 'grade_feedback',
-          context: { studentName, subject: 'Mathematics', score: gradeInput, maxScore: 20 },
+          context: {
+            studentName,
+            subject: activeAssignment?.subject || '',
+            score: gradeInput,
+            maxScore: activeAssignment?.totalPoints || 0,
+          },
         }),
         feedback: {
           success: 'A personalized feedback draft is ready.',
-          error: 'AI feedback is unavailable, so a safe fallback draft was used.',
+          error: 'AI feedback is unavailable.',
           successTitle: 'Draft generated',
         },
       });
       if (!res.ok) throw new Error('AI feedback request failed.');
       const data = await res.json();
-      setFeedbackInput(data.text || `Great job ${studentName}! Clear step-by-step working.`);
+      if (data.text) setFeedbackInput(data.text);
     } catch (err) {
-      setFeedbackInput(`Excellent effort ${studentName}! Your working is neat and logic is solid.`);
+      console.error('AI feedback generation failed', err);
     } finally {
       setIsAiGeneratingFeedback(false);
     }
   };
 
   const handleSaveGrade = (subId: string) => {
-    gradeSubmission(subId, gradeInput, feedbackInput || 'Good effort! Keep practicing.');
+    gradeSubmission(subId, gradeInput, feedbackInput);
     toast.success('The grade and feedback were saved for the student.', { title: 'Grade saved' });
     setGradingModalSubmissionId(null);
     setFeedbackInput('');
@@ -119,7 +155,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[#FDEEDC] text-xs font-bold">
-              <span>👨‍🏫 Class Teacher & Mathematics Faculty</span>
+              <span>Faculty • {facultySubjects}</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight font-serif">
               Welcome Back, {currentUser.name}! 🙏
@@ -364,7 +400,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       </div>
 
       {/* Real-Time Student Location Tracker Control */}
-      <StudentLocationTracker studentId="user-stu-1" studentName="Aarav Sharma" />
+      {trackedStudent && (
+        <StudentLocationTracker studentId={trackedStudent.id} studentName={trackedStudent.name} />
+      )}
 
       {/* Main Grid: Grading Desk & Class Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -429,7 +467,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       <button
                         onClick={() => {
                           setGradingModalSubmissionId(sub.id);
-                          setGradeInput(18);
+                          setGradeInput(sub.grade ?? 0);
                           setFeedbackInput('');
                         }}
                         className="px-4 py-2 rounded-xl bg-[#4A6741] text-white font-bold text-xs hover:bg-[#3D5535] transition-colors shadow-sm self-end sm:self-auto"
@@ -527,13 +565,18 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 Today's Class Attendance
               </h3>
               <span className="text-xs font-bold text-[#4A6741] bg-[#EBF1E8] px-2.5 py-0.5 rounded-full">
-                94% Present
+                {attendanceRate.toFixed(0)}% Present
               </span>
             </div>
             <div className="w-full h-2 rounded-full bg-[#F0EDE5] overflow-hidden">
-              <div className="h-full bg-[#4A6741] rounded-full" style={{ width: '94%' }} />
+              <div
+                className="h-full bg-[#4A6741] rounded-full"
+                style={{ width: `${attendanceRate}%` }}
+              />
             </div>
-            <p className="text-[11px] text-[#7A7A72]">32 Present • 2 Absent • 0 Late</p>
+            <p className="text-[11px] text-[#7A7A72]">
+              {presentCount} Present • {absentCount} Absent • {lateCount} Late
+            </p>
           </div>
         </div>
       </div>
@@ -546,11 +589,13 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
             <div>
               <label className="block font-semibold mb-1 text-slate-700">
-                Marks Awarded (Out of 20):
+                Marks Awarded (Out of {gradingAssignment?.totalPoints ?? 0}):
               </label>
               <input
                 type="number"
                 value={gradeInput}
+                min={0}
+                max={gradingAssignment?.totalPoints ?? 0}
                 onChange={(e) => setGradeInput(Number(e.target.value))}
                 className="w-full p-2.5 bg-slate-100 rounded-xl border border-slate-200 font-bold"
               />
@@ -608,8 +653,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   School Timetable & Bag Packing Editor
                 </h3>
                 <p className="text-xs text-[#7A7A72]">
-                  Upload and update periods for Grade 8-A. Students automatically see these changes
-                  upon viewing their dashboard for each day.
+                  Review your database-backed weekly classroom schedule and bag packing details.
                 </p>
               </div>
 
@@ -662,15 +706,18 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 <button
                   onClick={() => {
                     const nextNum = editablePeriods.length + 1;
+                    const classroom = classrooms.find((item) => item.teacherId === currentUser.id);
+                    if (!classroom) return;
                     const newP: SchedulePeriod = {
                       id: `${editingDay.toLowerCase()}-p${Date.now()}`,
                       periodNumber: nextNum,
-                      startTime: '02:30 PM',
-                      endTime: '03:15 PM',
-                      subject: 'New Subject',
+                      startTime: editablePeriods.at(-1)?.endTime || '',
+                      endTime: '',
+                      subject: classroom.subject,
                       teacherName: currentUser.name,
-                      room: 'Room 204',
-                      requiredBooks: 'Textbook & Notebook',
+                      room: classroom.roomNumber,
+                      classroomId: classroom.id,
+                      requiredBooks: '',
                     };
                     setEditablePeriods([...editablePeriods, newP]);
                   }}
