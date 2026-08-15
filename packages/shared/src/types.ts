@@ -508,3 +508,75 @@ export interface TeacherAssignmentAuditLog {
   reason?: string;
   createdAt: string;
 }
+
+export interface TimetableSlot {
+  id: string;
+  schoolId?: string;
+  academicYearId?: string;
+  classroomId: string;
+  cohortId: string;
+  subjectId: string;
+  teacherId: string;
+  dayOfWeek: number; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  periodNumber: number;
+  startTime: string; // "09:00"
+  endTime: string; // "09:45"
+  roomNumber: string;
+  requiredBooks?: string;
+  isArchived?: boolean;
+  subject?: { id: string; name: string; code?: string };
+  teacher?: { id: string; name: string; avatar?: string };
+  classroom?: { id: string; name: string; roomNumber?: string };
+  cohort?: { id: string; name: string; gradeLevel: number; section: string };
+}
+
+export interface BellScheduleBreak {
+  id: string;
+  name: string;
+  type: 'assembly' | 'snack' | 'lunch' | 'homeroom' | 'dismissal' | 'other';
+  startTime: string;
+  endTime?: string;
+  afterPeriod?: number;
+  sequence: number;
+  isArchived?: boolean;
+}
+
+export interface SchoolTimingConfig {
+  schoolStartTime: string;
+  schoolEndTime: string;
+  periodDurationMinutes: number;
+  periodsPerDay: number;
+  breaks: BellScheduleBreak[];
+}
+
+export interface AcademicTerm {
+  id: string;
+  schoolId: string;
+  academicYearId: string;
+  name: string;
+  sequence: number;
+  startsAt?: string;
+  endsAt?: string;
+  isArchived?: boolean;
+}
+
+export interface SchoolHoliday {
+  id: string;
+  schoolId: string;
+  academicYearId: string;
+  name: string;
+  date: string;
+  description?: string;
+  isArchived?: boolean;
+}
+
+export interface AcademicYear {
+  id: string;
+  schoolId: string;
+  name: string;
+  startsAt: string;
+  endsAt: string;
+  isActive: boolean;
+  isArchived?: boolean;
+}
+

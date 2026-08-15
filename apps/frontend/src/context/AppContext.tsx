@@ -13,6 +13,7 @@ import { useTrackingState } from './hooks/useTrackingState';
 import { useCommunicationState } from './hooks/useCommunicationState';
 import { useAdminState } from './hooks/useAdminState';
 import { useSyncState } from './hooks/useSyncState';
+import { useTimetableAndLifecycleState } from './hooks/useTimetableAndLifecycleState';
 import { readDatabaseBootstrap } from './databaseBootstrap';
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -41,6 +42,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     academicState.classrooms,
     bootstrap,
   );
+
+  const timetableState = useTimetableAndLifecycleState(authState.currentUser);
 
   useSyncState(
     authState.authReady,
@@ -413,6 +416,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     updateSubstituteStatus: adminState.updateSubstituteStatus,
     submitTeacherAbsenceRequest: adminState.submitTeacherAbsenceRequest,
     reviewTeacherAbsenceRequest: adminState.reviewTeacherAbsenceRequest,
+
+    // Timetable, Bell Schedule & Academic Lifecycle
+    timetableSlots: timetableState.timetableSlots,
+    setTimetableSlots: timetableState.setTimetableSlots,
+    academicYears: timetableState.academicYears,
+    academicTerms: timetableState.academicTerms,
+    schoolHolidays: timetableState.schoolHolidays,
+    schoolTimingConfig: timetableState.schoolTimingConfig,
+    fetchTimetableSlots: timetableState.fetchTimetableSlots,
+    fetchAcademicYears: timetableState.fetchAcademicYears,
+    fetchAcademicTerms: timetableState.fetchAcademicTerms,
+    fetchSchoolHolidays: timetableState.fetchSchoolHolidays,
+    fetchBellSchedule: timetableState.fetchBellSchedule,
+    saveTimetableSlot: timetableState.saveTimetableSlot,
+    deleteTimetableSlot: timetableState.deleteTimetableSlot,
+    validateTimetableClash: timetableState.validateTimetableClash,
+    updateSchoolTimingConfig: timetableState.updateSchoolTimingConfig,
+    saveAcademicTerm: timetableState.saveAcademicTerm,
+    deleteAcademicTerm: timetableState.deleteAcademicTerm,
+    saveSchoolHoliday: timetableState.saveSchoolHoliday,
+    deleteSchoolHoliday: timetableState.deleteSchoolHoliday,
+    executeAcademicRollover: timetableState.executeAcademicRollover,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

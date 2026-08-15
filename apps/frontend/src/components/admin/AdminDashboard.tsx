@@ -5,8 +5,10 @@ import { AdminStudentModal } from './AdminStudentModal';
 import { AdminTeacherModal } from './AdminTeacherModal';
 import { AdminParentLinkModal } from './AdminParentLinkModal';
 import { SubstituteRequestModal } from './SubstituteRequestModal';
+import { AdminTimetableHub } from './AdminTimetableHub';
 import { toast } from '@utils/toast';
 import {
+  Calendar,
   ShieldAlert,
   Users,
   GraduationCap,
@@ -81,6 +83,7 @@ export const AdminDashboard: React.FC = () => {
     | 'students'
     | 'parents'
     | 'teachers'
+    | 'timetable'
     | 'assignments'
     | 'substitutes'
     | 'assignment-history'
@@ -404,6 +407,18 @@ export const AdminDashboard: React.FC = () => {
               {teacherAbsenceRequests.filter((r) => r.status === 'pending').length} Leave
             </span>
           )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('timetable')}
+          className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'timetable'
+              ? 'bg-[#4A6741] text-white shadow-sm'
+              : 'text-[#7A7A72] hover:bg-[#F9F7F2]'
+          }`}
+        >
+          <Calendar className="w-4 h-4" />
+          <span>Timetable & Lifecycle</span>
         </button>
 
         <button
@@ -1253,6 +1268,9 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* TAB: TIMETABLE & LIFECYCLE */}
+      {activeTab === 'timetable' && <AdminTimetableHub />}
 
       {/* TAB: SUBJECT ASSIGNMENTS & REASSIGNMENTS */}
       {activeTab === 'assignments' && (

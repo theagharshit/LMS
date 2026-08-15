@@ -19,6 +19,10 @@ import {
   CalendarDays,
   Award,
   Hourglass,
+  Coffee,
+  Utensils,
+  Sun,
+  LogOut,
 } from 'lucide-react';
 
 interface StudentDashboardProps {
@@ -43,6 +47,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const {
     currentUser,
     weeklySchedule,
+    timetableSlots,
+    schoolTimingConfig,
     assignments,
     submissions,
     quizzes,
@@ -83,8 +89,32 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
       </div>
     );
 
-  // Get periods for selected day
-  const currentDayPeriods: SchedulePeriod[] = weeklySchedule[selectedDay] || [];
+  // Get periods for selected day from DB timetable slots or fallback to weeklySchedule
+  const dayIndex = DAYS_OF_WEEK.indexOf(selectedDay);
+  const dbSlotsForDay = timetableSlots.filter((s) => {
+    if (s.dayOfWeek !== dayIndex) return false;
+    if (s.cohort?.gradeLevel && studentData?.gradeLevel) {
+      return s.cohort.gradeLevel === studentData.gradeLevel;
+    }
+    return true;
+  });
+
+  const currentDayPeriods: SchedulePeriod[] = React.useMemo(() => {
+    if (dbSlotsForDay.length > 0) {
+      return dbSlotsForDay.map((s) => ({
+        id: s.id,
+        periodNumber: s.periodNumber,
+        startTime: s.startTime,
+        endTime: s.endTime,
+        subject: s.subject?.name || s.classroom?.name || 'Class',
+        teacherName: s.teacher?.name || 'Teacher',
+        room: s.roomNumber || 'Room 101',
+        classroomId: s.classroomId,
+        requiredBooks: s.requiredBooks || undefined,
+      })).sort((a, b) => a.startTime.localeCompare(b.startTime));
+    }
+    return weeklySchedule[selectedDay] || [];
+  }, [dbSlotsForDay, weeklySchedule, selectedDay]);
 
   // Parse time like "10:00 AM" into minutes from midnight
   const parseTimeToMinutes = (timeStr: string): number | null => {
@@ -122,6 +152,17 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
   // Find currently active period for selected day (if any)
   const activePeriod = currentDayPeriods.find((p) => isPeriodActiveAtMinutes(p, selectedDay));
+
+  // Find currently active break (if any)
+  const activeBreak = (schoolTimingConfig?.breaks || []).find((b) => {
+    if (selectedDay !== systemTodayName && timeMode === 'real') return false;
+    const startM = parseTimeToMinutes(b.startTime);
+    const endM = b.endTime ? parseTimeToMinutes(b.endTime) : (startM !== null ? startM + 30 : null);
+    if (startM !== null && endM !== null) {
+      return effectiveMinutes >= startM && effectiveMinutes < endM;
+    }
+    return false;
+  });
 
   const isPeriodHighlighted = (period: SchedulePeriod): boolean => {
     return activePeriod?.id === period.id;
@@ -288,7 +329,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             >
               <div className="flex items-center gap-2">
                 <span
-                  className={`w-2.5 h-2.5 rounded-full ${activePeriod ? 'bg-[#4A6741] animate-ping' : 'bg-amber-500'}`}
+                  className={`w-2.5 h-2.5 rounded-full ${activePeriod ? 'bg-[#4A6741] animate-ping' : activeBreak ? 'bg-amber-500 animate-ping' : 'bg-slate-400'}`}
                 ></span>
                 <span>
                   {activePeriod ? (
@@ -298,6 +339,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         Period {activePeriod.periodNumber} ({activePeriod.subject})
                       </strong>{' '}
                       • {activePeriod.startTime} - {activePeriod.endTime}
+                    </>
+                  ) : activeBreak ? (
+                    <>
+                      🔔 <strong>Current Break: {activeBreak.name}</strong> ({activeBreak.startTime} - {activeBreak.endTime || 'Ongoing'})
                     </>
                   ) : currentDayPeriods.length > 0 &&
                     effectiveMinutes <
@@ -339,92 +384,109 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             ) : (
               currentDayPeriods.map((period) => {
                 const highlighted = isPeriodHighlighted(period);
+                const matchingBreakAfter = (schoolTimingConfig?.breaks || []).find(
+                  (b) => b.afterPeriod === period.periodNumber,
+                );
 
                 return (
-                  <div
-                    key={period.id}
-                    className={`p-4 rounded-2xl border transition-all ${
-                      highlighted
-                        ? 'bg-[#EBF1E8] border-[#88A070] shadow-sm ring-1 ring-[#88A070]/50'
-                        : 'bg-[#F9F7F2] border-[#E5E1D8] hover:border-[#88A070]/60'
-                    }`}
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      {/* Left: Period Number, Subject & Time */}
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-10 h-10 rounded-2xl font-black text-xs flex flex-col items-center justify-center shrink-0 ${
-                            highlighted
-                              ? 'bg-[#4A6741] text-white shadow-sm'
-                              : 'bg-[#E5E1D8] text-[#2D2D2A]'
-                          }`}
-                        >
-                          <span className="text-[9px] uppercase font-medium opacity-80">
-                            Period
-                          </span>
-                          <span className="text-sm font-black leading-none">
-                            {period.periodNumber}
-                          </span>
-                        </div>
-
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-sm text-[#2D2D2A] font-serif">
-                              {period.subject}
-                            </h3>
-                            {highlighted && (
-                              <span className="text-[9px] font-black px-2.5 py-0.5 rounded-full bg-[#4A6741] text-white uppercase tracking-wider flex items-center gap-1 shadow-sm">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-ping"></span>
-                                <span>Active Period Now</span>
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-3 text-xs text-[#7A7A72] mt-0.5 font-sans">
-                            <span
-                              className={`flex items-center gap-1 font-semibold ${
-                                highlighted ? 'text-[#4A6741]' : 'text-[#7A7A72]'
-                              }`}
-                            >
-                              <Clock className="w-3.5 h-3.5" />
-                              {period.startTime} - {period.endTime}
+                  <React.Fragment key={period.id}>
+                    <div
+                      className={`p-4 rounded-2xl border transition-all ${
+                        highlighted
+                          ? 'bg-[#EBF1E8] border-[#88A070] shadow-sm ring-1 ring-[#88A070]/50'
+                          : 'bg-[#F9F7F2] border-[#E5E1D8] hover:border-[#88A070]/60'
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        {/* Left: Period Number, Subject & Time */}
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-10 h-10 rounded-2xl font-black text-xs flex flex-col items-center justify-center shrink-0 ${
+                              highlighted
+                                ? 'bg-[#4A6741] text-white shadow-sm'
+                                : 'bg-[#E5E1D8] text-[#2D2D2A]'
+                            }`}
+                          >
+                            <span className="text-[9px] uppercase font-medium opacity-80">
+                              Period
                             </span>
-                            <span>•</span>
-                            <span className="flex items-center gap-1">
-                              <MapPin className="w-3.5 h-3.5 text-[#7A7A72]" />
-                              {period.room}
-                            </span>
-                            <span>•</span>
-                            <span className="flex items-center gap-1">
-                              <User className="w-3.5 h-3.5 text-[#7A7A72]" />
-                              {period.teacherName}
+                            <span className="text-sm font-black leading-none">
+                              {period.periodNumber}
                             </span>
                           </div>
-                        </div>
-                      </div>
 
-                      {/* Right: What to pack badge */}
-                      {period.requiredBooks && (
-                        <div
-                          className={`shrink-0 border px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs transition-colors ${
-                            highlighted
-                              ? 'bg-white border-[#88A070] text-[#2D2D2A] shadow-sm'
-                              : 'bg-white border-[#E5E1D8] text-[#2D2D2A]'
-                          }`}
-                        >
-                          <BookMarked className="w-4 h-4 text-[#E88D67]" />
                           <div>
-                            <span className="text-[10px] font-bold text-[#7A7A72] uppercase block leading-none">
-                              Pack in Bag:
-                            </span>
-                            <span className="font-bold text-[#2D2D2A] text-[11px]">
-                              {period.requiredBooks}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-sm text-[#2D2D2A] font-serif">
+                                {period.subject}
+                              </h3>
+                              {highlighted && (
+                                <span className="text-[9px] font-black px-2.5 py-0.5 rounded-full bg-[#4A6741] text-white uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-ping"></span>
+                                  <span>Active Period Now</span>
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-3 text-xs text-[#7A7A72] mt-0.5 font-sans">
+                              <span
+                                className={`flex items-center gap-1 font-semibold ${
+                                  highlighted ? 'text-[#4A6741]' : 'text-[#7A7A72]'
+                                }`}
+                              >
+                                <Clock className="w-3.5 h-3.5" />
+                                {period.startTime} - {period.endTime}
+                              </span>
+                              <span>•</span>
+                              <span className="flex items-center gap-1">
+                                <MapPin className="w-3.5 h-3.5 text-[#7A7A72]" />
+                                {period.room}
+                              </span>
+                              <span>•</span>
+                              <span className="flex items-center gap-1">
+                                <User className="w-3.5 h-3.5 text-[#7A7A72]" />
+                                {period.teacherName}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      )}
+
+                        {/* Right: What to pack badge */}
+                        {period.requiredBooks && (
+                          <div
+                            className={`shrink-0 border px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs transition-colors ${
+                              highlighted
+                                ? 'bg-white border-[#88A070] text-[#2D2D2A] shadow-sm'
+                                : 'bg-white border-[#E5E1D8] text-[#2D2D2A]'
+                            }`}
+                          >
+                            <BookMarked className="w-4 h-4 text-[#E88D67]" />
+                            <div>
+                              <span className="text-[10px] font-bold text-[#7A7A72] uppercase block leading-none">
+                                Pack in Bag:
+                              </span>
+                              <span className="font-bold text-[#2D2D2A] text-[11px]">
+                                {period.requiredBooks}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
+
+                    {/* Render break indicator if configured after this period */}
+                    {matchingBreakAfter && (
+                      <div className="flex items-center gap-3 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-800 font-semibold">
+                        {matchingBreakAfter.type === 'snack' && <Coffee className="w-4 h-4 text-amber-600" />}
+                        {matchingBreakAfter.type === 'lunch' && <Utensils className="w-4 h-4 text-emerald-600" />}
+                        {matchingBreakAfter.type === 'dismissal' && <LogOut className="w-4 h-4 text-rose-600" />}
+                        <span>{matchingBreakAfter.name}</span>
+                        <span className="text-amber-600/70 font-mono font-normal">
+                          ({matchingBreakAfter.startTime} {matchingBreakAfter.endTime ? `- ${matchingBreakAfter.endTime}` : ''})
+                        </span>
+                      </div>
+                    )}
+                  </React.Fragment>
                 );
               })
             )}

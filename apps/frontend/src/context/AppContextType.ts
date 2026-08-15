@@ -31,6 +31,11 @@ import {
   TeacherAbsenceRequest,
   EligibleSubstituteTeacher,
   TeacherAssignmentAuditLog,
+  TimetableSlot,
+  SchoolTimingConfig,
+  AcademicTerm,
+  SchoolHoliday,
+  AcademicYear,
 } from '@lms/shared';
 
 export interface AppContextType {
@@ -279,4 +284,40 @@ export interface AppContextType {
     requestId: string,
     status: 'approved' | 'rejected',
   ) => Promise<void>;
+
+  // Timetable, Bell Schedule & Academic Lifecycle
+  timetableSlots: TimetableSlot[];
+  setTimetableSlots: React.Dispatch<React.SetStateAction<TimetableSlot[]>>;
+  academicYears: AcademicYear[];
+  academicTerms: AcademicTerm[];
+  schoolHolidays: SchoolHoliday[];
+  schoolTimingConfig: SchoolTimingConfig;
+  fetchTimetableSlots: (params?: { studentId?: string; teacherId?: string; academicYearId?: string }) => Promise<void>;
+  fetchAcademicYears: () => Promise<void>;
+  fetchAcademicTerms: (academicYearId?: string) => Promise<void>;
+  fetchSchoolHolidays: (academicYearId?: string) => Promise<void>;
+  fetchBellSchedule: () => Promise<void>;
+  saveTimetableSlot: (slot: Partial<TimetableSlot>) => Promise<boolean>;
+  deleteTimetableSlot: (slotId: string) => Promise<boolean>;
+  validateTimetableClash: (data: {
+    academicYearId: string;
+    dayOfWeek: number;
+    periodNumber: number;
+    teacherId: string;
+    cohortId: string;
+    roomNumber: string;
+    id?: string;
+  }) => Promise<{ valid: boolean; conflicts?: any[] }>;
+  updateSchoolTimingConfig: (config: SchoolTimingConfig) => Promise<void>;
+  saveAcademicTerm: (term: Partial<AcademicTerm>) => Promise<boolean>;
+  deleteAcademicTerm: (termId: string) => Promise<boolean>;
+  saveSchoolHoliday: (holiday: Partial<SchoolHoliday>) => Promise<boolean>;
+  deleteSchoolHoliday: (holidayId: string) => Promise<boolean>;
+  executeAcademicRollover: (params: {
+    fromAcademicYearId: string;
+    toAcademicYearId: string;
+    passPercentage?: number;
+    graduationGrade?: number;
+  }) => Promise<{ success: boolean; data?: any; error?: string }>;
 }
+

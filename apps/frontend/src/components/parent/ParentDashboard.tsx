@@ -17,6 +17,11 @@ import {
   BookOpen,
   MessageSquare,
   XCircle,
+  Calendar,
+  Coffee,
+  Utensils,
+  MapPin,
+  User,
 } from 'lucide-react';
 
 interface ParentDashboardProps {
@@ -36,6 +41,9 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenParental
     attendanceRecords,
     subjectPerformances,
     classrooms,
+    timetableSlots,
+    weeklySchedule,
+    schoolTimingConfig,
   } = useApp();
   const [pendingMessages, setPendingMessages] = React.useState<DirectMessage[]>([]);
 
@@ -109,6 +117,33 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenParental
 
   const isBelowGrade7 = activeChild.gradeLevel < 7;
 
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const todayDayName = daysOfWeek[new Date().getDay()];
+  const todayDayIdx = new Date().getDay();
+
+  const childDbSlots = timetableSlots.filter((s) => {
+    if (s.dayOfWeek !== todayDayIdx) return false;
+    if (s.cohort?.gradeLevel && activeChild.gradeLevel) {
+      return s.cohort.gradeLevel === activeChild.gradeLevel;
+    }
+    return true;
+  });
+
+  const childTodayPeriods = React.useMemo(() => {
+    if (childDbSlots.length > 0) {
+      return childDbSlots.map((s) => ({
+        id: s.id,
+        periodNumber: s.periodNumber,
+        startTime: s.startTime,
+        endTime: s.endTime,
+        subject: s.subject?.name || s.classroom?.name || 'Class',
+        teacherName: s.teacher?.name || 'Teacher',
+        room: s.roomNumber || 'Room 101',
+      })).sort((a, b) => a.startTime.localeCompare(b.startTime));
+    }
+    return weeklySchedule[todayDayName as keyof typeof weeklySchedule] || [];
+  }, [childDbSlots, weeklySchedule, todayDayName]);
+
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Parent Welcome Hero Banner */}
@@ -137,45 +172,85 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenParental
               <Sparkles className="w-4 h-4 text-white" />
               <span>Generate AI Bilingual Digest</span>
             </button>
-
-            {isBelowGrade7 && (
-              <button
-                onClick={onOpenParentalControls}
-                className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-[#FDEEDC] border border-white/20 font-extrabold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
-              >
-                <ShieldAlert className="w-4 h-4 text-[#FDEEDC]" />
-                <span>Grade &lt; 7 Parental Safety</span>
-              </button>
-            )}
+            <button
+              onClick={onOpenParentalControls}
+              className="px-4 py-3 rounded-2xl bg-white/20 hover:bg-white/30 text-white font-extrabold text-xs flex items-center gap-2 border border-white/30 backdrop-blur-md transition-all cursor-pointer"
+            >
+              <ShieldAlert className="w-4 h-4 text-[#FDEEDC]" />
+              <span>Parental Safeguards</span>
+            </button>
           </div>
         </div>
+
+        {/* Multi-Child Selector Tabs */}
+        {activeChildList.length > 1 && (
+          <div className="mt-6 pt-4 border-t border-white/20 flex flex-wrap gap-2">
+            {activeChildList.map((child) => (
+              <button
+                key={child.id}
+                onClick={() => setActiveChildId(child.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  child.id === activeChild.id
+                    ? 'bg-white text-[#4A6741] shadow-sm'
+                    : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
+              >
+                {child.name} (Grade {child.gradeLevel}-{child.section})
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
+      {/* Parent Action Required Alert (Pending Message Approvals) */}
       {pendingMessages.length > 0 && (
-        <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-          <div className="mb-3 flex items-center gap-2 text-amber-900">
-            <MessageSquare className="h-5 w-5" />
-            <h2 className="font-serif text-sm font-bold">Student messages awaiting approval</h2>
+        <section className="bg-amber-50 rounded-3xl p-6 border border-amber-200 shadow-sm space-y-4">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-amber-100 rounded-xl text-amber-700">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-amber-950 font-serif">
+                Action Required: Outbound Message Approvals ({pendingMessages.length})
+              </h3>
+              <p className="text-xs text-amber-700">
+                Messages from students under Grade 7 require parental authorization prior to
+                delivery.
+              </p>
+            </div>
           </div>
+
           <div className="space-y-3">
-            {pendingMessages.map((message) => (
-              <div key={message.id} className="rounded-2xl border border-amber-200 bg-white p-4">
-                <p className="text-[11px] font-bold text-[#7A7A72]">
-                  {message.senderName} → {message.receiverName}
-                </p>
-                <p className="mt-2 whitespace-pre-wrap text-xs text-[#2D2D2A]">{message.content}</p>
-                <div className="mt-3 flex gap-2">
+            {pendingMessages.map((msg) => (
+              <div
+                key={msg.id}
+                className="p-4 rounded-2xl bg-white border border-amber-200/60 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-[#2D2D2A]">To: {msg.receiverName}</span>
+                    <span className="text-[10px] text-[#7A7A72]">
+                      ({new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#52524E] italic bg-[#F9F7F2] p-2.5 rounded-xl border border-[#EDEAE2]">
+                    "{msg.content}"
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
                   <button
-                    onClick={() => reviewMessage(message.id, 'approved')}
-                    className="inline-flex items-center gap-1 rounded-xl bg-[#4A6741] px-3 py-2 text-xs font-bold text-white"
+                    onClick={() => reviewMessage(msg.id, 'approved')}
+                    className="px-3 py-1.5 bg-[#4A6741] hover:bg-[#3D5535] text-white text-xs font-bold rounded-xl transition flex items-center gap-1 cursor-pointer"
                   >
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Approve & send
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Approve
                   </button>
                   <button
-                    onClick={() => reviewMessage(message.id, 'rejected')}
-                    className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700"
+                    onClick={() => reviewMessage(msg.id, 'rejected')}
+                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1 cursor-pointer"
                   >
-                    <XCircle className="h-3.5 w-3.5" /> Reject
+                    <XCircle className="w-3.5 h-3.5" />
+                    Reject
                   </button>
                 </div>
               </div>
@@ -184,19 +259,34 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenParental
         </section>
       )}
 
-      {/* Real-Time "Where is My Child?" Location Tracking Card */}
-      <StudentLocationTracker studentId={activeChild.id} studentName={activeChild.name} />
+      {/* Real-Time Location Tracker Card */}
+      <StudentLocationTracker
+        studentId={activeChild.id}
+        studentName={activeChild.name}
+        showUpdateButton={false}
+      />
 
-      {/* Child Status Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Top Level Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 rounded-3xl bg-white border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-1">
           <p className="text-[10px] font-bold uppercase text-[#7A7A72]">Today's Attendance</p>
-          <div className="flex items-center gap-2 text-[#4A6741] font-extrabold text-base">
-            <CheckCircle2 className="w-5 h-5 text-[#4A6741]" />
-            <span className="capitalize">{todayAttendance?.status || 'Not marked'}</span>
+          <div className="flex items-center gap-2 font-extrabold text-base">
+            <span
+              className={`w-2.5 h-2.5 rounded-full ${
+                todayAttendance?.status === 'present'
+                  ? 'bg-[#4A6741]'
+                  : todayAttendance?.status === 'absent'
+                    ? 'bg-red-500'
+                    : 'bg-amber-500'
+              }`}
+            />
+            <span className="capitalize text-[#2D2D2A]">
+              {todayAttendance?.status ?? 'Not Marked Yet'}
+            </span>
           </div>
           <p className="text-[11px] text-[#7A7A72]">
-            {activeChild.attendancePercentage}% Total Attendance Rate
+            Overall Rate:{' '}
+            <strong className="text-[#2D2D2A]">{activeChild.attendancePercentage}%</strong>
           </p>
         </div>
 
@@ -238,6 +328,36 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenParental
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column (2 Cols): Homework & Exam Monitor */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Today's Schedule Card */}
+          <div className="bg-white rounded-3xl p-6 border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-[#2D2D2A] font-serif flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-[#4A6741]" />
+                Today's Class Schedule ({todayDayName})
+              </h2>
+            </div>
+
+            {childTodayPeriods.length === 0 ? (
+              <p className="text-xs text-[#7A7A72] py-4 text-center">No scheduled classes for today.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {childTodayPeriods.map((period) => (
+                  <div key={period.id} className="p-3 bg-[#F9F7F2] border border-[#EDEAE2] rounded-2xl flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-[#4A6741] uppercase">Period {period.periodNumber}</span>
+                      <h4 className="font-bold text-xs text-[#2D2D2A]">{period.subject}</h4>
+                      <p className="text-[11px] text-[#7A7A72] mt-0.5 flex items-center gap-2">
+                        <span>{period.startTime} - {period.endTime}</span>
+                        <span>•</span>
+                        <span>{period.room}</span>
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="bg-white rounded-3xl p-6 border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-bold text-[#2D2D2A] font-serif flex items-center gap-2">
