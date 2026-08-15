@@ -296,13 +296,15 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(Array.isArray(res.body.classrooms)).toBe(true);
     });
     it('3. POST /api/upload stores file record', async () => {
-      const res = await request(app).post('/api/upload').send({
-        name: 'Test_Doc.pdf',
-        uploadedBy: 'Teacher Test',
-        sizeBytes: 1024,
-        mimeType: 'application/pdf',
-        checksum: `sha256-${'a'.repeat(64)}`,
-      });
+      const res = await request(app)
+        .post('/api/upload')
+        .send({
+          name: 'Test_Doc.pdf',
+          uploadedBy: 'Teacher Test',
+          sizeBytes: 1024,
+          mimeType: 'application/pdf',
+          checksum: `sha256-${'a'.repeat(64)}`,
+        });
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
       expect(res.body.record).toBeDefined();
@@ -755,24 +757,28 @@ describe('Controller & Route API Suite (45 Comprehensive Tests)', () => {
       expect(res.body.quizSubmission.answers['q-controller-1']).toBe('3');
     });
     it('43. GET /api/files/:id returns file object when valid file ID exists', async () => {
-      const uploadRes = await request(app).post('/api/upload').send({
-        name: 'Lookup_File.pdf',
-        sizeBytes: 1024,
-        mimeType: 'application/pdf',
-        checksum: `sha256-${'b'.repeat(64)}`,
-      });
+      const uploadRes = await request(app)
+        .post('/api/upload')
+        .send({
+          name: 'Lookup_File.pdf',
+          sizeBytes: 1024,
+          mimeType: 'application/pdf',
+          checksum: `sha256-${'b'.repeat(64)}`,
+        });
       const fileId = uploadRes.body.record.id;
       const res = await request(app).get(`/api/files/${fileId}`);
       expect(res.status).toBe(200);
       expect(res.body.file.id).toBe(fileId);
     });
     it('44. DELETE /api/files/:id removes file object when valid file ID exists', async () => {
-      const uploadRes = await request(app).post('/api/upload').send({
-        name: 'Delete_File.pdf',
-        sizeBytes: 1024,
-        mimeType: 'application/pdf',
-        checksum: `sha256-${'c'.repeat(64)}`,
-      });
+      const uploadRes = await request(app)
+        .post('/api/upload')
+        .send({
+          name: 'Delete_File.pdf',
+          sizeBytes: 1024,
+          mimeType: 'application/pdf',
+          checksum: `sha256-${'c'.repeat(64)}`,
+        });
       const fileId = uploadRes.body.record.id;
       const res = await request(app).delete(`/api/files/${fileId}`);
       expect(res.status).toBe(200);

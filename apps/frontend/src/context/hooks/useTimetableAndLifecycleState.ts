@@ -69,24 +69,29 @@ export const useTimetableAndLifecycleState = (currentUser: User | null) => {
     }
   });
 
-  const fetchTimetableSlots = useCallback(async (params?: { studentId?: string; teacherId?: string; academicYearId?: string }) => {
-    try {
-      const query = new URLSearchParams();
-      if (params?.studentId) query.set('studentId', params.studentId);
-      if (params?.teacherId) query.set('teacherId', params.teacherId);
-      if (params?.academicYearId) query.set('academicYearId', params.academicYearId);
+  const fetchTimetableSlots = useCallback(
+    async (params?: { studentId?: string; teacherId?: string; academicYearId?: string }) => {
+      try {
+        const query = new URLSearchParams();
+        if (params?.studentId) query.set('studentId', params.studentId);
+        if (params?.teacherId) query.set('teacherId', params.teacherId);
+        if (params?.academicYearId) query.set('academicYearId', params.academicYearId);
 
-      const res = await apiFetch(`/api/db/timetable/slots${query.toString() ? `?${query.toString()}` : ''}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.slots) {
-          setTimetableSlots(data.slots);
+        const res = await apiFetch(
+          `/api/db/timetable/slots${query.toString() ? `?${query.toString()}` : ''}`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data.slots) {
+            setTimetableSlots(data.slots);
+          }
         }
+      } catch (err) {
+        console.error('Failed to fetch timetable slots:', err);
       }
-    } catch (err) {
-      console.error('Failed to fetch timetable slots:', err);
-    }
-  }, []);
+    },
+    [],
+  );
 
   const fetchAcademicYears = useCallback(async () => {
     try {
@@ -165,7 +170,14 @@ export const useTimetableAndLifecycleState = (currentUser: User | null) => {
       fetchSchoolHolidays();
       fetchBellSchedule();
     }
-  }, [currentUser?.id, fetchTimetableSlots, fetchAcademicYears, fetchAcademicTerms, fetchSchoolHolidays, fetchBellSchedule]);
+  }, [
+    currentUser?.id,
+    fetchTimetableSlots,
+    fetchAcademicYears,
+    fetchAcademicTerms,
+    fetchSchoolHolidays,
+    fetchBellSchedule,
+  ]);
 
   const saveTimetableSlot = async (slot: Partial<TimetableSlot>): Promise<boolean> => {
     try {

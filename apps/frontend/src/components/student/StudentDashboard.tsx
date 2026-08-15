@@ -101,17 +101,19 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
   const currentDayPeriods: SchedulePeriod[] = React.useMemo(() => {
     if (dbSlotsForDay.length > 0) {
-      return dbSlotsForDay.map((s) => ({
-        id: s.id,
-        periodNumber: s.periodNumber,
-        startTime: s.startTime,
-        endTime: s.endTime,
-        subject: s.subject?.name || s.classroom?.name || 'Class',
-        teacherName: s.teacher?.name || 'Teacher',
-        room: s.roomNumber || 'Room 101',
-        classroomId: s.classroomId,
-        requiredBooks: s.requiredBooks || undefined,
-      })).sort((a, b) => a.startTime.localeCompare(b.startTime));
+      return dbSlotsForDay
+        .map((s) => ({
+          id: s.id,
+          periodNumber: s.periodNumber,
+          startTime: s.startTime,
+          endTime: s.endTime,
+          subject: s.subject?.name || s.classroom?.name || 'Class',
+          teacherName: s.teacher?.name || 'Teacher',
+          room: s.roomNumber || 'Room 101',
+          classroomId: s.classroomId,
+          requiredBooks: s.requiredBooks || undefined,
+        }))
+        .sort((a, b) => a.startTime.localeCompare(b.startTime));
     }
     return weeklySchedule[selectedDay] || [];
   }, [dbSlotsForDay, weeklySchedule, selectedDay]);
@@ -157,7 +159,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const activeBreak = (schoolTimingConfig?.breaks || []).find((b) => {
     if (selectedDay !== systemTodayName && timeMode === 'real') return false;
     const startM = parseTimeToMinutes(b.startTime);
-    const endM = b.endTime ? parseTimeToMinutes(b.endTime) : (startM !== null ? startM + 30 : null);
+    const endM = b.endTime ? parseTimeToMinutes(b.endTime) : startM !== null ? startM + 30 : null;
     if (startM !== null && endM !== null) {
       return effectiveMinutes >= startM && effectiveMinutes < endM;
     }
@@ -342,7 +344,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                     </>
                   ) : activeBreak ? (
                     <>
-                      🔔 <strong>Current Break: {activeBreak.name}</strong> ({activeBreak.startTime} - {activeBreak.endTime || 'Ongoing'})
+                      🔔 <strong>Current Break: {activeBreak.name}</strong> ({activeBreak.startTime}{' '}
+                      - {activeBreak.endTime || 'Ongoing'})
                     </>
                   ) : currentDayPeriods.length > 0 &&
                     effectiveMinutes <
@@ -477,12 +480,19 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                     {/* Render break indicator if configured after this period */}
                     {matchingBreakAfter && (
                       <div className="flex items-center gap-3 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-800 font-semibold">
-                        {matchingBreakAfter.type === 'snack' && <Coffee className="w-4 h-4 text-amber-600" />}
-                        {matchingBreakAfter.type === 'lunch' && <Utensils className="w-4 h-4 text-emerald-600" />}
-                        {matchingBreakAfter.type === 'dismissal' && <LogOut className="w-4 h-4 text-rose-600" />}
+                        {matchingBreakAfter.type === 'snack' && (
+                          <Coffee className="w-4 h-4 text-amber-600" />
+                        )}
+                        {matchingBreakAfter.type === 'lunch' && (
+                          <Utensils className="w-4 h-4 text-emerald-600" />
+                        )}
+                        {matchingBreakAfter.type === 'dismissal' && (
+                          <LogOut className="w-4 h-4 text-rose-600" />
+                        )}
                         <span>{matchingBreakAfter.name}</span>
                         <span className="text-amber-600/70 font-mono font-normal">
-                          ({matchingBreakAfter.startTime} {matchingBreakAfter.endTime ? `- ${matchingBreakAfter.endTime}` : ''})
+                          ({matchingBreakAfter.startTime}{' '}
+                          {matchingBreakAfter.endTime ? `- ${matchingBreakAfter.endTime}` : ''})
                         </span>
                       </div>
                     )}

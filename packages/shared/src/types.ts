@@ -579,4 +579,3 @@ export interface AcademicYear {
   isActive: boolean;
   isArchived?: boolean;
 }
-
