@@ -1,14 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { apiFetch } from '../../utils/apiFetch';
-import {
-  Send,
-  Paperclip,
-  Search,
-  FileText,
-  Download,
-  Loader2,
-} from 'lucide-react';
+import { Send, Paperclip, Search, FileText, Download, Loader2 } from 'lucide-react';
 
 export const MessagesView: React.FC = () => {
   const { messages, sendMessage, currentUser, chatContacts, fetchChatHistory } = useApp();
@@ -135,12 +128,7 @@ export const MessagesView: React.FC = () => {
   return (
     <div className="bg-white rounded-3xl border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden h-[80vh] flex animate-in fade-in duration-200 text-xs">
       {/* Hidden File Input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        className="hidden"
-        onChange={handleFileUpload}
-      />
+      <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} />
 
       {/* Channels Sidebar */}
       <div className="w-80 border-r border-[#E5E1D8] flex flex-col bg-[#F0EDE5]">
@@ -248,7 +236,8 @@ export const MessagesView: React.FC = () => {
         <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#F9F7F2]">
           {channelMessages.map((msg) => {
             const isMe = msg.senderId === currentUser.id;
-            const isAttachment = msg.content.includes('📎 Attachment:') || msg.content.includes('/uploads/');
+            const isAttachment =
+              msg.content.includes('📎 Attachment:') || msg.content.includes('/uploads/');
 
             return (
               <div

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { User, StudentProfile } from '@lms/shared';
 import { X, Users, Check, Save, UserPlus, Trash2, Search } from 'lucide-react';
 
-
 interface AdminParentLinkModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -84,7 +83,7 @@ export const AdminParentLinkModal: React.FC<AdminParentLinkModalProps> = ({
             <h4 className="font-bold text-[#2D2D2A] text-xs font-serif mb-2">
               Select Enrolled Students to Link:
             </h4>
-            
+
             <div className="relative mb-3">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-[#7A7A72]" />
@@ -103,47 +102,47 @@ export const AdminParentLinkModal: React.FC<AdminParentLinkModalProps> = ({
                 .filter(
                   (s) =>
                     s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    s.rollNumber?.toString().toLowerCase().includes(searchQuery.toLowerCase())
+                    s.rollNumber?.toString().toLowerCase().includes(searchQuery.toLowerCase()),
                 )
                 .map((student) => {
-                const isLinked = selectedChildIds.includes(student.id);
-                return (
-                  <div
-                    key={student.id}
-                    onClick={() => toggleChildLink(student.id)}
-                    className={`p-3 rounded-2xl border flex items-center justify-between transition-all cursor-pointer ${
-                      isLinked
-                        ? 'bg-[#EBF1E8] border-[#88A070]/50 shadow-xs'
-                        : 'bg-[#F9F7F2] border-[#EDEAE2] hover:bg-[#F0EDE5]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={student.avatar}
-                        alt={student.name}
-                        className="w-8 h-8 rounded-full object-cover border border-white"
-                      />
-                      <div>
-                        <p className="font-bold text-[#2D2D2A] text-xs">{student.name}</p>
-                        <p className="text-[10px] text-[#7A7A72]">
-                          Grade {student.gradeLevel}-{student.section} • Roll #
-                          {student.rollNumber || 'N/A'}
-                        </p>
-                      </div>
-                    </div>
-
+                  const isLinked = selectedChildIds.includes(student.id);
+                  return (
                     <div
-                      className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all ${
+                      key={student.id}
+                      onClick={() => toggleChildLink(student.id)}
+                      className={`p-3 rounded-2xl border flex items-center justify-between transition-all cursor-pointer ${
                         isLinked
-                          ? 'bg-[#4A6741] border-[#4A6741] text-white'
-                          : 'border-[#7A7A72]/40 bg-white'
+                          ? 'bg-[#EBF1E8] border-[#88A070]/50 shadow-xs'
+                          : 'bg-[#F9F7F2] border-[#EDEAE2] hover:bg-[#F0EDE5]'
                       }`}
                     >
-                      {isLinked && <Check className="w-3.5 h-3.5 text-white" />}
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={student.avatar}
+                          alt={student.name}
+                          className="w-8 h-8 rounded-full object-cover border border-white"
+                        />
+                        <div>
+                          <p className="font-bold text-[#2D2D2A] text-xs">{student.name}</p>
+                          <p className="text-[10px] text-[#7A7A72]">
+                            Grade {student.gradeLevel}-{student.section} • Roll #
+                            {student.rollNumber || 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all ${
+                          isLinked
+                            ? 'bg-[#4A6741] border-[#4A6741] text-white'
+                            : 'border-[#7A7A72]/40 bg-white'
+                        }`}
+                      >
+                        {isLinked && <Check className="w-3.5 h-3.5 text-white" />}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
 

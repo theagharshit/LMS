@@ -749,141 +749,148 @@ export const AdminDashboard: React.FC = () => {
               <div className="col-span-full py-12 flex flex-col items-center justify-center text-[#7A7A72] bg-[#F9F7F2] rounded-2xl border border-[#EDEAE2] shadow-xs">
                 <span className="text-4xl mb-3 opacity-50">📭</span>
                 <p className="font-bold text-[#2D2D2A] text-sm">No students found</p>
-                <p className="text-xs mt-1 font-medium">Try adjusting your filters or search terms.</p>
+                <p className="text-xs mt-1 font-medium">
+                  Try adjusting your filters or search terms.
+                </p>
               </div>
             ) : (
               filteredStudents.map((s) => {
                 const isUnenrolled = s.isArchived;
-              const isPending = s.verificationStatus === 'pending_verification';
+                const isPending = s.verificationStatus === 'pending_verification';
 
-              return (
-                <div
-                  key={s.id}
-                  className={`p-4 rounded-2xl border space-y-3 flex flex-col justify-between transition-all ${
-                    isUnenrolled
-                      ? 'border-rose-300 bg-rose-50/60 shadow-xs'
-                      : isPending
-                        ? 'border-amber-300 bg-amber-50/50 shadow-xs'
-                        : 'border-[#EDEAE2] bg-[#F9F7F2]'
-                  }`}
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-1 flex-wrap">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                          isUnenrolled
-                            ? 'bg-rose-600 text-white'
+                return (
+                  <div
+                    key={s.id}
+                    className={`p-4 rounded-2xl border space-y-3 flex flex-col justify-between transition-all ${
+                      isUnenrolled
+                        ? 'border-rose-300 bg-rose-50/60 shadow-xs'
+                        : isPending
+                          ? 'border-amber-300 bg-amber-50/50 shadow-xs'
+                          : 'border-[#EDEAE2] bg-[#F9F7F2]'
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-1 flex-wrap">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                            isUnenrolled
+                              ? 'bg-rose-600 text-white'
+                              : isPending
+                                ? 'bg-amber-500 text-white'
+                                : 'bg-[#EBF1E8] text-[#4A6741]'
+                          }`}
+                        >
+                          {isUnenrolled
+                            ? '❌ Unenrolled / Archived'
                             : isPending
-                              ? 'bg-amber-500 text-white'
-                              : 'bg-[#EBF1E8] text-[#4A6741]'
-                        }`}
-                      >
-                        {isUnenrolled
-                          ? '❌ Unenrolled / Archived'
-                          : isPending
-                            ? '⏳ Pending Verification'
-                            : `Grade ${s.gradeLevel}-${s.section}`}
-                      </span>
-                      <span className="text-[10px] text-[#7A7A72] font-semibold">
-                        Roll #{s.rollNumber || 'N/A'}
-                      </span>
-                    </div>
+                              ? '⏳ Pending Verification'
+                              : `Grade ${s.gradeLevel}-${s.section}`}
+                        </span>
+                        <span className="text-[10px] text-[#7A7A72] font-semibold">
+                          Roll #{s.rollNumber || 'N/A'}
+                        </span>
+                      </div>
 
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={s.avatar}
-                        alt={s.name}
-                        className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-xs"
-                      />
-                      <div>
-                        <h4 className="font-bold text-[#2D2D2A] text-sm font-serif">{s.name}</h4>
-                        <p className="text-[11px] text-[#7A7A72]">{s.email}</p>
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={s.avatar}
+                          alt={s.name}
+                          className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-xs"
+                        />
+                        <div>
+                          <h4 className="font-bold text-[#2D2D2A] text-sm font-serif">{s.name}</h4>
+                          <p className="text-[11px] text-[#7A7A72]">{s.email}</p>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="p-2.5 rounded-xl bg-white border border-[#EDEAE2] space-y-1 text-[11px]">
-                      <div className="flex justify-between">
-                        <span className="text-[#7A7A72]">Attendance Rate:</span>
-                        <span className="font-bold text-[#4A6741]">{s.attendancePercentage}%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-[#7A7A72]">Parent/Guardian:</span>
-                        <span className="font-bold text-[#2D2D2A]">{s.parentName || 'Linked'}</span>
-                      </div>
-                      {s.parentPhone && (
-                        <div className="flex justify-between items-center gap-2">
-                          <span className="text-[#7A7A72]">Emergency Contact:</span>
-                          <span
-                            className="rounded-full bg-rose-100 px-2 py-0.5 font-bold text-rose-700"
-                            aria-label={`Emergency contact ${s.parentPhone}`}
-                          >
-                            {s.parentPhone}
+                      <div className="p-2.5 rounded-xl bg-white border border-[#EDEAE2] space-y-1 text-[11px]">
+                        <div className="flex justify-between">
+                          <span className="text-[#7A7A72]">Attendance Rate:</span>
+                          <span className="font-bold text-[#4A6741]">
+                            {s.attendancePercentage}%
                           </span>
                         </div>
-                      )}
-                      {s.medicalNotes && (
-                        <div className="pt-1 text-[10px] text-rose-700 font-semibold border-t border-[#EDEAE2]">
-                          Medical: {s.medicalNotes}
+                        <div className="flex justify-between">
+                          <span className="text-[#7A7A72]">Parent/Guardian:</span>
+                          <span className="font-bold text-[#2D2D2A]">
+                            {s.parentName || 'Linked'}
+                          </span>
                         </div>
+                        {s.parentPhone && (
+                          <div className="flex justify-between items-center gap-2">
+                            <span className="text-[#7A7A72]">Emergency Contact:</span>
+                            <span
+                              className="rounded-full bg-rose-100 px-2 py-0.5 font-bold text-rose-700"
+                              aria-label={`Emergency contact ${s.parentPhone}`}
+                            >
+                              {s.parentPhone}
+                            </span>
+                          </div>
+                        )}
+                        {s.medicalNotes && (
+                          <div className="pt-1 text-[10px] text-rose-700 font-semibold border-t border-[#EDEAE2]">
+                            Medical: {s.medicalNotes}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-[#EDEAE2] flex items-center justify-between gap-2 flex-wrap">
+                      {isPending && (
+                        <button
+                          onClick={() => {
+                            updateStudentProfile(s.id, { verificationStatus: 'verified_enrolled' });
+                          }}
+                          className="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] cursor-pointer shadow-xs"
+                        >
+                          Verify & Activate ✅
+                        </button>
                       )}
+
+                      {isUnenrolled && (
+                        <button
+                          onClick={() => {
+                            updateStudentProfile(s.id, { isArchived: false });
+                          }}
+                          className="px-2.5 py-1 rounded-xl bg-[#4A6741] hover:bg-[#3D5535] text-white font-bold text-[10px] cursor-pointer shadow-xs"
+                        >
+                          Re-Enroll Student 🔄
+                        </button>
+                      )}
+
+                      <div className="flex gap-1.5 ml-auto">
+                        <button
+                          onClick={() => {
+                            setEditingStudent(s);
+                            setIsStudentModalOpen(true);
+                          }}
+                          className="px-2.5 py-1.5 rounded-xl bg-white border border-[#EDEAE2] hover:bg-[#F0EDE5] font-bold text-[11px] text-[#2D2D2A] flex items-center gap-1 cursor-pointer"
+                        >
+                          <Edit className="w-3.5 h-3.5 text-[#4A6741]" />
+                          <span>Edit</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            if (
+                              confirm(
+                                `Are you sure you want to unenroll/archive record for ${s.name}?`,
+                              )
+                            ) {
+                              deleteStudentProfile(s.id);
+                            }
+                          }}
+                          className="px-2.5 py-1.5 rounded-xl bg-white border border-rose-200 hover:bg-rose-50 font-bold text-[11px] text-rose-700 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>{isUnenrolled ? 'Unenrolled' : 'Unenroll'}</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="pt-2 border-t border-[#EDEAE2] flex items-center justify-between gap-2 flex-wrap">
-                    {isPending && (
-                      <button
-                        onClick={() => {
-                          updateStudentProfile(s.id, { verificationStatus: 'verified_enrolled' });
-                        }}
-                        className="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] cursor-pointer shadow-xs"
-                      >
-                        Verify & Activate ✅
-                      </button>
-                    )}
-
-                    {isUnenrolled && (
-                      <button
-                        onClick={() => {
-                          updateStudentProfile(s.id, { isArchived: false });
-                        }}
-                        className="px-2.5 py-1 rounded-xl bg-[#4A6741] hover:bg-[#3D5535] text-white font-bold text-[10px] cursor-pointer shadow-xs"
-                      >
-                        Re-Enroll Student 🔄
-                      </button>
-                    )}
-
-                    <div className="flex gap-1.5 ml-auto">
-                      <button
-                        onClick={() => {
-                          setEditingStudent(s);
-                          setIsStudentModalOpen(true);
-                        }}
-                        className="px-2.5 py-1.5 rounded-xl bg-white border border-[#EDEAE2] hover:bg-[#F0EDE5] font-bold text-[11px] text-[#2D2D2A] flex items-center gap-1 cursor-pointer"
-                      >
-                        <Edit className="w-3.5 h-3.5 text-[#4A6741]" />
-                        <span>Edit</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          if (
-                            confirm(
-                              `Are you sure you want to unenroll/archive record for ${s.name}?`,
-                            )
-                          ) {
-                            deleteStudentProfile(s.id);
-                          }
-                        }}
-                        className="px-2.5 py-1.5 rounded-xl bg-white border border-rose-200 hover:bg-rose-50 font-bold text-[11px] text-rose-700 flex items-center gap-1 cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>{isUnenrolled ? 'Unenrolled' : 'Unenroll'}</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            }))}
+                );
+              })
+            )}
           </div>
         </div>
       )}
