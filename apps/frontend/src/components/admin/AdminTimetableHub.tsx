@@ -4,6 +4,7 @@ import {
   Clock,
   Plus,
   Trash2,
+  Edit2,
   AlertTriangle,
   CheckCircle2,
   Maximize2,
@@ -18,87 +19,85 @@ import {
   LogOut,
   CalendarCheck,
   CalendarX,
+  User,
+  MapPin,
+  Layers,
+  Building2,
+  Filter,
+  X,
+  AlertCircle,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { TimetableSlot, SchoolTimingConfig } from '@lms/shared';
 import { toast } from '@utils/toast';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-const DAY_INDEX_MAP: Record<string, number> = {
-  Sunday: 0,
-  Monday: 1,
-  Tuesday: 2,
-  Wednesday: 3,
-  Thursday: 4,
-  Friday: 5,
-  Saturday: 6,
-};
 
 const SUBJECT_COLORS: Record<string, { bg: string; border: string; text: string; badge: string }> =
   {
     math: {
-      bg: 'bg-indigo-900/30',
-      border: 'border-indigo-500/40',
+      bg: 'bg-indigo-950/40',
+      border: 'border-indigo-500/30 hover:border-indigo-400',
       text: 'text-indigo-300',
       badge: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
     },
     mathematics: {
-      bg: 'bg-indigo-900/30',
-      border: 'border-indigo-500/40',
+      bg: 'bg-indigo-950/40',
+      border: 'border-indigo-500/30 hover:border-indigo-400',
       text: 'text-indigo-300',
       badge: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
     },
     science: {
-      bg: 'bg-emerald-900/30',
-      border: 'border-emerald-500/40',
+      bg: 'bg-emerald-950/40',
+      border: 'border-emerald-500/30 hover:border-emerald-400',
       text: 'text-emerald-300',
       badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
     },
     physics: {
-      bg: 'bg-emerald-900/30',
-      border: 'border-emerald-500/40',
-      text: 'text-emerald-300',
-      badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+      bg: 'bg-teal-950/40',
+      border: 'border-teal-500/30 hover:border-teal-400',
+      text: 'text-teal-300',
+      badge: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
     },
     chemistry: {
-      bg: 'bg-emerald-900/30',
-      border: 'border-emerald-500/40',
-      text: 'text-emerald-300',
-      badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+      bg: 'bg-cyan-950/40',
+      border: 'border-cyan-500/30 hover:border-cyan-400',
+      text: 'text-cyan-300',
+      badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
     },
     biology: {
-      bg: 'bg-emerald-900/30',
-      border: 'border-emerald-500/40',
+      bg: 'bg-emerald-950/40',
+      border: 'border-emerald-500/30 hover:border-emerald-400',
       text: 'text-emerald-300',
       badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
     },
     english: {
-      bg: 'bg-amber-900/30',
-      border: 'border-amber-500/40',
+      bg: 'bg-amber-950/40',
+      border: 'border-amber-500/30 hover:border-amber-400',
       text: 'text-amber-300',
       badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
     },
     nepali: {
-      bg: 'bg-purple-900/30',
-      border: 'border-purple-500/40',
+      bg: 'bg-purple-950/40',
+      border: 'border-purple-500/30 hover:border-purple-400',
       text: 'text-purple-300',
       badge: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
     },
     social: {
-      bg: 'bg-rose-900/30',
-      border: 'border-rose-500/40',
+      bg: 'bg-rose-950/40',
+      border: 'border-rose-500/30 hover:border-rose-400',
       text: 'text-rose-300',
       badge: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
     },
     computer: {
-      bg: 'bg-sky-900/30',
-      border: 'border-sky-500/40',
+      bg: 'bg-sky-950/40',
+      border: 'border-sky-500/30 hover:border-sky-400',
       text: 'text-sky-300',
       badge: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
     },
     opt: {
-      bg: 'bg-teal-900/30',
-      border: 'border-teal-500/40',
+      bg: 'bg-teal-950/40',
+      border: 'border-teal-500/30 hover:border-teal-400',
       text: 'text-teal-300',
       badge: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
     },
@@ -107,18 +106,18 @@ const SUBJECT_COLORS: Record<string, { bg: string; border: string; text: string;
 const getSubjectTheme = (subjectName?: string) => {
   if (!subjectName)
     return {
-      bg: 'bg-slate-800/40',
-      border: 'border-slate-700',
+      bg: 'bg-slate-900/50',
+      border: 'border-slate-800 hover:border-slate-700',
       text: 'text-slate-300',
-      badge: 'bg-slate-700 text-slate-300 border-slate-600',
+      badge: 'bg-slate-800 text-slate-300 border-slate-700',
     };
   const lower = subjectName.toLowerCase();
   for (const [key, theme] of Object.entries(SUBJECT_COLORS)) {
     if (lower.includes(key)) return theme;
   }
   return {
-    bg: 'bg-blue-900/20',
-    border: 'border-blue-500/30',
+    bg: 'bg-blue-950/40',
+    border: 'border-blue-500/30 hover:border-blue-400',
     text: 'text-blue-300',
     badge: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
   };
@@ -240,7 +239,6 @@ export const AdminTimetableHub: React.FC = () => {
     const defDay = dayOfWeek !== undefined ? dayOfWeek : 0;
     const defPeriod = periodNumber || 1;
 
-    // Approximate default times based on period
     const startHour = 9 + Math.floor((defPeriod - 1) * 0.75);
     const startMin = ((defPeriod - 1) * 45) % 60;
     const endHour = 9 + Math.floor(defPeriod * 0.75);
@@ -250,13 +248,13 @@ export const AdminTimetableHub: React.FC = () => {
 
     setSlotForm({
       classroomId: selectedClass?.id || '',
-      teacherId: selectedClass?.teacherId || (teachers[0]?.id ?? ''),
+      teacherId: selectedClass?.teacherId || teachers[0]?.id || '',
       dayOfWeek: defDay,
       periodNumber: defPeriod,
       startTime: startFormatted,
       endTime: endFormatted,
       roomNumber: selectedClass?.roomNumber || 'Room 101',
-      requiredBooks: '',
+      requiredBooks: 'Textbook and Exercise Notebook',
     });
     setClashWarning(null);
     setIsSlotModalOpen(true);
@@ -271,153 +269,144 @@ export const AdminTimetableHub: React.FC = () => {
       periodNumber: slot.periodNumber,
       startTime: slot.startTime,
       endTime: slot.endTime,
-      roomNumber: slot.roomNumber,
+      roomNumber: slot.roomNumber || '',
       requiredBooks: slot.requiredBooks || '',
     });
     setClashWarning(null);
     setIsSlotModalOpen(true);
   };
 
-  const handleCheckClash = async () => {
-    if (!slotForm.classroomId || !slotForm.teacherId || !slotForm.roomNumber) return;
-    const cls = classrooms.find((c) => c.id === slotForm.classroomId);
-    if (!cls || !activeYear) return;
+  // Clash Check effect
+  useEffect(() => {
+    if (!isSlotModalOpen || !slotForm.classroomId || !slotForm.teacherId) return;
 
-    setIsCheckingClash(true);
-    const result = await validateTimetableClash({
-      academicYearId: activeYear.id,
-      dayOfWeek: slotForm.dayOfWeek,
-      periodNumber: slotForm.periodNumber,
-      teacherId: slotForm.teacherId,
-      cohortId: (cls as any).cohortId || cls.id,
-      roomNumber: slotForm.roomNumber,
-      id: slotForm.id,
-    });
-    setIsCheckingClash(false);
+    const timer = setTimeout(async () => {
+      setIsCheckingClash(true);
+      const selectedClass = classrooms.find((c) => c.id === slotForm.classroomId);
+      const cohortId = selectedClass?.gradeLevel
+        ? `cohort-g${selectedClass.gradeLevel}`
+        : selectedClass?.id || 'cohort-general';
 
-    if (!result.valid && result.conflicts && result.conflicts.length > 0) {
-      const c = result.conflicts[0];
-      setClashWarning(
-        `Clash detected! ${c.teacher?.name || 'Teacher'} is already scheduled in ${c.classroom?.name || 'Room'} for Period ${c.periodNumber} on this day.`,
-      );
-    } else {
-      setClashWarning(null);
-      toast.success('No scheduling conflict found! Time slot is valid.');
-    }
-  };
-
-  const handleSaveSlot = async () => {
-    if (!slotForm.classroomId) {
-      toast.error('Please select a classroom');
-      return;
-    }
-    const success = await saveTimetableSlot({
-      ...slotForm,
-      academicYearId: activeYear?.id,
-    });
-    if (success) {
-      setIsSlotModalOpen(false);
-    }
-  };
-
-  const handleSeedDefaults = async () => {
-    if (classrooms.length === 0) {
-      toast.error('No classrooms found to generate timetable.');
-      return;
-    }
-
-    let createdCount = 0;
-    for (let day = 0; day < 6; day++) {
-      for (let p = 1; p <= 6; p++) {
-        const cls = classrooms[(day + p) % classrooms.length];
-        if (!cls) continue;
-
-        // Check if slot already exists
-        const exists = timetableSlots.some(
-          (s) => s.dayOfWeek === day && s.periodNumber === p && s.classroomId === cls.id,
-        );
-        if (exists) continue;
-
-        const startH = 9 + Math.floor((p - 1) * 0.75);
-        const startM = ((p - 1) * 45) % 60;
-        const endH = 9 + Math.floor(p * 0.75);
-        const endM = (p * 45) % 60;
-
-        await saveTimetableSlot({
-          classroomId: cls.id,
-          teacherId: cls.teacherId,
-          dayOfWeek: day,
-          periodNumber: p,
-          startTime: `${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')}`,
-          endTime: `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`,
-          roomNumber: cls.roomNumber || `Room 10${(p % 4) + 1}`,
-          requiredBooks: `${cls.subject} Textbook`,
-        });
-        createdCount++;
+      const result = await validateTimetableClash({
+        id: slotForm.id,
+        academicYearId: activeYear?.id || 'ay-2026-2027',
+        cohortId,
+        teacherId: slotForm.teacherId,
+        dayOfWeek: Number(slotForm.dayOfWeek),
+        periodNumber: Number(slotForm.periodNumber),
+        roomNumber: slotForm.roomNumber,
+      });
+      setIsCheckingClash(false);
+      if (!result.valid && result.conflicts && result.conflicts.length > 0) {
+        setClashWarning(result.conflicts.map((c: any) => c.message || c).join(' | '));
+      } else {
+        setClashWarning(null);
       }
-    }
-    toast.success(`Generated ${createdCount} default schedule slots across 6 days!`);
-  };
+    }, 300);
 
-  const handleAddTerm = async () => {
-    if (!newTermName || !newTermStart || !newTermEnd) {
-      toast.error('Please fill in all term fields.');
+    return () => clearTimeout(timer);
+  }, [
+    slotForm.classroomId,
+    slotForm.teacherId,
+    slotForm.dayOfWeek,
+    slotForm.periodNumber,
+    slotForm.roomNumber,
+    slotForm.id,
+    isSlotModalOpen,
+    validateTimetableClash,
+    classrooms,
+    activeYear?.id,
+  ]);
+
+  const handleSaveSlot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!slotForm.classroomId || !slotForm.teacherId) {
+      toast.error('Please select both a classroom and teacher');
       return;
     }
-    const ok = await saveAcademicTerm({
-      name: newTermName,
-      startsAt: newTermStart,
-      endsAt: newTermEnd,
-      sequence: Number(newTermSeq),
-      academicYearId: activeYear?.id,
-    });
-    if (ok) {
-      setNewTermName('');
-      setNewTermStart('');
-      setNewTermEnd('');
-      setNewTermSeq(academicTerms.length + 2);
+
+    try {
+      const selectedClass = classrooms.find((c) => c.id === slotForm.classroomId);
+      const cohortId = selectedClass?.gradeLevel
+        ? `cohort-g${selectedClass.gradeLevel}`
+        : selectedClass?.id || 'cohort-general';
+
+      await saveTimetableSlot({
+        id: slotForm.id,
+        academicYearId: activeYear?.id || 'ay-2026-2027',
+        cohortId,
+        classroomId: slotForm.classroomId,
+        teacherId: slotForm.teacherId,
+        dayOfWeek: Number(slotForm.dayOfWeek),
+        periodNumber: Number(slotForm.periodNumber),
+        startTime: slotForm.startTime,
+        endTime: slotForm.endTime,
+        roomNumber: slotForm.roomNumber,
+        requiredBooks: slotForm.requiredBooks,
+      });
+      toast.success(slotForm.id ? 'Slot updated successfully' : 'Slot added to schedule');
+      setIsSlotModalOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save timetable slot');
     }
   };
 
-  const handleAddHoliday = async () => {
-    if (!newHolidayName || !newHolidayDate) {
-      toast.error('Please provide holiday name and date.');
+  const handleDeleteSlot = async (id: string) => {
+    if (!window.confirm('Are you sure you want to remove this timetable slot?')) return;
+    try {
+      await deleteTimetableSlot(id);
+      toast.success('Period slot removed');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete slot');
+    }
+  };
+
+  // Seed sample full schedule
+  const handleSeedDefaults = async () => {
+    if (classrooms.length === 0 || teachers.length === 0) {
+      toast.error('Need classrooms and teachers to populate sample timetable');
       return;
     }
-    const ok = await saveSchoolHoliday({
-      name: newHolidayName,
-      date: newHolidayDate,
-      description: newHolidayDesc,
-      academicYearId: activeYear?.id,
-    });
-    if (ok) {
-      setNewHolidayName('');
-      setNewHolidayDate('');
-      setNewHolidayDesc('');
+
+    try {
+      const days = [0, 1, 2, 3, 4, 5]; // Sun-Fri
+      const periods = [1, 2, 3, 4, 5, 6];
+
+      let count = 0;
+      for (const d of days) {
+        for (const p of periods) {
+          const cls = classrooms[(d + p) % classrooms.length];
+          const t = teachers[(p + d) % teachers.length];
+          const startHour = 9 + Math.floor((p - 1) * 0.75);
+          const startMin = ((p - 1) * 45) % 60;
+          const endHour = 9 + Math.floor(p * 0.75);
+          const endMin = (p * 45) % 60;
+
+          await saveTimetableSlot({
+            academicYearId: activeYear?.id || 'ay-2026-2027',
+            cohortId: cls.gradeLevel ? `cohort-g${cls.gradeLevel}` : cls.id,
+            classroomId: cls.id,
+            teacherId: t.id,
+            dayOfWeek: d,
+            periodNumber: p,
+            startTime: `${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`,
+            endTime: `${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`,
+            roomNumber: cls.roomNumber || `Room 10${(p % 4) + 1}`,
+            requiredBooks: 'Sikshya Standard Textbook & Practice Journal',
+          });
+          count++;
+        }
+      }
+      toast.success(`Generated ${count} sample clash-free timetable slots`);
+    } catch (err: any) {
+      toast.error('Failed to populate defaults: ' + err.message);
     }
   };
 
-  const handleExecuteRollover = async () => {
-    if (!activeYear || !rolloverTargetYear) {
-      toast.error('Please select both source and target academic years.');
-      return;
-    }
-    setIsPerformingRollover(true);
-    const res = await executeAcademicRollover({
-      fromAcademicYearId: activeYear.id,
-      toAcademicYearId: rolloverTargetYear,
-      passPercentage: Number(rolloverPassPercent),
-      graduationGrade: 10,
-    });
-    setIsPerformingRollover(false);
-    if (res.success) {
-      setRolloverResult(res.data);
-    }
-  };
-
-  // Filter slots according to active view
+  // Filtered Slots for the Active View
   const filteredSlots = useMemo(() => {
     return timetableSlots.filter((slot) => {
+      if (activeView === 'matrix') return true;
       if (activeView === 'cohort' && selectedCohort) {
         const cls = classrooms.find((c) => c.id === slot.classroomId);
         if (!cls) return false;
@@ -439,72 +428,78 @@ export const AdminTimetableHub: React.FC = () => {
 
   return (
     <div
-      className={`space-y-6 ${isFullScreen ? 'fixed inset-0 z-50 bg-slate-950 p-6 overflow-y-auto' : ''}`}
+      className={`space-y-4 ${
+        isFullScreen ? 'fixed inset-0 z-50 bg-slate-950 p-6 overflow-y-auto' : ''
+      }`}
     >
-      {/* Top Header Card */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 relative z-10">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-indigo-500/20 border border-indigo-500/30 rounded-xl text-indigo-400">
-                <Calendar className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white tracking-tight">
-                  Master Timetable & Academic Engine
+      {/* Sleek Integrated Control Toolbar */}
+      <div className="bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col gap-4">
+        {/* Top Row: Title, Year Badge & Action Group */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-indigo-400">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-bold text-white tracking-tight font-serif">
+                  Master Timetable & Academic Scheduler
                 </h2>
-                <p className="text-sm text-slate-400 mt-0.5">
-                  Academic Year:{' '}
-                  <span className="font-semibold text-indigo-400">
-                    {activeYear?.name || '2026/2027'}
-                  </span>{' '}
-                  • Zero-conflict scheduling & Bell Schedule
-                </p>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                  {activeYear?.name || '2026/2027'}
+                </span>
               </div>
+              <p className="text-xs text-slate-400">
+                Zero-conflict cohort scheduling, daily bell routines & lifecycle management
+              </p>
             </div>
           </div>
 
-          {/* Quick Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5">
+          {/* Quick Action Button Group */}
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => handleOpenAddSlot()}
-              className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition shadow-lg shadow-indigo-500/20 cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-indigo-600/20 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              Add Period Slot
+              <span>Add Period</span>
             </button>
+
             <button
               onClick={() => setIsBellScheduleModalOpen(true)}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-medium rounded-xl transition cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium rounded-xl transition cursor-pointer"
             >
-              <Clock className="w-4 h-4 text-emerald-400" />
-              Bell Schedule
+              <Clock className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Bell Schedule</span>
             </button>
+
             <button
               onClick={() => setIsTermsModalOpen(true)}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-medium rounded-xl transition cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium rounded-xl transition cursor-pointer"
             >
-              <CalendarCheck className="w-4 h-4 text-amber-400" />
-              Terms ({academicTerms.length})
+              <CalendarCheck className="w-3.5 h-3.5 text-amber-400" />
+              <span>Terms ({academicTerms.length})</span>
             </button>
+
             <button
               onClick={() => setIsHolidaysModalOpen(true)}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-medium rounded-xl transition cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium rounded-xl transition cursor-pointer"
             >
-              <CalendarX className="w-4 h-4 text-rose-400" />
-              Holidays ({schoolHolidays.length})
+              <CalendarX className="w-3.5 h-3.5 text-rose-400" />
+              <span>Holidays ({schoolHolidays.length})</span>
             </button>
+
             <button
               onClick={() => setIsRolloverModalOpen(true)}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-medium rounded-xl transition cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium rounded-xl transition cursor-pointer"
             >
-              <GraduationCap className="w-4 h-4 text-purple-400" />
-              Academic Rollover
+              <GraduationCap className="w-3.5 h-3.5 text-purple-400" />
+              <span>Rollover</span>
             </button>
+
             <button
               onClick={() => setIsFullScreen(!isFullScreen)}
-              className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 rounded-xl transition cursor-pointer"
+              className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition cursor-pointer"
               title={isFullScreen ? 'Exit Full Screen' : 'Full Screen'}
             >
               {isFullScreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -512,95 +507,109 @@ export const AdminTimetableHub: React.FC = () => {
           </div>
         </div>
 
-        {/* View Switcher & Filter Ribbon */}
-        <div className="mt-6 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-slate-800">
+        {/* Bottom Row: View Switchers, Context Filters & Timing Overview Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/80">
+          {/* Segmented View Switcher */}
+          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
             <button
               onClick={() => setActiveView('matrix')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 activeView === 'matrix'
-                  ? 'bg-indigo-600 text-white shadow'
+                  ? 'bg-indigo-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Master Grid
+              <Layers className="w-3.5 h-3.5" />
+              <span>Master Grid</span>
             </button>
             <button
               onClick={() => setActiveView('cohort')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 activeView === 'cohort'
-                  ? 'bg-indigo-600 text-white shadow'
+                  ? 'bg-indigo-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              By Cohort / Grade
+              <Building2 className="w-3.5 h-3.5" />
+              <span>By Cohort</span>
             </button>
             <button
               onClick={() => setActiveView('teacher')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 activeView === 'teacher'
-                  ? 'bg-indigo-600 text-white shadow'
+                  ? 'bg-indigo-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              By Teacher
+              <User className="w-3.5 h-3.5" />
+              <span>By Teacher</span>
             </button>
             <button
               onClick={() => setActiveView('room')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 activeView === 'room'
-                  ? 'bg-indigo-600 text-white shadow'
+                  ? 'bg-indigo-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              By Room
+              <MapPin className="w-3.5 h-3.5" />
+              <span>By Room</span>
             </button>
           </div>
 
-          {/* Secondary Filters based on active view */}
-          <div className="flex items-center gap-3">
+          {/* Contextual Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
             {activeView === 'cohort' && (
-              <select
-                value={selectedCohort}
-                onChange={(e) => setSelectedCohort(e.target.value)}
-                className="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500"
-              >
-                {cohorts.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-indigo-400" />
+                <select
+                  value={selectedCohort}
+                  onChange={(e) => setSelectedCohort(e.target.value)}
+                  className="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-1.5 outline-none focus:border-indigo-500 cursor-pointer"
+                >
+                  {cohorts.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
 
             {activeView === 'teacher' && (
-              <select
-                value={selectedTeacherId}
-                onChange={(e) => setSelectedTeacherId(e.target.value)}
-                className="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500"
-              >
-                <option value="">Select a Teacher</option>
-                {teachers.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-indigo-400" />
+                <select
+                  value={selectedTeacherId}
+                  onChange={(e) => setSelectedTeacherId(e.target.value)}
+                  className="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-1.5 outline-none focus:border-indigo-500 cursor-pointer"
+                >
+                  <option value="">All Teachers ({teachers.length})</option>
+                  {teachers.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
 
             {activeView === 'room' && (
-              <select
-                value={selectedRoom}
-                onChange={(e) => setSelectedRoom(e.target.value)}
-                className="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500"
-              >
-                <option value="">Select a Room</option>
-                {rooms.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-indigo-400" />
+                <select
+                  value={selectedRoom}
+                  onChange={(e) => setSelectedRoom(e.target.value)}
+                  className="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-1.5 outline-none focus:border-indigo-500 cursor-pointer"
+                >
+                  <option value="">All Rooms ({rooms.length})</option>
+                  {rooms.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
 
             {timetableSlots.length === 0 && (
@@ -612,53 +621,55 @@ export const AdminTimetableHub: React.FC = () => {
                 Auto-Fill Sample Schedule
               </button>
             )}
+
+            {/* Daily Timing Pills */}
+            <div className="hidden lg:flex items-center gap-2 pl-2 border-l border-slate-800 text-[11px] text-slate-400">
+              <span className="flex items-center gap-1 font-mono text-slate-300">
+                <Clock className="w-3 h-3 text-indigo-400" />
+                {schoolTimingConfig.schoolStartTime} - {schoolTimingConfig.schoolEndTime}
+              </span>
+              <span>•</span>
+              <span>{schoolTimingConfig.periodDurationMinutes}m / period</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Routine / Daily Schedule Grid */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl overflow-x-auto">
-        {/* Bell Schedule Banner Overview */}
-        <div className="mb-6 p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2 text-slate-300">
-            <Clock className="w-4 h-4 text-indigo-400" />
-            <span className="font-semibold text-white">Daily Operational Hours:</span>
-            <span>
-              {schoolTimingConfig.schoolStartTime} – {schoolTimingConfig.schoolEndTime}
-            </span>
-            <span className="text-slate-600">|</span>
-            <span>{schoolTimingConfig.periodDurationMinutes} mins / period</span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {schoolTimingConfig.breaks.map((b) => (
-              <span
-                key={b.id}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-xs font-medium"
-              >
-                {b.type === 'assembly' && <Sun className="w-3 h-3 text-amber-400" />}
-                {b.type === 'snack' && <Coffee className="w-3 h-3 text-orange-400" />}
-                {b.type === 'lunch' && <Utensils className="w-3 h-3 text-emerald-400" />}
-                {b.type === 'dismissal' && <LogOut className="w-3 h-3 text-rose-400" />}
-                <span>{b.name}:</span>
-                <span className="text-slate-400 font-mono">
-                  {b.startTime} {b.endTime ? `- ${b.endTime}` : ''}
-                </span>
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Timetable Table Grid */}
-        <div className="min-w-[800px]">
-          <div className="grid grid-cols-7 gap-3 mb-3 text-center font-semibold text-xs text-slate-400 uppercase tracking-wider">
-            <div className="p-2 bg-slate-950/40 rounded-lg">Period / Time</div>
+      {/* Main Timetable Routine Grid */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl overflow-x-auto">
+        <div className="min-w-[850px]">
+          {/* Day Column Headers */}
+          <div className="grid grid-cols-7 gap-2.5 mb-3 text-center font-bold text-xs uppercase tracking-wider">
+            <div className="p-2.5 bg-slate-950/60 border border-slate-800/80 rounded-xl text-slate-400 flex items-center justify-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Period</span>
+            </div>
             {DAYS.map((day) => (
-              <div key={day} className="p-2 bg-slate-950/40 rounded-lg text-slate-300">
-                {day}
+              <div
+                key={day}
+                className="p-2.5 bg-slate-950/60 border border-slate-800/80 rounded-xl text-slate-200 flex items-center justify-center gap-1.5 font-semibold"
+              >
+                <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                <span>{day}</span>
               </div>
             ))}
           </div>
+
+          {/* Morning Assembly Banner (if afterPeriod === 0) */}
+          {schoolTimingConfig.breaks
+            .filter((b) => b.afterPeriod === 0 || b.type === 'assembly')
+            .map((b) => (
+              <div
+                key={b.id}
+                className="my-2.5 p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-center gap-3 text-xs text-amber-300"
+              >
+                <Sun className="w-4 h-4 text-amber-400" />
+                <span className="font-semibold uppercase tracking-wider">{b.name}</span>
+                <span className="font-mono text-amber-400/80 font-normal">
+                  ({b.startTime} - {b.endTime})
+                </span>
+              </div>
+            ))}
 
           {/* Periods 1 through 6 with Interleaved Breaks */}
           {[1, 2, 3, 4, 5, 6].map((pNum) => {
@@ -668,12 +679,14 @@ export const AdminTimetableHub: React.FC = () => {
 
             return (
               <React.Fragment key={`period-group-${pNum}`}>
-                {/* Break row if applicable */}
                 {breakAfter && (
-                  <div className="my-2 p-2.5 bg-indigo-950/20 border border-indigo-500/20 rounded-xl flex items-center justify-center gap-3 text-xs text-indigo-300">
+                  <div className="my-2.5 p-2.5 bg-indigo-950/30 border border-indigo-500/20 rounded-xl flex items-center justify-center gap-3 text-xs text-indigo-300">
                     {breakAfter.type === 'snack' && <Coffee className="w-4 h-4 text-orange-400" />}
                     {breakAfter.type === 'lunch' && (
                       <Utensils className="w-4 h-4 text-emerald-400" />
+                    )}
+                    {breakAfter.type === 'dismissal' && (
+                      <LogOut className="w-4 h-4 text-rose-400" />
                     )}
                     <span className="font-semibold uppercase tracking-wider">
                       {breakAfter.name}
@@ -684,13 +697,13 @@ export const AdminTimetableHub: React.FC = () => {
                   </div>
                 )}
 
-                <div className="grid grid-cols-7 gap-3 mb-3">
-                  {/* Period Header Column */}
+                <div className="grid grid-cols-7 gap-2.5 mb-2.5">
+                  {/* Period Time Column */}
                   <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-3 flex flex-col justify-center items-center text-center">
                     <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">
                       Period {pNum}
                     </span>
-                    <span className="text-[11px] text-slate-500 mt-1 font-mono">
+                    <span className="text-[11px] text-slate-500 mt-0.5 font-mono">
                       {pNum === 1 && '09:00 - 09:45'}
                       {pNum === 2 && '09:45 - 10:30'}
                       {pNum === 3 && '10:45 - 11:30'}
@@ -700,20 +713,19 @@ export const AdminTimetableHub: React.FC = () => {
                     </span>
                   </div>
 
-                  {/* 6 Day Columns for this Period */}
-                  {DAYS.map((day) => {
-                    const dayIdx = DAY_INDEX_MAP[day];
+                  {/* 6 Day Cells */}
+                  {DAYS.map((dayName, dIdx) => {
                     const slotsForCell = filteredSlots.filter(
-                      (s) => s.dayOfWeek === dayIdx && s.periodNumber === pNum,
+                      (s) => s.dayOfWeek === dIdx && s.periodNumber === pNum,
                     );
 
                     return (
                       <div
-                        key={`${day}-${pNum}`}
-                        className="min-h-[90px] bg-slate-950/40 border border-slate-800/60 rounded-xl p-2 flex flex-col justify-between hover:border-slate-700 transition relative group"
+                        key={`cell-${dIdx}-${pNum}`}
+                        className="bg-slate-950/40 border border-slate-800/80 hover:border-slate-700/80 rounded-xl p-2 min-h-[96px] flex flex-col justify-between transition group relative"
                       >
                         {slotsForCell.length > 0 ? (
-                          <div className="space-y-1.5">
+                          <div className="space-y-1.5 w-full">
                             {slotsForCell.map((slot) => {
                               const theme = getSubjectTheme(
                                 slot.subject?.name || slot.classroom?.name,
@@ -721,20 +733,25 @@ export const AdminTimetableHub: React.FC = () => {
                               return (
                                 <div
                                   key={slot.id}
-                                  className={`p-2 rounded-lg border ${theme.bg} ${theme.border} text-left relative group/card cursor-pointer transition-all hover:scale-[1.02]`}
-                                  onClick={() => handleEditSlot(slot)}
+                                  className={`p-2.5 rounded-lg border transition-all ${theme.bg} ${theme.border} space-y-1.5`}
                                 >
-                                  <div className="flex items-center justify-between gap-1 mb-1">
-                                    <span className={`text-xs font-bold ${theme.text} truncate`}>
-                                      {slot.subject?.name || slot.classroom?.name || 'Class'}
-                                    </span>
-                                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-900/60 text-slate-300">
-                                      {slot.roomNumber}
+                                  <div className="flex items-start justify-between gap-1">
+                                    <div className="font-bold text-xs text-white leading-tight truncate">
+                                      {slot.subject?.name ||
+                                        slot.classroom?.name ||
+                                        'Assigned Subject'}
+                                    </div>
+                                    <span
+                                      className={`text-[9px] font-semibold px-1.5 py-0.5 rounded border shrink-0 ${theme.badge}`}
+                                    >
+                                      {slot.roomNumber || 'Room N/A'}
                                     </span>
                                   </div>
-                                  <div className="text-[11px] text-slate-400 flex items-center justify-between">
-                                    <span className="truncate">
-                                      {slot.teacher?.name || 'Assigned Teacher'}
+
+                                  <div className="text-[11px] text-slate-300 flex items-center justify-between gap-1">
+                                    <span className="truncate flex items-center gap-1">
+                                      <User className="w-3 h-3 text-slate-400" />
+                                      {slot.teacher?.name || 'Teacher'}
                                     </span>
                                     {slot.cohort?.name && (
                                       <span className="text-[10px] text-indigo-400 font-medium truncate">
@@ -742,35 +759,45 @@ export const AdminTimetableHub: React.FC = () => {
                                       </span>
                                     )}
                                   </div>
+
                                   {slot.requiredBooks && (
-                                    <div className="text-[10px] text-slate-500 mt-1 truncate flex items-center gap-1">
-                                      <BookOpen className="w-3 h-3" />
-                                      {slot.requiredBooks}
+                                    <div className="text-[10px] text-slate-400 flex items-center gap-1 truncate pt-0.5 border-t border-slate-800/60">
+                                      <BookOpen className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                                      <span className="truncate">{slot.requiredBooks}</span>
                                     </div>
                                   )}
-                                  {/* Delete Quick Action */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      deleteTimetableSlot(slot.id);
-                                    }}
-                                    className="absolute top-1.5 right-1.5 opacity-0 group-hover/card:opacity-100 p-1 text-slate-400 hover:text-rose-400 bg-slate-900/90 rounded transition cursor-pointer"
-                                    title="Remove Slot"
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </button>
+
+                                  {/* Quick Action Hover Bar */}
+                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end gap-1.5 pt-1 border-t border-slate-800/80">
+                                    <button
+                                      onClick={() => handleEditSlot(slot)}
+                                      className="p-1 hover:bg-slate-800 text-slate-400 hover:text-indigo-300 rounded transition cursor-pointer"
+                                      title="Edit Slot"
+                                    >
+                                      <Edit2 className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteSlot(slot.id)}
+                                      className="p-1 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 rounded transition cursor-pointer"
+                                      title="Delete Slot"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  </div>
                                 </div>
                               );
                             })}
                           </div>
                         ) : (
-                          <button
-                            onClick={() => handleOpenAddSlot(dayIdx, pNum)}
-                            className="w-full h-full flex flex-col items-center justify-center text-slate-600 hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition py-4 cursor-pointer"
-                          >
-                            <Plus className="w-4 h-4 mb-1" />
-                            <span className="text-[11px]">Assign Class</span>
-                          </button>
+                          <div className="h-full w-full flex items-center justify-center">
+                            <button
+                              onClick={() => handleOpenAddSlot(dIdx, pNum)}
+                              className="w-full h-full min-h-[64px] border border-dashed border-slate-800 hover:border-indigo-500/50 hover:bg-indigo-950/10 rounded-lg flex flex-col items-center justify-center gap-1 text-[11px] text-slate-600 hover:text-indigo-400 transition cursor-pointer"
+                            >
+                              <Plus className="w-3.5 h-3.5 opacity-60" />
+                              <span className="text-[10px]">Schedule</span>
+                            </button>
+                          </div>
                         )}
                       </div>
                     );
@@ -782,18 +809,20 @@ export const AdminTimetableHub: React.FC = () => {
         </div>
       </div>
 
-      {/* MODAL: Add / Edit Timetable Slot */}
+      {/* --- Modals & Dialogs --- */}
+
+      {/* 1. Add / Edit Slot Modal */}
       {isSlotModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-lg">
+                <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl">
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">
-                    {slotForm.id ? 'Edit Period Slot' : 'Schedule New Period Slot'}
+                    {slotForm.id ? 'Edit Period Slot' : 'Schedule Period Slot'}
                   </h3>
                   <p className="text-xs text-slate-400">
                     Configure clash-free timetable period for cohort & teacher
@@ -802,23 +831,24 @@ export const AdminTimetableHub: React.FC = () => {
               </div>
               <button
                 onClick={() => setIsSlotModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg transition cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
+            {/* Clash Alert Warning */}
             {clashWarning && (
-              <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-start gap-2.5 text-rose-300 text-xs">
-                <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-semibold block">Schedule Conflict Detected:</span>
+              <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-start gap-2.5 text-rose-300 text-xs animate-in fade-in duration-150">
+                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  <span className="font-bold">Scheduling Conflict Detected: </span>
                   {clashWarning}
                 </div>
               </div>
             )}
 
-            <div className="space-y-4 text-xs">
+            <form onSubmit={handleSaveSlot} className="space-y-4 text-xs">
               <div>
                 <label className="block text-slate-300 font-medium mb-1.5">
                   Classroom / Subject & Cohort
@@ -826,15 +856,16 @@ export const AdminTimetableHub: React.FC = () => {
                 <select
                   value={slotForm.classroomId}
                   onChange={(e) => {
-                    const cId = e.target.value;
-                    const c = classrooms.find((cls) => cls.id === cId);
+                    const cid = e.target.value;
+                    const c = classrooms.find((cls) => cls.id === cid);
                     setSlotForm((prev) => ({
                       ...prev,
-                      classroomId: cId,
+                      classroomId: cid,
                       teacherId: c?.teacherId || prev.teacherId,
                       roomNumber: c?.roomNumber || prev.roomNumber,
                     }));
                   }}
+                  required
                   className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500"
                 >
                   <option value="">Select a Classroom</option>
@@ -865,8 +896,9 @@ export const AdminTimetableHub: React.FC = () => {
                     ))}
                   </select>
                 </div>
+
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1.5">Room / Facility</label>
+                  <label className="block text-slate-300 font-medium mb-1.5">Room Number</label>
                   <input
                     type="text"
                     value={slotForm.roomNumber}
@@ -896,6 +928,7 @@ export const AdminTimetableHub: React.FC = () => {
                     ))}
                   </select>
                 </div>
+
                 <div>
                   <label className="block text-slate-300 font-medium mb-1.5">Period Number</label>
                   <select
@@ -955,47 +988,36 @@ export const AdminTimetableHub: React.FC = () => {
                   className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500"
                 />
               </div>
-            </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-slate-800">
-              <button
-                type="button"
-                onClick={handleCheckClash}
-                disabled={isCheckingClash}
-                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                {isCheckingClash ? 'Checking...' : 'Validate Clashes'}
-              </button>
-
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsSlotModalOpen(false)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition cursor-pointer"
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
-                  type="button"
-                  onClick={handleSaveSlot}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition shadow-md shadow-indigo-500/20 cursor-pointer"
+                  type="submit"
+                  disabled={Boolean(clashWarning) || isCheckingClash}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition shadow-lg shadow-indigo-600/20 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
                 >
-                  {slotForm.id ? 'Save Changes' : 'Create Slot'}
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{slotForm.id ? 'Save Changes' : 'Confirm Slot'}</span>
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
 
-      {/* MODAL: Bell Schedule & Breaks Config */}
+      {/* 2. Bell Schedule Modal */}
       {isBellScheduleModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl">
                   <Clock className="w-5 h-5" />
                 </div>
                 <div>
@@ -1007,9 +1029,9 @@ export const AdminTimetableHub: React.FC = () => {
               </div>
               <button
                 onClick={() => setIsBellScheduleModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg transition cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -1023,7 +1045,7 @@ export const AdminTimetableHub: React.FC = () => {
                     onChange={(e) =>
                       setTimingConfig((prev) => ({ ...prev, schoolStartTime: e.target.value }))
                     }
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 font-mono"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 outline-none font-mono"
                   />
                 </div>
                 <div>
@@ -1034,7 +1056,7 @@ export const AdminTimetableHub: React.FC = () => {
                     onChange={(e) =>
                       setTimingConfig((prev) => ({ ...prev, schoolEndTime: e.target.value }))
                     }
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 font-mono"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 outline-none font-mono"
                   />
                 </div>
                 <div>
@@ -1050,21 +1072,21 @@ export const AdminTimetableHub: React.FC = () => {
                         periodDurationMinutes: Number(e.target.value),
                       }))
                     }
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 font-mono"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 outline-none font-mono"
                   />
                 </div>
               </div>
 
+              {/* Interleaved Breaks */}
               <div>
-                <h4 className="text-sm font-semibold text-slate-200 mb-2 flex items-center gap-1.5">
-                  <Coffee className="w-4 h-4 text-amber-400" />
-                  Scheduled Breaks & Intermissions
-                </h4>
-                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                  {timingConfig.breaks.map((b, idx) => (
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-slate-300">Daily Recess & Breaks</span>
+                </div>
+                <div className="space-y-2 max-h-56 overflow-y-auto">
+                  {timingConfig.breaks.map((b) => (
                     <div
-                      key={b.id || idx}
-                      className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between gap-3"
+                      key={b.id}
+                      className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between gap-2"
                     >
                       <div>
                         <div className="font-semibold text-slate-200">{b.name}</div>
@@ -1074,50 +1096,57 @@ export const AdminTimetableHub: React.FC = () => {
                         </div>
                       </div>
                       <button
-                        onClick={() => {
-                          const updated = timingConfig.breaks.filter((_, i) => i !== idx);
-                          setTimingConfig((prev) => ({ ...prev, breaks: updated }));
-                        }}
-                        className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition cursor-pointer"
+                        onClick={() =>
+                          setTimingConfig((prev) => ({
+                            ...prev,
+                            breaks: prev.breaks.filter((x) => x.id !== b.id),
+                          }))
+                        }
+                        className="p-1 text-rose-400 hover:bg-rose-950/40 rounded transition cursor-pointer"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-800">
-              <button
-                type="button"
-                onClick={() => setIsBellScheduleModalOpen(false)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  updateSchoolTimingConfig(timingConfig);
-                  setIsBellScheduleModalOpen(false);
-                }}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
-              >
-                Save Schedule Settings
-              </button>
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsBellScheduleModalOpen(false)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      await updateSchoolTimingConfig(timingConfig);
+                      toast.success('Bell Schedule and Operational Hours updated');
+                      setIsBellScheduleModalOpen(false);
+                    } catch (err: any) {
+                      toast.error('Failed to update timing: ' + err.message);
+                    }
+                  }}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Save Bell Schedule</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL: Academic Terms */}
+      {/* 3. Academic Terms Modal */}
       {isTermsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-amber-500/20 text-amber-400 rounded-lg">
+                <div className="p-2 bg-amber-500/10 text-amber-400 rounded-xl">
                   <CalendarCheck className="w-5 h-5" />
                 </div>
                 <div>
@@ -1129,56 +1158,63 @@ export const AdminTimetableHub: React.FC = () => {
               </div>
               <button
                 onClick={() => setIsTermsModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg transition cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="space-y-4 text-xs">
-              <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl space-y-2">
+              <div className="space-y-2 bg-slate-950 p-3.5 border border-slate-800 rounded-xl">
                 <div className="font-semibold text-slate-300">Add New Term</div>
+                <input
+                  type="text"
+                  placeholder="Term Name (e.g. 1st Trimester)"
+                  value={newTermName}
+                  onChange={(e) => setNewTermName(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 outline-none"
+                />
                 <div className="grid grid-cols-2 gap-2">
                   <input
-                    type="text"
-                    placeholder="Term Name (e.g. Term 1)"
-                    value={newTermName}
-                    onChange={(e) => setNewTermName(e.target.value)}
-                    className="bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5"
+                    type="date"
+                    value={newTermStart}
+                    onChange={(e) => setNewTermStart(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2 py-1.5 outline-none font-mono"
                   />
                   <input
-                    type="number"
-                    placeholder="Sequence #"
-                    value={newTermSeq}
-                    onChange={(e) => setNewTermSeq(Number(e.target.value))}
-                    className="bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5"
+                    type="date"
+                    value={newTermEnd}
+                    onChange={(e) => setNewTermEnd(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2 py-1.5 outline-none font-mono"
                   />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10px] text-slate-400 block mb-0.5">Start Date</label>
-                    <input
-                      type="date"
-                      value={newTermStart}
-                      onChange={(e) => setNewTermStart(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-slate-400 block mb-0.5">End Date</label>
-                    <input
-                      type="date"
-                      value={newTermEnd}
-                      onChange={(e) => setNewTermEnd(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5"
-                    />
-                  </div>
                 </div>
                 <button
-                  onClick={handleAddTerm}
-                  className="w-full mt-2 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-medium transition cursor-pointer"
+                  onClick={async () => {
+                    if (!newTermName || !newTermStart || !newTermEnd) {
+                      toast.error('Please enter name, start date, and end date');
+                      return;
+                    }
+                    try {
+                      await saveAcademicTerm({
+                        name: newTermName,
+                        academicYearId: activeYear?.id || 'ay-2026-2027',
+                        startsAt: newTermStart,
+                        endsAt: newTermEnd,
+                        sequence: newTermSeq,
+                      });
+                      toast.success('Academic term added');
+                      setNewTermName('');
+                      setNewTermStart('');
+                      setNewTermEnd('');
+                      setNewTermSeq((prev) => prev + 1);
+                    } catch (err: any) {
+                      toast.error('Failed to add term: ' + err.message);
+                    }
+                  }}
+                  className="w-full py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  Save New Term
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Term</span>
                 </button>
               </div>
 
@@ -1189,7 +1225,7 @@ export const AdminTimetableHub: React.FC = () => {
                 {academicTerms.map((term) => (
                   <div
                     key={term.id}
-                    className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between"
+                    className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between"
                   >
                     <div>
                       <div className="font-semibold text-white">
@@ -1203,9 +1239,9 @@ export const AdminTimetableHub: React.FC = () => {
                     </div>
                     <button
                       onClick={() => deleteAcademicTerm(term.id)}
-                      className="p-1 text-slate-500 hover:text-rose-400 transition cursor-pointer"
+                      className="p-1 text-rose-400 hover:bg-rose-950/40 rounded transition cursor-pointer"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
@@ -1215,13 +1251,13 @@ export const AdminTimetableHub: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL: Holidays Calendar */}
+      {/* 4. Holiday Calendar Modal */}
       {isHolidaysModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-rose-500/20 text-rose-400 rounded-lg">
+                <div className="p-2 bg-rose-500/10 text-rose-400 rounded-xl">
                   <CalendarX className="w-5 h-5" />
                 </div>
                 <div>
@@ -1233,42 +1269,59 @@ export const AdminTimetableHub: React.FC = () => {
               </div>
               <button
                 onClick={() => setIsHolidaysModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg transition cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="space-y-4 text-xs">
-              <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl space-y-2">
-                <div className="font-semibold text-slate-300">Add School Holiday</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    placeholder="Holiday Name (e.g. Dashain Festival)"
-                    value={newHolidayName}
-                    onChange={(e) => setNewHolidayName(e.target.value)}
-                    className="bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5"
-                  />
-                  <input
-                    type="date"
-                    value={newHolidayDate}
-                    onChange={(e) => setNewHolidayDate(e.target.value)}
-                    className="bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5"
-                  />
-                </div>
+              <div className="space-y-2 bg-slate-950 p-3.5 border border-slate-800 rounded-xl">
+                <div className="font-semibold text-slate-300">Register Holiday</div>
                 <input
                   type="text"
-                  placeholder="Optional description / notes"
+                  placeholder="Holiday Name (e.g. Dashain Festival)"
+                  value={newHolidayName}
+                  onChange={(e) => setNewHolidayName(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 outline-none"
+                />
+                <input
+                  type="date"
+                  value={newHolidayDate}
+                  onChange={(e) => setNewHolidayDate(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 outline-none font-mono"
+                />
+                <input
+                  type="text"
+                  placeholder="Description / Notice"
                   value={newHolidayDesc}
                   onChange={(e) => setNewHolidayDesc(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5"
+                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 outline-none"
                 />
                 <button
-                  onClick={handleAddHoliday}
-                  className="w-full mt-2 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-medium transition cursor-pointer"
+                  onClick={async () => {
+                    if (!newHolidayName || !newHolidayDate) {
+                      toast.error('Please enter name and date');
+                      return;
+                    }
+                    try {
+                      await saveSchoolHoliday({
+                        name: newHolidayName,
+                        date: newHolidayDate,
+                        description: newHolidayDesc,
+                      });
+                      toast.success('Holiday registered');
+                      setNewHolidayName('');
+                      setNewHolidayDate('');
+                      setNewHolidayDesc('');
+                    } catch (err: any) {
+                      toast.error('Failed to save holiday: ' + err.message);
+                    }
+                  }}
+                  className="w-full py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  Add Holiday
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Register Holiday</span>
                 </button>
               </div>
 
@@ -1279,7 +1332,7 @@ export const AdminTimetableHub: React.FC = () => {
                 {schoolHolidays.map((h) => (
                   <div
                     key={h.id}
-                    className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between"
+                    className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between"
                   >
                     <div>
                       <div className="font-semibold text-white">{h.name}</div>
@@ -1289,9 +1342,9 @@ export const AdminTimetableHub: React.FC = () => {
                     </div>
                     <button
                       onClick={() => deleteSchoolHoliday(h.id)}
-                      className="p-1 text-slate-500 hover:text-rose-400 transition cursor-pointer"
+                      className="p-1 text-rose-400 hover:bg-rose-950/40 rounded transition cursor-pointer"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
@@ -1301,13 +1354,13 @@ export const AdminTimetableHub: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL: Academic Rollover & Progression */}
+      {/* 5. Academic Rollover Modal */}
       {isRolloverModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-purple-500/20 text-purple-400 rounded-lg">
+                <div className="p-2 bg-purple-500/10 text-purple-400 rounded-xl">
                   <GraduationCap className="w-5 h-5" />
                 </div>
                 <div>
@@ -1322,20 +1375,20 @@ export const AdminTimetableHub: React.FC = () => {
                   setIsRolloverModalOpen(false);
                   setRolloverResult(null);
                 }}
-                className="text-slate-400 hover:text-white p-1 rounded-lg transition cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {rolloverResult ? (
-              <div className="space-y-4">
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-300 space-y-2">
-                  <div className="font-bold flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              <div className="space-y-4 text-xs">
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-300">
+                  <div className="font-bold text-sm text-white flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                     Academic Rollover Completed Successfully!
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-300 mt-2">
+                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-300 mt-3">
                     <div>
                       Students Promoted:{' '}
                       <span className="font-semibold text-white">
@@ -1367,17 +1420,20 @@ export const AdminTimetableHub: React.FC = () => {
                     setIsRolloverModalOpen(false);
                     setRolloverResult(null);
                   }}
-                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+                  className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition cursor-pointer"
                 >
                   Done
                 </button>
               </div>
             ) : (
               <div className="space-y-4 text-xs">
-                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-300 text-[11px] leading-relaxed">
-                  ⚠️ <strong>Important:</strong> Rollover will automatically calculate student
-                  progress, generate official Report Cards, promote students in grades 1–9 to the
-                  next grade level, graduate Grade 10 students, and archive the old academic year.
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-300 text-[11px] leading-relaxed flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong>Important:</strong> Rollover will automatically calculate student
+                    progress, generate official Report Cards, promote students in grades 1–9 to the
+                    next grade level, graduate Grade 10 students, and archive the old academic year.
+                  </div>
                 </div>
 
                 <div>
@@ -1396,14 +1452,16 @@ export const AdminTimetableHub: React.FC = () => {
                   <select
                     value={rolloverTargetYear}
                     onChange={(e) => setRolloverTargetYear(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 outline-none font-mono"
                   >
-                    <option value="">Select Target Academic Year</option>
+                    <option value="">Select or Create Next Year</option>
+                    <option value="2027/2028">2027/2028 (Next Standard Year)</option>
+                    <option value="2028/2029">2028/2029</option>
                     {academicYears
-                      .filter((y) => y.id !== activeYear?.id)
+                      .filter((y) => !y.isActive)
                       .map((y) => (
-                        <option key={y.id} value={y.id}>
-                          {y.name} ({y.startsAt?.slice(0, 10)} - {y.endsAt?.slice(0, 10)})
+                        <option key={y.id} value={y.name}>
+                          {y.name}
                         </option>
                       ))}
                   </select>
@@ -1419,31 +1477,56 @@ export const AdminTimetableHub: React.FC = () => {
                     max={100}
                     value={rolloverPassPercent}
                     onChange={(e) => setRolloverPassPercent(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 font-mono"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 outline-none font-mono"
                   />
                 </div>
 
-                <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
                   <button
                     type="button"
                     onClick={() => setIsRolloverModalOpen(false)}
-                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition cursor-pointer"
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
-                    type="button"
-                    disabled={isPerformingRollover || !rolloverTargetYear}
-                    onClick={handleExecuteRollover}
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer"
+                    disabled={!rolloverTargetYear || isPerformingRollover}
+                    onClick={async () => {
+                      try {
+                        setIsPerformingRollover(true);
+                        const targetYearObj = academicYears.find(
+                          (y) => y.name === rolloverTargetYear,
+                        );
+                        const res = await executeAcademicRollover({
+                          fromAcademicYearId: activeYear?.id || 'ay-2026-2027',
+                          toAcademicYearId: targetYearObj?.id || rolloverTargetYear,
+                          passPercentage: Number(rolloverPassPercent),
+                          graduationGrade: 10,
+                        });
+                        if (res.success) {
+                          setRolloverResult(res.data || res);
+                          toast.success('Academic rollover finished successfully');
+                        } else {
+                          toast.error(res.error || 'Rollover failed');
+                        }
+                      } catch (err: any) {
+                        toast.error('Rollover error: ' + err.message);
+                      } finally {
+                        setIsPerformingRollover(false);
+                      }
+                    }}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl transition shadow-lg shadow-purple-600/20 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
                   >
                     {isPerformingRollover ? (
                       <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        Executing Rollover...
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Processing Rollover...</span>
                       </>
                     ) : (
-                      'Execute Rollover'
+                      <>
+                        <GraduationCap className="w-4 h-4" />
+                        <span>Execute Rollover</span>
+                      </>
                     )}
                   </button>
                 </div>

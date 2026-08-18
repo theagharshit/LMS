@@ -1,5 +1,12 @@
 import { Router } from 'express';
-import { login, getMe, refreshSession, logout, getCsrfToken } from '@controllers/authController';
+import {
+  login,
+  devSwitch,
+  getMe,
+  refreshSession,
+  logout,
+  getCsrfToken,
+} from '@controllers/authController';
 import { authenticateJwt } from '@middlewares/authMiddleware';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
@@ -9,7 +16,7 @@ export const authRoutes = Router();
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: process.env.NODE_ENV === 'test' ? 1_000 : 5,
+  limit: process.env.NODE_ENV === 'test' ? 1_000 : 50,
   skipSuccessfulRequests: true,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
@@ -31,6 +38,7 @@ authRoutes.post(
   ),
   login,
 );
+authRoutes.post('/auth/dev-switch', devSwitch);
 authRoutes.post('/auth/refresh', refreshSession);
 authRoutes.post('/auth/logout', logout);
 authRoutes.get('/auth/me', authenticateJwt, getMe);

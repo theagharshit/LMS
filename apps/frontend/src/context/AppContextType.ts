@@ -42,6 +42,7 @@ export interface AppContextType {
   currentUser: User;
   allUsers: User[];
   switchUser: (userId: string) => void;
+  devSwitchUser: (userIdOrRole: string) => Promise<void>;
   establishSession: (user: User, token: string) => void;
   logout: () => void;
   activeChild: StudentProfile | undefined;

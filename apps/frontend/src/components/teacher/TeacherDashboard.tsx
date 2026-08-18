@@ -27,6 +27,7 @@ import {
   History,
   ShieldCheck,
   ArrowRight,
+  FileText,
 } from 'lucide-react';
 import { TeacherSubstitutesAndLeavesModal } from './TeacherSubstitutesAndLeavesModal';
 
@@ -158,7 +159,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               <span>Faculty • {facultySubjects}</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight font-serif">
-              Welcome Back, {currentUser.name}! 🙏
+              Welcome Back, {currentUser.name}!
             </h1>
             <p className="text-[#F9F7F2]/90 text-xs md:text-sm max-w-xl">
               You have{' '}
@@ -457,8 +458,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                             {new Date(sub.submittedAt).toLocaleTimeString()}
                           </p>
                           {sub.fileName && (
-                            <span className="inline-block text-[10px] text-[#4A6741] font-medium mt-0.5">
-                              📄 {sub.fileName}
+                            <span className="inline-flex items-center gap-1 text-[10px] text-[#4A6741] font-medium mt-0.5">
+                              <FileText className="w-3 h-3 text-[#4A6741]" />
+                              <span>{sub.fileName}</span>
                             </span>
                           )}
                         </div>
@@ -839,8 +841,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-[#E88D67] uppercase mb-1">
-                          🎒 Books / Copy to Pack
+                        <label className="flex items-center gap-1 text-[10px] font-bold text-[#E88D67] uppercase mb-1">
+                          <BookOpen className="w-3 h-3 text-[#E88D67]" />
+                          <span>Books / Copy to Pack</span>
                         </label>
                         <input
                           type="text"

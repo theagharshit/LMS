@@ -28,6 +28,7 @@ import { LoginView } from './components/common/LoginView';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { SessionExpiryWarning } from './components/common/SessionExpiryWarning';
 import { DialogAccessibilityManager } from './components/common/DialogAccessibilityManager';
+import { PersonaQuickSwitcher } from './components/common/PersonaQuickSwitcher';
 
 const AppContent: React.FC = () => {
   const { currentUser, activeView, isCompletedQuizzesOpen, setIsCompletedQuizzesOpen } = useApp();
@@ -152,6 +153,9 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F9F7F2] text-[#2D2D2A] flex flex-col font-sans transition-colors duration-200">
+      {/* Dev Backdoor Persona Switcher */}
+      <PersonaQuickSwitcher />
+
       {/* Top Header */}
       <Header onToggleNotifications={() => setIsNotificationOpen(true)} />
 

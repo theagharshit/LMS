@@ -279,7 +279,7 @@ export const StudentProfileView: React.FC = () => {
               <div>
                 <p className="text-[10px] font-bold uppercase text-[#7A7A72]">Current Streak</p>
                 <p className="text-base font-bold text-[#2D2D2A]">
-                  {studentData.streakDays} Days Active 🔥
+                  {studentData.streakDays} Days Active
                 </p>
               </div>
             </div>

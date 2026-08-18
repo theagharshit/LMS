@@ -22,6 +22,7 @@ import {
   Utensils,
   MapPin,
   User,
+  Flame,
 } from 'lucide-react';
 
 interface ParentDashboardProps {
@@ -157,7 +158,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenParental
               <span>Parent Portal • {currentUser.schoolName}</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight font-serif">
-              Namaste, {currentUser.name}! 🙏
+              Namaste, {currentUser.name}!
             </h1>
             <p className="text-[#F9F7F2]/90 text-xs md:text-sm max-w-xl">
               Viewing learning progress & activity for{' '}
@@ -300,7 +301,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenParental
         <div className="p-4 rounded-3xl bg-white border border-[#EDEAE2] shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-1">
           <p className="text-[10px] font-bold uppercase text-[#7A7A72]">Learning Streak</p>
           <div className="flex items-center gap-2 text-[#E88D67] font-extrabold text-base">
-            <span className="text-xl">🔥</span>
+            <Flame className="w-5 h-5 text-[#E88D67]" />
             <span>{activeChild.streakDays} Consecutive Days</span>
           </div>
           <p className="text-[11px] text-[#7A7A72]">Active daily on Sikshya LMS</p>

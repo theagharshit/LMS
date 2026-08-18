@@ -23,6 +23,7 @@ import {
   Utensils,
   Sun,
   LogOut,
+  Bell,
 } from 'lucide-react';
 
 interface StudentDashboardProps {
@@ -205,12 +206,12 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[#FDEEDC] text-xs font-bold">
               <span>
-                🇳🇵 Grade {studentData.gradeLevel} '{studentData.section}' • Roll No.{' '}
+                Grade {studentData.gradeLevel} '{studentData.section}' • Roll No.{' '}
                 {studentData.rollNumber}
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight font-serif">
-              नमस्ते, {studentData.name}! 🙏
+              नमस्ते, {studentData.name}!
             </h1>
             <p className="text-[#F9F7F2]/90 text-xs md:text-sm max-w-xl">
               Here is your daily schedule and learning tasks for {studentData.schoolName}.
@@ -343,10 +344,13 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       • {activePeriod.startTime} - {activePeriod.endTime}
                     </>
                   ) : activeBreak ? (
-                    <>
-                      🔔 <strong>Current Break: {activeBreak.name}</strong> ({activeBreak.startTime}{' '}
-                      - {activeBreak.endTime || 'Ongoing'})
-                    </>
+                    <span className="flex items-center gap-1.5">
+                      <Bell className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                      <span>
+                        <strong>Current Break: {activeBreak.name}</strong> ({activeBreak.startTime}{' '}
+                        - {activeBreak.endTime || 'Ongoing'})
+                      </span>
+                    </span>
                   ) : currentDayPeriods.length > 0 &&
                     effectiveMinutes <
                       Math.min(

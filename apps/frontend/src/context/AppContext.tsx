@@ -194,6 +194,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const devSwitchUser = async (userIdOrRole: string) => {
+    await authState.devSwitchUser(userIdOrRole);
+    uiState.setActiveView('dashboard');
+  };
+
   const joinClassroomByCode = async (code: string): Promise<boolean> => {
     // First check if already enrolled (classroom already in state for this student)
     const alreadyIn = academicState.classrooms.find(
@@ -296,6 +301,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     currentUser: authState.currentUser,
     allUsers: authState.allUsers,
     switchUser,
+    devSwitchUser,
     establishSession: authState.establishSession,
     logout: authState.clearSession,
     activeChild: authState.activeChild,

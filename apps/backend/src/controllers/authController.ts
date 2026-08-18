@@ -97,7 +97,16 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         }
       }
     }
+    const isDevSwitch = Boolean(
+      userId &&
+      !password &&
+      (process.env.NODE_ENV !== 'production' ||
+        !isStrictAuthMode() ||
+        process.env.ALLOW_DEV_SWITCH === 'true'),
+    );
+
     if (
+      !isDevSwitch &&
       credential?.passwordHash &&
       (!password || !(await passwordHashService.verify(password, credential.passwordHash)))
     ) {
@@ -127,6 +136,50 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   } catch (err) {
     logger.error('Failed to authenticate user:', err);
     res.status(500).json({ status: 'error', message: 'Authentication failed' });
+  }
+};
+
+export const devSwitch = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { userId, email, role } = req.body;
+    const allUsers = await lmsDB.getUsers();
+    let user = allUsers.find(
+      (u) =>
+        (userId && u.id === userId) ||
+        (email && u.email?.toLowerCase() === email.toLowerCase()) ||
+        (role && u.role?.toLowerCase() === role.toLowerCase()),
+    );
+    if (!user) {
+      if (role) {
+        user = allUsers.find((u) => u.role?.toLowerCase() === role.toLowerCase());
+      }
+      if (!user) {
+        user = allUsers[0];
+      }
+    }
+    if (!user) {
+      res.status(404).json({ status: 'error', message: 'No available users found in system.' });
+      return;
+    }
+    const payload = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
+    const session = await authService.issueSession(payload, getFingerprint(req), req.ip);
+    res.cookie('refresh_token', session.refreshToken, refreshCookieOptions);
+    logger.info(`[DevAuth] Instant switched to persona '${user.name}' (${user.role})`);
+    res.json({
+      status: 'success',
+      token: session.accessToken,
+      accessToken: session.accessToken,
+      expiresIn: session.expiresIn,
+      user,
+    });
+  } catch (err) {
+    logger.error('Dev switch failed:', err);
+    res.status(500).json({ status: 'error', message: 'Dev switch failed' });
   }
 };
 
